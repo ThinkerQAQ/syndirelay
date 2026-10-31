@@ -5,8 +5,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import sharp from "sharp";
+import { fileURLToPath } from "node:url";
 
-const script=new URL("./sanitize-image.mjs",import.meta.url).pathname;
+const script=fileURLToPath(new URL("./sanitize-image.mjs",import.meta.url));
 test("real EXIF metadata is stripped and orientation applied before output",async()=>{
  const input=await sharp({create:{width:5,height:3,channels:3,background:"#bca"}})
   .withMetadata({orientation:6})
