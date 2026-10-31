@@ -1,4 +1,5 @@
 import { performToutiaoBrowserRequest } from "./toutiao-request.js";
+import { read51CTOInventoryInPage } from "./cto51-inventory.js";
 import { prepareMediumReplacement, verifyMediumDocument } from "./medium-document.js";
 import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
@@ -971,6 +972,40 @@ function kickGoogleIndexQueuePump() {
   return googleIndexPumpPromise;
 }
 
+// 51CTO requires the browser's authenticated same-origin request context.
+// This read-only inventory action does not use the removed tls-client/fhttp
+// impersonation transport and does not transfer cookies to the Bridge.
+async function read51CTOInventoryFromBrowser() {
+  let tab = null;
+  let created = false;
+  try {
+    const tabs = await chrome.tabs.query({ url: "https://blog.51cto.com/*" });
+    tab = tabs.find((item) => item.status === "complete" && item.url?.startsWith("https://blog.51cto.com/creative-center/"))
+      || tabs.find((item) => item.status === "complete") || null;
+    if (!tab) {
+      tab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
+      created = true;
+      for (let attempt = 0; attempt < 40; attempt++) {
+        tab = await chrome.tabs.get(tab.id);
+        if (tab.status === "complete") break;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      if (tab.status !== "complete") throw new Error("51CTO background tab did not load");
+    }
+    const result = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: "MAIN",
+      func: read51CTOInventoryInPage,
+    });
+    if (!Array.isArray(result) || result.length !== 1 || !result[0]?.result) {
+      throw new Error("51CTO browser inventory did not return a result");
+    }
+    return result[0].result;
+  } finally {
+    if (created && tab?.id != null) await chrome.tabs.remove(tab.id).catch(() => {});
+  }
+}
+
 async function handleMessage(message) {
   switch (message.type) {
     case "blogctl.status": return { ok: true, status: await getStatus() };
@@ -1017,6 +1052,10 @@ async function handleMessage(message) {
       const platform = String(message.platform || "").trim();
       if (!["cnblogs", "juejin", "csdn", "segmentfault", "zhihu", "51cto", "oschina", "toutiao", "devto", "hashnode", "medium"].includes(platform)) {
         throw new Error("不支持的平台");
+      }
+      if (platform === "51cto") {
+        // First-party read-only inventory: no browser fingerprint spoofing.
+        return { ok: true, ...await read51CTOInventoryFromBrowser() };
       }
       if (platform !== "devto") await syncPlatformSession(platform);
       const query = new URLSearchParams({ platform });
