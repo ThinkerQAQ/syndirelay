@@ -210,6 +210,11 @@ func zipExecutable(source, destination string, license []byte, licenseRoot, runt
 	}
 	header.Name = filepath.Base(source)
 	header.Method = zip.Deflate
+	// Windows filesystems have no POSIX executable bit. Release ZIPs created
+	// on Windows must still mark Unix targets executable after extraction.
+	if strings.HasPrefix(header.Name, "syndirelay-linux-") || strings.HasPrefix(header.Name, "syndirelay-darwin-") {
+		header.SetMode(header.Mode() | 0o755)
+	}
 	entry, err := writer.CreateHeader(header)
 	if err != nil {
 		return err
