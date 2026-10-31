@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "BlogCTL 扩展"
+  },
+  "extensionDescription": {
+    "message": "BlogCTL 博客分发工作台的浏览器扩展。"
+  },
+  "openPanel": {
+    "message": "打开 BlogCTL 侧边栏"
+  }
+}

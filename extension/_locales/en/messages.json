@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "BlogCTL Extension"
+  },
+  "extensionDescription": {
+    "message": "Browser companion for the BlogCTL publishing console."
+  },
+  "openPanel": {
+    "message": "Open BlogCTL sidebar"
+  }
+}

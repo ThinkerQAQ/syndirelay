@@ -1,0 +1,73 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extensionName__",
+  "version": "0.1.193",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyoRaJZyGlfPJwOckQ4SIm0ur3QCYDZgF9kXwBTTN9wDhuM+qr4EGx/W1n9BTF3rl18QPuQbtSmZGUm8R+Gm3w3ESQryIoY4qRVHsRKf7h7fCb7mSFsSbeNySxeCLoLcJW5g8PExAeGaFwnkYyu+X23s/30bdMXTOlmWzSWQsu2Df4cE1g63dgqMyGRtZRCrm4yUv4iV2sP3AmnzmMfPBlLj21uj7Woa4LQ+yvs52j3QaT5RwVdZnhYHS0lasU3FocM9kyZRrI2SlF95AqXd/PORB6yjLCRZzv6jdIGCJOqCWNrRBG612aHEB7ebWDMarnRW6uwFL0fiNkZSepxnRswIDAQAB",
+  "description": "__MSG_extensionDescription__",
+  "permissions": [
+    "cookies",
+    "webRequest",
+    "nativeMessaging",
+    "sidePanel",
+    "scripting",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://*.cnblogs.com/*",
+    "https://*.juejin.cn/*",
+    "https://*.csdn.net/*",
+    "https://*.segmentfault.com/*",
+    "https://*.zhihu.com/*",
+    "https://*.51cto.com/*",
+    "https://*.oschina.net/*",
+    "https://*.toutiao.com/*",
+    "https://dev.to/*",
+    "https://medium.com/*",
+    "https://hashnode.com/*",
+    "http://127.0.0.1:32145/*",
+    "https://cnblogs.com/*",
+    "https://juejin.cn/*",
+    "https://csdn.net/*",
+    "https://segmentfault.com/*",
+    "https://zhihu.com/*",
+    "https://51cto.com/*",
+    "https://oschina.net/*",
+    "https://toutiao.com/*",
+    "https://search.google.com/*",
+    "https://accounts.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "popup/popup.html"
+  },
+  "action": {
+    "default_title": "__MSG_openPanel__",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:32145/console/*"
+      ],
+      "js": [
+        "console-relay.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "default_locale": "en"
+}

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BlogCTL</title>
+  <link rel="icon" type="image/png" href="../icons/icon48.png">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="header-brand">
+        <img class="brand-icon" src="../icons/icon48.png" alt="" width="40" height="40">
+        <div>
+          <div class="brand-row">
+            <h1>BlogCTL</h1>
+            <strong id="bridgeIndicator" class="status checking">Bridge 检测中</strong>
+          </div>
+          <p>博客同步发布控制面</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="openWorkspace" class="header-icon-action" type="button"
+          title="在浏览器标签页打开工作台" aria-label="在浏览器标签页打开工作台" data-tooltip="打开工作台">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="15" rx="2"/>
+            <path d="M8 3h8M8 11h8m-4-4 4 4-4 4"/>
+          </svg>
+        </button>
+        <button id="refresh" class="header-icon-action" type="button"
+          title="刷新当前页面" aria-label="刷新当前页面" data-tooltip="刷新当前页面">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 11a8 8 0 0 0-14.7-4.3L3 9"/>
+            <path d="M3 4v5h5"/>
+            <path d="M4 13a8 8 0 0 0 14.7 4.3L21 15"/>
+            <path d="M21 20v-5h-5"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="workspace-shell">
+      <nav class="tabs" role="tablist" aria-label="BlogCTL 功能导航">
+        <span class="navigation-label">工作台</span>
+        <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="binding" title="检测" aria-label="检测"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span><span class="nav-text">检测</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="creation" title="创建" aria-label="创建"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="nav-text">创建</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="drafts" title="更新" aria-label="更新"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.7-4.3L3 9M3 4v5h5M4 13a8 8 0 0 0 14.7 4.3L21 15M21 20v-5h-5"/></svg></span><span class="nav-text">更新</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="social" title="动态" aria-label="动态"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 11h11M4 16h7"/><path d="m17 15 4 3-4 3"/></svg></span><span class="nav-text">动态</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="indexing" title="索引" aria-label="索引"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h1M3 12h1M3 18h1"/></svg></span><span class="nav-text">索引</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="tasks" title="任务" aria-label="任务"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 8h9M8 12h9M8 16h6"/></svg></span><span class="nav-text">任务</span></button>
+        <button class="tab" type="button" role="tab" aria-selected="false" data-tab="logs" title="日志" aria-label="日志"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h12"/></svg></span><span class="nav-text">日志</span></button>
+        <button class="tab tab-settings" type="button" role="tab" aria-selected="false" data-tab="environment" title="设置" aria-label="设置"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M12 19v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M3 12h2M19 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/><circle cx="12" cy="12" r="4"/></svg></span><span class="nav-text">设置</span></button>
+      </nav>
+      <div class="workspace-main">
+    <section class="panel active" role="tabpanel" data-panel="binding">
+      <section class="status-card">
+        <div class="section-title">远端文章清单</div>
+        <p class="card-hint">查看各平台的草稿与已发布文章。需要修改内容时，请前往「更新」。</p>
+        <div class="publication-filters">
+          <label class="field"><span>平台</span><select id="inventoryPlatform"><option value="">全部平台</option></select></label>
+          <label class="field"><span>状态</span><select id="inventoryStatus"><option value="">全部状态</option><option value="draft">草稿</option><option value="published">已发布</option></select></label>
+        </div>
+        <div class="binding-detect-toolbar">
+          <span id="inventorySummary" class="card-hint">正在读取远端文章…</span>
+          <button id="refreshInventory" class="secondary compact" type="button">刷新</button>
+        </div>
+        <div id="inventoryPlatforms" class="platform-choices"></div>
+      </section>
+      <p id="inventoryMessage" class="message" role="status"></p>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="creation"></section>
+
+    <section class="panel" role="tabpanel" data-panel="social">
+      <section class="status-card">
+        <div class="section-title">社交动态 · Buffer</div>
+        <p class="card-hint">AI 从 BlogContent 全文生成社交草稿；点击「存入 Buffer 草稿」即确认当前内容版本，不会公开发布。</p>
+        <div class="binding-detect-toolbar">
+          <label class="field"><span>草稿</span><select id="socialDraftPicker"></select></label>
+          <button id="socialRefresh" class="secondary compact" type="button">刷新</button>
+        </div>
+        <label class="field"><span>平台</span><select id="socialPlatform"></select></label>
+        <label class="field"><span>英文正文</span><textarea id="socialText" rows="10" spellcheck="true"></textarea></label>
+        <div id="socialMedia"></div>
+        <p class="card-hint">发布预览（自动追加原文 URL 与 UTM）</p>
+        <pre id="socialPreview" class="social-preview"></pre>
+        <div class="binding-detect-toolbar">
+          <button id="socialSave" class="secondary compact" type="button">保存修改</button>
+          <button id="socialStage" class="secondary compact" type="button">存入 Buffer 草稿</button>
+          <button id="socialReconcile" class="secondary compact" type="button">检查发布状态</button>
+          <button id="socialPublish" class="primary compact" type="button">确认发布</button>
+        </div>
+        <p id="socialMessage" class="message" role="status"></p>
+      </section>
+    </section>
+    <section class="panel" role="tabpanel" data-panel="drafts">
+      <div id="sharedDraftWorkspace">
+      <section class="status-card">
+        <div id="draftModeTitle" class="section-title">更新</div>
+        <p id="draftModeHint" class="card-hint">选择文章和远端目标后更新；未选目标不会创建新文章。</p>
+        <label class="field"><span>搜索</span><input id="draftArticlePicker" type="search" list="draftArticleOptions" placeholder="文章标题或 slug" autocomplete="off"></label>
+        <datalist id="draftArticleOptions"></datalist>
+        <p id="draftArticleMeta" class="card-hint"></p>
+      </section>
+
+      <section class="status-card">
+        <div class="section-title">平台与文章关联</div>
+        <div class="binding-detect-toolbar">
+          <button id="selectAllDraftPlatforms" class="secondary compact" type="button">全选</button>
+          <button id="invertDraftPlatforms" class="secondary compact" type="button">反选</button>
+          <button id="refreshArticleMatches" class="secondary compact" type="button" disabled title="重新检测已选平台的远端文章">重新检测</button>
+        </div>
+        <p id="draftPlatformHint" class="card-hint">自动检测已选平台的远端文章，勾选目标后更新。</p>
+        <div id="draftPlatforms" class="platform-choices"><div class="platform-loading">正在读取平台状态…</div></div>
+        <p id="syncMessage" class="message" role="status"></p>
+      </section>
+
+      <div class="sync-actions">
+        <button id="saveDrafts" class="primary" type="button" disabled>更新所选</button>
+        <button id="publishAfterSave" class="secondary full-width" type="button" disabled>更新并发布</button>
+        <div id="draftNextActions" class="workflow-next-actions" hidden>
+          <button id="draftViewTask" class="secondary" type="button">查看任务</button>
+        </div>
+      </div>
+      <p id="draftsMessage" class="message" role="status"></p>
+      </div>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="tasks">
+      <section class="status-card">
+        <div class="status-row">
+          <div>
+            <div class="section-title">同步任务</div>
+            <p class="card-hint">查看运行状态、平台结果与详细日志。</p>
+          </div>
+          <div class="task-toolbar">
+            <button id="refreshTasks" class="secondary compact" type="button">刷新</button>
+            <button id="clearFinishedTasks" class="secondary compact" type="button">清理已结束</button>
+          </div>
+        </div>
+        <div id="taskList" class="job-list"><div class="platform-loading">暂无任务</div></div>
+      </section>
+      <p id="tasksMessage" class="message" role="status"></p>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="logs">
+      <section class="status-card">
+        <div class="status-row">
+          <div>
+            <div class="section-title">运行日志</div>
+            <p class="card-hint">实时查看 BlogCTL Bridge 结构化日志；日志目录和最低级别在「环境与配置 → 日志」中设置。</p>
+          </div>
+          <strong id="logsStatus" class="status checking">读取中</strong>
+        </div>
+        <div class="log-toolbar">
+          <label class="field log-search"><span>搜索</span><input id="logQuery" type="search" placeholder="消息 / URL / jobId / error"></label>
+          <label class="field log-filter"><span>显示级别</span><select id="logLevelFilter"><option value="">全部</option><option value="DEBUG">DEBUG</option><option value="INFO">INFO</option><option value="WARN">WARN</option><option value="ERROR">ERROR</option></select></label>
+          <label class="checkbox-row log-follow"><span>自动刷新</span><input id="logAutoRefresh" type="checkbox" checked></label>
+          <button id="selectAllLogs" class="secondary compact" type="button">全选日志</button>
+          <button id="findInLogs" class="secondary compact" type="button" title="使用 CodeMirror 搜索日志">查找</button>
+          <button id="copyLogs" class="secondary compact" type="button">复制</button>
+          <button id="refreshLogs" class="secondary compact" type="button">刷新</button>
+          <button id="clearLogs" class="secondary compact danger-action" type="button">清空</button>
+        </div>
+        <code id="logPath" class="path-value">-</code>
+        <div id="logOutput" class="log-viewer" aria-label="运行日志查看器"></div>
+      </section>
+      <p id="logsMessage" class="message" role="status"></p>
+    </section>
+
+
+    <section class="panel" role="tabpanel" data-panel="indexing">
+      <section class="status-card index-source-details">
+        <div class="status-row">
+          <div>
+            <div class="section-title">索引 URL（所有引擎共用）</div>
+            <p class="card-hint">TXT URL 清单和 XML Sitemap 供所有搜索引擎使用。</p>
+          </div>
+          <button id="indexRefreshInventory" class="secondary compact" type="button">刷新 URL</button>
+        </div>
+        <div class="index-link-row"><span>TXT URL 清单</span><a id="indexSource" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <div class="index-link-row"><span>XML Sitemap</span><a id="indexSitemap" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <p class="card-hint">在「设置 → 搜索引擎 → 索引站点与 URL」中配置。</p>
+        <div class="index-stat-grid">
+          <div><span>URL 总数</span><strong id="indexInventoryTotal">-</strong></div>
+          <div><span>内容指纹</span><strong id="indexInventoryFingerprintCoverage">-</strong></div>
+          <div><span>最后刷新</span><strong id="indexInventoryFetchedAt">-</strong></div>
+        </div>
+      </section>
+      <section class="status-card index-engine-selector">
+        <div class="section-title">搜索引擎</div>
+        <p class="card-hint">选择引擎后查看对应的索引状态、统计和操作。</p>
+        <label class="field"><span>平台</span>
+          <select id="indexEngineFilter">
+            <option value="indexnow">IndexNow</option>
+            <option value="baidu">百度</option>
+            <option value="google">Google Search Console</option>
+            <option value="so360">360 搜索</option>
+            <option value="sogou">搜狗搜索</option>
+            <option value="all">全部引擎</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="status-card" data-index-engine="indexnow">
+        <div class="status-row">
+          <div>
+            <div class="section-title">IndexNow</div>
+            <p class="card-hint">默认只提交新增、内容已变化和已删除 URL；需要时可手动全量重新提交。</p>
+          </div>
+          <strong id="indexNowStatus" class="status disabled">未运行</strong>
+        </div>
+        <div class="index-link-row"><span>Bing 控制台</span><a id="indexBingConsole" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <div class="index-stat-grid">
+          <div><span>上次提交</span><strong id="indexNowFinishedAt">-</strong></div>
+          <div><span>模式</span><strong id="indexNowMode">-</strong></div>
+          <div><span>实际提交</span><strong id="indexNowCount">-</strong></div>
+          <div><span>新增</span><strong id="indexNowNewCount">-</strong></div>
+          <div><span>更新</span><strong id="indexNowChangedCount">-</strong></div>
+          <div><span>删除</span><strong id="indexNowDeletedCount">-</strong></div>
+          <div><span>未变化</span><strong id="indexNowUnchangedCount">-</strong></div>
+          <div><span>HTTP</span><strong id="indexNowHTTP">-</strong></div>
+        </div>
+        <div class="index-action-row index-action-row-equal">
+          <button id="indexNowSubmitIncremental" class="primary inline-primary" type="button">提交增量</button>
+          <button id="indexNowSubmitFull" class="primary inline-primary" type="button">全量重新提交</button>
+        </div>
+      </section>
+
+      <section class="status-card" data-index-engine="baidu">
+        <div class="status-row">
+          <div>
+            <div class="section-title">Baidu Search Resource</div>
+            <p class="card-hint">普通收录只提交新增和内容变化 URL；已删除 URL 仅统计，不通过该接口提交。</p>
+          </div>
+          <strong id="indexBaiduStatus" class="status disabled">未运行</strong>
+        </div>
+        <div class="index-link-row"><span>百度控制台</span><a id="indexBaiduConsole" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <p id="indexBaiduError" class="card-hint" role="status"></p>
+        <div class="index-stat-grid">
+          <div><span>上次提交</span><strong id="indexBaiduFinishedAt">-</strong></div>
+          <div><span>模式</span><strong id="indexBaiduMode">-</strong></div>
+          <div><span>实际提交</span><strong id="indexBaiduCount">-</strong></div>
+          <div><span>新增</span><strong id="indexBaiduNewCount">-</strong></div>
+          <div><span>更新</span><strong id="indexBaiduChangedCount">-</strong></div>
+          <div><span>删除（未提交）</span><strong id="indexBaiduDeletedCount">-</strong></div>
+          <div><span>未变化</span><strong id="indexBaiduUnchangedCount">-</strong></div>
+          <div><span>HTTP</span><strong id="indexBaiduHTTP">-</strong></div>
+        </div>
+        <div class="index-action-row index-action-row-equal">
+          <button id="indexBaiduSubmitIncremental" class="primary inline-primary" type="button">提交增量</button>
+          <button id="indexBaiduSubmitFull" class="primary inline-primary" type="button">全量重新提交</button>
+        </div>
+      </section>
+
+      <section class="status-card" data-index-engine="google">
+        <div class="status-row">
+          <div>
+            <div class="section-title">Google Search Console</div>
+            <p class="card-hint">保留 Sitemap、官方 URL Inspection 和 GSC Request Indexing 三层流程。</p>
+          </div>
+          <strong id="indexGoogleCredentials" class="status disabled">凭据未知</strong>
+        </div>
+        <div class="index-link-row"><span>Google 控制台</span><a id="indexGoogleConsole" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+
+        <div class="index-subcard">
+          <div class="status-row">
+            <div>
+              <strong>Sitemap</strong>
+              <p class="card-hint">始终提交配置中的 XML Sitemap 和 TXT URL 清单。</p>
+            </div>
+            <strong id="indexGoogleSitemapStatus" class="status disabled">未运行</strong>
+          </div>
+          <div class="index-stat-grid">
+            <div><span>上次提交</span><strong id="indexGoogleSitemapFinishedAt">-</strong></div>
+            <div><span>提交数量</span><strong id="indexGoogleSitemapCount">-</strong></div>
+          </div>
+          <button id="indexGoogleSitemaps" class="secondary full-width" type="button">重新提交两个 Sitemap</button>
+          <p id="indexGoogleSitemapError" class="card-hint" role="status"></p>
+        </div>
+
+        <div class="index-subcard">
+          <div class="status-row">
+            <div>
+              <strong>URL Inspection</strong>
+              <p class="card-hint">使用官方 Search Console URL Inspection API；单日按站点最多检查 2000 个 URL。</p>
+            </div>
+            <strong id="indexGoogleInspectionStatus" class="status disabled">未运行</strong>
+          </div>
+          <div class="index-stat-grid">
+            <div><span>已检查</span><strong id="indexInspectionInspected">0</strong></div>
+            <div><span>已收录</span><strong id="indexInspectionIndexed">0</strong></div>
+            <div><span>未收录/未知</span><strong id="indexInspectionNotIndexed">0</strong></div>
+            <div><span>从未抓取</span><strong id="indexInspectionNeverCrawled">0</strong></div>
+            <div><span>未关联 Sitemap</span><strong id="indexInspectionWithoutSitemap">0</strong></div>
+            <div><span>剩余</span><strong id="indexInspectionRemaining">-</strong></div>
+          </div>
+          <button id="indexGoogleInspect" class="secondary full-width" type="button">检查下一批</button>
+        </div>
+
+        <div class="index-subcard">
+          <div class="status-row">
+            <div>
+              <strong>Request Indexing</strong>
+              <p class="card-hint">Inspection 一旦产出未收录 URL，就可以独立开始 Request Indexing；不需要等待整批 Inspection 完成。</p>
+            </div>
+            <strong id="indexGoogleRequestStatus" class="status disabled">未运行</strong>
+          </div>
+          <div class="status-row">
+            <span>GSC 会话</span>
+            <strong id="indexGoogleGSCStatus" class="status disabled">未检测</strong>
+          </div>
+          <div class="index-stat-grid">
+            <div><span>候选</span><strong id="indexRequestTotal">0</strong></div>
+            <div><span>已请求</span><strong id="indexRequestRequested">0</strong></div>
+            <div><span>已收录跳过</span><strong id="indexRequestIndexed">0</strong></div>
+            <div><span>待处理</span><strong id="indexRequestQueued">0</strong></div>
+            <div><span>失败</span><strong id="indexRequestFailed">0</strong></div>
+            <div><span>队列位置</span><strong id="indexRequestPosition">-</strong></div>
+          </div>
+          <p id="indexRequestError" class="card-hint"></p>
+          <div class="index-action-row">
+            <button id="indexGoogleOpen" class="secondary" type="button">打开 / 检测 GSC</button>
+            <button id="indexGoogleRequestStart" class="primary inline-primary" type="button">开始请求索引</button>
+            <button id="indexGoogleRequestPause" class="secondary" type="button">暂停</button>
+            <button id="indexGoogleRequestResume" class="secondary" type="button">继续</button>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="status-card" data-index-engine="so360">
+        <div class="status-row">
+          <div>
+            <div class="section-title">360 搜索</div>
+            <p class="card-hint">支持增量和全量提交；远端提交暂未接入。</p>
+          </div>
+          <strong id="index360Status" class="status unknown">未接入</strong>
+        </div>
+        <div class="index-link-row"><span>360 控制台</span><a id="index360Console" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <p id="index360Error" class="card-hint" role="status"></p>
+        <div class="index-stat-grid">
+          <div><span>上次提交</span><strong id="index360FinishedAt">-</strong></div>
+          <div><span>模式</span><strong id="index360Mode">-</strong></div>
+          <div><span>实际提交</span><strong id="index360Count">-</strong></div>
+          <div><span>新增</span><strong id="index360NewCount">-</strong></div>
+          <div><span>更新</span><strong id="index360ChangedCount">-</strong></div>
+          <div><span>删除（未提交）</span><strong id="index360DeletedCount">-</strong></div>
+          <div><span>未变化</span><strong id="index360UnchangedCount">-</strong></div>
+          <div><span>HTTP</span><strong id="index360HTTP">-</strong></div>
+        </div>
+        <div class="index-action-row index-action-row-equal">
+          <button id="index360SubmitIncremental" class="primary inline-primary" type="button">提交增量</button>
+          <button id="index360SubmitFull" class="primary inline-primary" type="button">全量重新提交</button>
+        </div>
+      </section>
+
+      <section class="status-card" data-index-engine="sogou">
+        <div class="status-row">
+          <div>
+            <div class="section-title">搜狗搜索</div>
+            <p class="card-hint">支持增量和全量提交；远端提交暂未接入。</p>
+          </div>
+          <strong id="indexSogouStatus" class="status unknown">未接入</strong>
+        </div>
+        <div class="index-link-row"><span>搜狗控制台</span><a id="indexSogouConsole" target="_blank" rel="noopener noreferrer">正在读取…</a></div>
+        <p id="indexSogouError" class="card-hint" role="status"></p>
+        <div class="index-stat-grid">
+          <div><span>上次提交</span><strong id="indexSogouFinishedAt">-</strong></div>
+          <div><span>模式</span><strong id="indexSogouMode">-</strong></div>
+          <div><span>实际提交</span><strong id="indexSogouCount">-</strong></div>
+          <div><span>新增</span><strong id="indexSogouNewCount">-</strong></div>
+          <div><span>更新</span><strong id="indexSogouChangedCount">-</strong></div>
+          <div><span>删除（未提交）</span><strong id="indexSogouDeletedCount">-</strong></div>
+          <div><span>未变化</span><strong id="indexSogouUnchangedCount">-</strong></div>
+          <div><span>HTTP</span><strong id="indexSogouHTTP">-</strong></div>
+        </div>
+        <div class="index-action-row index-action-row-equal">
+          <button id="indexSogouSubmitIncremental" class="primary inline-primary" type="button">提交增量</button>
+          <button id="indexSogouSubmitFull" class="primary inline-primary" type="button">全量重新提交</button>
+        </div>
+      </section>
+
+      <p id="indexingMessage" class="message" role="status"></p>
+    </section>
+
+    <section class="panel" role="tabpanel" data-panel="environment">
+      <section class="status-card">
+        <div class="section-title">环境与工具</div>
+
+        <div id="environmentInterfaceSettings" class="tool-card environment-interface-settings">
+          <label class="field ui-locale-field" for="blogctlUiLocale">
+            <span>界面语言</span>
+            <select id="blogctlUiLocale" aria-label="界面语言">
+              <option value="auto">跟随浏览器</option>
+              <option value="zh-CN">简体中文</option>
+              <option value="en">English</option>
+            </select>
+          </label>
+          <p class="card-hint">修改后自动保存到 blogctl.toml，仅影响界面，不改变文章语言。</p>
+          <p id="uiLocaleMessage" class="message" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="tool-card environment-config-file">
+          <div class="status-row">
+            <span class="tool-identity">
+              <strong>Config</strong>
+              <span class="tool-requirement required">必选</span>
+            </span>
+            <code class="config-file-name">blogctl.toml</code>
+          </div>
+          <code id="environmentConfigPath" class="path-value">正在读取 blogctl.toml…</code>
+          <div class="tool-edit-controls">
+            <button id="editConfigFile" class="secondary tool-edit-button" type="button">✎ 编辑</button>
+          </div>
+        </div>
+
+        <div id="environmentRuntimeTools" class="tool-list"><div class="platform-loading">正在检测本机环境…</div></div>
+
+        <details id="assetConfigEnvironmentCard" class="tool-card environment-large-card">
+          <summary class="status-row">
+            <span class="tool-identity">
+              <strong>共享图片资产</strong>
+              <span class="tool-requirement optional">可选</span>
+            </span>
+            <strong id="assetStatus" class="status checking">检测中</strong>
+          </summary>
+          <div class="tool-card-body environment-embedded-tool">
+            <p class="card-hint">此配置由所有发布平台共享。支持平台原生图片上传时优先使用平台图床，失败后统一回退到同一个 R2。</p>
+            <div class="section-title">Mermaid 渲染</div>
+            <div class="publication-filters">
+              <label class="field"><span>PNG 宽度</span><input id="mermaidWidth" type="number" min="1" step="1"></label>
+              <label class="field"><span>渲染倍数</span><input id="mermaidScale" type="number" min="0.1" step="0.1"></label>
+            </div>
+            <div class="section-title">R2 兜底</div>
+            <p id="assetStatusDetail" class="card-hint">正在检测共享 R2 配置…</p>
+            <label class="field"><span>R2 Bucket</span><input id="r2Bucket" type="text" placeholder="thinkerqaq-assets"></label>
+            <label class="field"><span>R2 Public Base URL</span><input id="r2PublicBaseUrl" type="url" placeholder="https://assets.example.com/"></label>
+            <label class="field"><span>Access Key ID</span><input id="r2AccessKeyId" type="text" autocomplete="off"></label>
+            <label class="field"><span>Secret Access Key</span><input id="r2SecretAccessKey" type="password" autocomplete="new-password" placeholder="未配置"></label>
+            <label class="field"><span>Account ID</span><input id="r2AccountId" type="text" autocomplete="off"></label>
+            <label class="field"><span>Endpoint（可选）</span><input id="r2Endpoint" type="url" placeholder="留空时由 Account ID 自动生成"></label>
+            <p class="card-hint">R2 配置统一保存在本机 <code>blogctl.toml</code>；Secret Access Key 不会回显到插件。</p>
+            <div class="tool-edit-controls">
+              <button id="editAssets" class="secondary tool-edit-button" type="button">✎ 编辑</button>
+              <div id="assetEditActions" class="tool-edit-actions" hidden>
+                <button id="cancelAssets" class="secondary" type="button">取消</button>
+                <button id="saveAssets" class="primary inline-primary" type="button">保存</button>
+              </div>
+            </div>
+            <p id="assetsMessage" class="message" role="status"></p>
+          </div>
+        </details>
+
+        <details id="platformConfigEnvironmentCard" class="tool-card environment-large-card">
+          <summary class="status-row">
+            <span class="tool-identity">
+              <strong>平台配置</strong>
+              <span class="tool-requirement required">必选</span>
+            </span>
+            <span class="status ok">已加载</span>
+          </summary>
+          <div class="tool-card-body environment-embedded-tool">
+            <label class="field"><span>平台</span><select id="publishingPlatform"><option value="">正在加载配置…</option></select></label>
+            
+            <div class="section-title">平台接入</div>
+            <div id="platformAccessConfig" class="platform-access-config"><div class="platform-loading">正在读取平台配置…</div></div>
+            
+            <label class="switch-row" for="publishingChangedOnly"><span><strong>仅更新内容有变化的草稿</strong><small>此平台已有草稿且内容未变时跳过；Medium 暂不支持更新已有草稿。</small></span><input id="publishingChangedOnly" type="checkbox"></label>
+            
+            <label class="field"><span>内容语言</span><select id="publishingLanguage"><option value="zh-CN">中文</option><option value="en">English</option></select></label>
+            
+            <div class="section-title">Footer</div>
+            <label class="switch-row" for="footerEnabled"><span><strong>启用 Footer</strong><small>同步时追加到平台文章末尾。</small></span><input id="footerEnabled" type="checkbox"></label>
+            <label class="field"><span>Footer 模板</span><textarea id="footerTemplate" placeholder="支持 {site} {title} {url}"></textarea></label>
+            <p class="card-hint">可用变量：<code>{site}</code> <code>{title}</code> <code>{url}</code></p>
+            
+            <div class="section-title">Canonical</div>
+            <label class="field"><span>策略</span><select id="canonicalMode"><option value="native">Native canonical</option><option value="footer">Footer backlink</option><option value="none">Disabled</option></select></label>
+            
+            <div class="section-title">Tracking</div>
+            <label class="switch-row" for="trackingEnabled"><span><strong>启用 Tracking</strong><small>为 Footer 中的原文链接追加 UTM 参数。</small></span><input id="trackingEnabled" type="checkbox"></label>
+            <label class="field"><span>Source</span><input id="trackingSource" type="text" placeholder="cnblogs"></label>
+            <label class="field"><span>Medium</span><input id="trackingMedium" type="text" placeholder="referral"></label>
+            <label class="field"><span>Campaign</span><input id="trackingCampaign" type="text" placeholder="article_syndication"></label>
+            
+            <div class="preview-box"><div class="section-title">预览</div><pre id="publishingPreview"></pre></div>
+            <div class="tool-edit-controls">
+              <button id="editPublishing" class="secondary tool-edit-button" type="button">✎ 编辑</button>
+              <div id="publishingEditActions" class="tool-edit-actions" hidden>
+                <button id="resetPublishing" class="secondary" type="button">恢复默认</button>
+                <button id="cancelPublishing" class="secondary" type="button">取消</button>
+                <button id="savePublishing" class="primary inline-primary" type="button">保存</button>
+              </div>
+            </div>
+            <p id="publishingMessage" class="message" role="status"></p>
+          </div>
+        </details>
+
+        <details id="socialConfigEnvironmentCard" class="tool-card environment-large-card">
+          <summary class="status-row">
+            <span class="tool-identity">
+              <strong>社交平台 · Buffer</strong>
+              <span class="tool-requirement optional">可选</span>
+            </span>
+            <span id="socialConfigStatus" class="status checking">检测中</span>
+          </summary>
+          <div class="tool-card-body environment-embedded-tool">
+            <p class="card-hint">通过 Buffer 统一管理 LinkedIn、X、Bluesky 等社交动态；与技术文章的分发平台配置相互独立。</p>
+            <div id="socialPlatformAccessConfig" class="tool-list"></div>
+            <div class="section-title">已连接的渠道</div>
+            <div class="binding-detect-toolbar">
+              <span class="card-hint">连接或更换账号请在 Buffer 中操作。</span>
+              <button id="socialChannelsRefresh" type="button" class="secondary compact">检查连接</button>
+            </div>
+            <div id="socialChannelsList" class="tool-list" role="status">正在读取…</div>
+          </div>
+        </details>
+
+        <details id="searchEngineEnvironmentCard" class="tool-card environment-large-card">
+          <summary class="status-row">
+            <span class="tool-identity">
+              <strong>搜索引擎</strong>
+              <span class="tool-requirement optional">可选</span>
+            </span>
+            <span id="searchEngineEnvironmentStatus" class="status checking">检测中</span>
+          </summary>
+          <div class="tool-card-body">
+            <p class="card-hint">IndexNow、Baidu 与 Google Search Console 的接入配置和连通性检测。</p>
+            <div id="searchEngineTools" class="tool-list environment-nested-tools"><div class="platform-loading">正在读取搜索引擎配置…</div></div>
+          </div>
+        </details>
+
+        <div id="environmentDependencyTools" class="tool-list"></div>
+        <div id="environmentAbout" class="tool-card">
+          <div class="status-row"><span>Extension 版本</span><code id="aboutExtensionVersion">正在读取…</code></div>
+          <div class="status-row"><span>Bridge 版本</span><code id="aboutBridgeVersion">正在读取…</code></div>
+          <div class="status-row"><span>连接状态</span><strong id="aboutBridgeStatus" class="status checking">Bridge 检测中</strong></div>
+        </div>
+      </section>
+      <p id="environmentMessage" class="message" role="status"></p>
+    </section>
+        </div>
+    </div>
+  </main>
+
+  <script src="i18next-vendor.js"></script>
+  <script src="i18n-messages.js"></script>
+  <script src="i18n.js"></script>
+  <script src="transport.js"></script>
+  <script src="core.js"></script>
+  <script src="sync-model.js"></script>
+  <script src="sync-state.js"></script>
+  <script src="sync.js"></script>
+  <script src="inventory.js"></script>
+  <script src="drafts.js"></script>
+  <script src="task-ui-state.js"></script>
+  <script src="tasks.js"></script>
+  <script src="log-editor-vendor.js"></script>
+  <script src="logs.js"></script>
+  <script src="indexing.js"></script>
+  <script src="assets.js"></script>
+  <script src="social.js"></script>
+  <script src="publishing.js"></script>
+  <script src="environment.js"></script>
+  <script src="settings-navigation.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
