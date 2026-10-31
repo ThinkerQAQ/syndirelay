@@ -7,7 +7,7 @@ import { toError } from "./errors.js";
 import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab } from "./medium-upload.js";
 import { insertMediumImageInPage, verifyMediumDraftInPage, validMediumEditorTask } from "./medium-insert.js";
 
-const NATIVE_HOST = "com.thinkerqaq.blogctl";
+const NATIVE_HOST = "com.thinkerqaq.syndirelay";
 const AUTH_TIMEOUT_MS = 7000;
 const BRIDGE_CACHE_MS = 30000;
 let googleSearchConsoleProperty = "";

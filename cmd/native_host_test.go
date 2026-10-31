@@ -13,8 +13,8 @@ import (
 func TestNativeMessagingInvocationDetection(t *testing.T) {
 	for _, args := range [][]string{
 		{"--native-host"},
-		{"chrome-extension://kbenbblolndleojbmcjcfmkkgfhljmbe/"},
-		{"edge-extension://kbenbblolndleojbmcjcfmkkgfhljmbe/"},
+		{"chrome-extension://npppoiidliogpfjnlhkhfdnffbamagci/"},
+		{"edge-extension://npppoiidliogpfjnlhkhfdnffbamagci/"},
 	} {
 		if !isNativeMessagingInvocation(args) {
 			t.Fatalf("expected native messaging invocation for %#v", args)
@@ -49,7 +49,7 @@ func isolateNativeHostConfigDir(t *testing.T) string {
 	t.Setenv("HOME", root)
 	t.Setenv("XDG_CONFIG_HOME", root)
 	t.Setenv("APPDATA", root)
-	t.Setenv("BLOGCTL_DATA_DIR", filepath.Join(root, "BlogCTL"))
+	t.Setenv("SYNDIRELAY_DATA_DIR", filepath.Join(root, "BlogCTL"))
 	dir, err := bridge.ConfigDir()
 	if err != nil {
 		t.Fatal(err)

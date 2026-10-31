@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
   "version": "0.1.193",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyoRaJZyGlfPJwOckQ4SIm0ur3QCYDZgF9kXwBTTN9wDhuM+qr4EGx/W1n9BTF3rl18QPuQbtSmZGUm8R+Gm3w3ESQryIoY4qRVHsRKf7h7fCb7mSFsSbeNySxeCLoLcJW5g8PExAeGaFwnkYyu+X23s/30bdMXTOlmWzSWQsu2Df4cE1g63dgqMyGRtZRCrm4yUv4iV2sP3AmnzmMfPBlLj21uj7Woa4LQ+yvs52j3QaT5RwVdZnhYHS0lasU3FocM9kyZRrI2SlF95AqXd/PORB6yjLCRZzv6jdIGCJOqCWNrRBG612aHEB7ebWDMarnRW6uwFL0fiNkZSepxnRswIDAQAB",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA59/i1QkISX5Kq+gRqR9qfVERoFR11gRLqcvrXsfhMtyJFNyK0N4cQmChNGbBSQakDjfD2Hvm3nbJ4fF59EKzpFTc2r6yvZH+Dca5xpXOEsNDb5UQAjl1KSDrNCAqd8nVARbm/gum5CsbkFha9amGSmkc/qBbc7NxvCAGyREjg5W715wHKm+S21KuHphwkSDGLeLEdEfOH3D/+Wn1XTwkisyuNO2H866/kY3N7sjzs2RMLc8zMTG6Ly9eGutFY1hagajCzBPJqTs0uJYhJr+Kc+YAoe3ebjp7wDjEXZI2H7N4v2sTz0WFkfdvlAxBzrA2ZYqTUzBoFEnMU9SLuJqO0wIDAQAB",
   "description": "__MSG_extensionDescription__",
   "permissions": [
     "cookies",
@@ -24,7 +24,7 @@
     "https://dev.to/*",
     "https://medium.com/*",
     "https://hashnode.com/*",
-    "http://127.0.0.1:32145/*",
+    "http://127.0.0.1:32146/*",
     "https://cnblogs.com/*",
     "https://juejin.cn/*",
     "https://csdn.net/*",
@@ -61,7 +61,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://127.0.0.1:32145/console/*"
+        "http://127.0.0.1:32146/console/*"
       ],
       "js": [
         "console-relay.js"

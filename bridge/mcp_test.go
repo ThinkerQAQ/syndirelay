@@ -33,7 +33,7 @@ func mcpRequest(t *testing.T, ts *httptest.Server, method, path string, body any
 	return r
 }
 func TestMCPSessionRefreshUsesExistingExtensionSession(t *testing.T) {
-	t.Setenv("BLOGCTL_DATA_DIR", t.TempDir())
+	t.Setenv("SYNDIRELAY_DATA_DIR", t.TempDir())
 	server, err := New("test-token")
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ func TestMCPSessionRefreshUsesExistingExtensionSession(t *testing.T) {
 }
 func TestMCPArticleReadSafePath(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("BLOGCTL_DATA_DIR", t.TempDir())
+	t.Setenv("SYNDIRELAY_DATA_DIR", t.TempDir())
 	target := filepath.Join(dir, "src", "content", "articles", "en", "test.md")
 	if err := os.MkdirAll(filepath.Dir(target), 0700); err != nil {
 		t.Fatal(err)
@@ -131,7 +131,7 @@ func TestMCPArticleReadSafePath(t *testing.T) {
 	}
 }
 func TestMCPIdempotentPublishingJobs(t *testing.T) {
-	t.Setenv("BLOGCTL_DATA_DIR", t.TempDir())
+	t.Setenv("SYNDIRELAY_DATA_DIR", t.TempDir())
 	server, err := New("test-token")
 	if err != nil {
 		t.Fatal(err)

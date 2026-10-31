@@ -76,9 +76,13 @@ func (s *Server) imageConfig() (bridgeConfig, *http.Client) {
 	return s.config, s.httpClient
 }
 func sanitizeImage(ctx context.Context, engineRoot string, input []byte, format string) (cleanedImage, error) {
-	script := filepath.Join(engineRoot, "tools", "blogctl", "renderers", "node", "sanitize-image.mjs")
+	script := filepath.Join(engineRoot, "renderers", "node", "sanitize-image.mjs")
 	if info, err := os.Stat(script); err != nil || info.IsDir() {
-		return cleanedImage{}, errors.New("image sanitizer is unavailable; configure engine_root and install its Node dependencies")
+		// Compatibility for the original BlogCTL repo before the move.
+		script = filepath.Join(engineRoot, "tools", "blogctl", "renderers", "node", "sanitize-image.mjs")
+		if legacyInfo, legacyErr := os.Stat(script); legacyErr != nil || legacyInfo.IsDir() {
+			return cleanedImage{}, errors.New("image sanitizer unavailable; configure SyndiRelay workspace and install Node dependencies")
+		}
 	}
 	node, err := exec.LookPath("node")
 	if err != nil {

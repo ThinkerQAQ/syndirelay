@@ -53,7 +53,7 @@ func TestSearchOrigin(t *testing.T) {
 	for _, property := range []string{"sc-domain:configured.example", "https://configured.example/"} {
 		t.Run(property, func(t *testing.T) {
 			dir := t.TempDir()
-			t.Setenv("BLOGCTL_DATA_DIR", dir)
+			t.Setenv("SYNDIRELAY_DATA_DIR", dir)
 			config := "[search]\nsite_origin = 'https://configured.example'\nurl_list_url = 'https://configured.example/sitemap-all.txt'\nsitemap_url = 'https://configured.example/sitemap-index.xml'\ngoogle_property = '" + property + "'\n"
 			if err := os.WriteFile(filepath.Join(dir, "blogctl.toml"), []byte(config), 0o600); err != nil {
 				t.Fatal(err)

@@ -36,7 +36,7 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 		}
 		// Never send the local Bridge token to an arbitrary origin, even if a
 		// stale/tampered runtime-state file advertises a different address.
-		if state.BaseURL != "http://127.0.0.1:32145" && state.BaseURL != "http://localhost:32145" {
+		if state.BaseURL != "http://127.0.0.1:32146" && state.BaseURL != "http://localhost:32146" {
 			c.mu.Unlock()
 			return nil, errors.New("invalid local BlogCTL Bridge origin")
 		}

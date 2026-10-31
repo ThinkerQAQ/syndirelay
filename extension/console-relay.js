@@ -3,7 +3,7 @@
 // Content script only installed on BlogCTL's fixed local console endpoint.
 // This is the same authenticated Extension message transport as Side Panel.
 // The Go-served page never receives a Bridge token, cookie or platform session.
-const CONSOLE_ORIGIN = "http://127.0.0.1:32145";
+const CONSOLE_ORIGIN = "http://127.0.0.1:32146";
 if (location.origin === CONSOLE_ORIGIN &&
     location.pathname.startsWith("/console/") &&
     window.top === window) {

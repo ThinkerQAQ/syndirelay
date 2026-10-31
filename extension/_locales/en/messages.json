@@ -1,11 +1,11 @@
 {
   "extensionName": {
-    "message": "BlogCTL Extension"
+    "message": "SyndiRelay Extension"
   },
   "extensionDescription": {
-    "message": "Browser companion for the BlogCTL publishing console."
+    "message": "Browser companion for SyndiRelay cross-platform publishing."
   },
   "openPanel": {
-    "message": "Open BlogCTL sidebar"
+    "message": "Open SyndiRelay sidebar"
   }
 }

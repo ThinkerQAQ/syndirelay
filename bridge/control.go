@@ -245,7 +245,8 @@ func listArticles(contentRoot string) ([]articleSummary, error) {
 }
 
 func isEngineWorkspace(path string) bool {
-	return filePresent(filepath.Join(path, "package.json")) && filePresent(filepath.Join(path, "astro.config.mjs"))
+	return filePresent(filepath.Join(path, "package.json")) &&
+		filePresent(filepath.Join(path, "renderers", "node", "markdown-html.mjs"))
 }
 
 func isContentWorkspace(path string) bool {
@@ -483,8 +484,8 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			}},
 		},
 		{
-			Name: "bridge", DisplayName: "BlogCTL Bridge", Kind: "runtime", Required: true,
-			Description: "Extension 与本机 BlogCTL 的持久控制连接。",
+			Name: "bridge", DisplayName: "SyndiRelay Bridge", Kind: "runtime", Required: true,
+			Description: "Extension 与本机 SyndiRelay 的持久控制连接。",
 			Health: toolHealth{
 				OK: true, Status: "ok", Summary: "运行中", Version: version.Current,
 				Detail: fmt.Sprintf("PID %d · %s", os.Getpid(), DefaultAddress),
@@ -502,19 +503,19 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"contentRoot": config.ContentRoot}, Schema: []toolField{{Key: "contentRoot", Label: "Content Repository", Type: "directory", Description: "例如 C:\\Users\\zsk\\code\\blog\\blog-content"}}, DefaultExpanded: true},
 		},
 		{
-			Name: "engine-workspace", DisplayName: "Public Engine", Kind: "runtime", Required: true,
-			Description: "Astro、BlogCTL scripts 与 publishing adapters 所在仓库。",
+			Name: "engine-workspace", DisplayName: "SyndiRelay Runtime", Kind: "runtime", Required: true,
+			Description: "SyndiRelay 平台编译器和 Node 渲染器所在目录，不依赖 Astro。",
 			Health:      workspaceHealth(config.EngineRoot, "engine"),
-			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"engineRoot": config.EngineRoot}, Schema: []toolField{{Key: "engineRoot", Label: "Engine Repository", Type: "directory", Description: "例如 C:\\Users\\zsk\\code\\blog\\ThinkerQAQ.github.io"}}, DefaultExpanded: true},
+			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"engineRoot": config.EngineRoot}, Schema: []toolField{{Key: "engineRoot", Label: "SyndiRelay Runtime", Type: "directory", Description: "例如 C:\\software\\Coding\\SyndiRelay"}}, DefaultExpanded: true},
 		},
 		{
 			Name: "distribution-root", DisplayName: "Distribution", Kind: "runtime", Required: true,
-			Description: "BlogCTL 生成的发布产物、图片缓存与平台临时输出目录。",
+			Description: "SyndiRelay 生成的发布产物、图片缓存与平台临时输出目录。",
 			Health:      distributionRootHealth(config.DistributionRoot),
 			Config: toolConfigView{
 				Scope:           "bridge",
 				Values:          map[string]any{"path": config.DistributionRoot},
-				Schema:          []toolField{{Key: "path", Label: "Distribution Directory", Type: "directory", Description: "默认位于 C:\\software\\Coding\\blogctl\\Data\\distribution"}},
+				Schema:          []toolField{{Key: "path", Label: "Distribution Directory", Type: "directory", Description: "默认位于 C:\\software\\Coding\\SyndiRelay\\Data\\distribution"}},
 				DefaultExpanded: true,
 			},
 		},
@@ -680,7 +681,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "node", DisplayName: "Node.js", Kind: "dependency", Required: true,
-			Description: "必选。用于 Markdown HTML 渲染、发布图片 renderer，以及 Astro / Pagefind / Mermaid 等 Node 工具链；建议 Node.js 22.21+ 或 24+。",
+			Description: "必选。用于 Markdown HTML、图片清理、Mermaid 与 PlantUML 发布素材渲染；不需要 Astro。",
 			Health:      executableHealth(config, "node"),
 			Actions: []toolAction{{
 				ID: "update", Label: "更新",
@@ -690,7 +691,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "npm", DisplayName: "npm", Kind: "dependency", Required: true,
-			Description: "必选。负责安装并运行 Public Engine 的 Node 依赖，包括 Astro、Pagefind 与 Mermaid CLI。", Health: executableHealth(config, "npm"),
+			Description: "必选。负责安装 SyndiRelay 渲染器的 micromark、Sharp 等依赖。", Health: executableHealth(config, "npm"),
 			Actions: []toolAction{{
 				ID: "update", Label: "更新",
 				Description: "执行 npm install -g npm@latest，并沿用 BlogCTL Network Proxy。",

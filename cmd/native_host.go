@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	nativeHostName       = "com.thinkerqaq.blogctl"
+	nativeHostName       = "com.thinkerqaq.syndirelay"
 	maxNativeMessageSize = 256 << 10
 )
 

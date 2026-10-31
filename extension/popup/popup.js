@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("openWorkspace").hidden = true;
   }
   document.getElementById("openWorkspace").addEventListener("click", () => {
-    const url = "http://127.0.0.1:32145/console/";
+    const url = "http://127.0.0.1:32146/console/";
     if (BlogCTLTransport.host === "web") return;
     if (globalThis.chrome?.tabs?.create) chrome.tabs.create({ url });
     else window.open(url, "_blank", "noopener");

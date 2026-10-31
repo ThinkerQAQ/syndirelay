@@ -10,7 +10,7 @@ import (
 )
 
 func TestSocialAPIRequiresBridgeTokenEvenForDraftListing(t *testing.T) {
-	t.Setenv("BLOGCTL_DATA_DIR", t.TempDir())
+	t.Setenv("SYNDIRELAY_DATA_DIR", t.TempDir())
 	s := &Server{token: "test-token"}
 	for _, tc := range []struct {
 		path, token string
@@ -35,7 +35,7 @@ func TestSocialAPIRequiresBridgeTokenEvenForDraftListing(t *testing.T) {
 
 func TestSocialBridgeReturnsExtensionCompatibleSuccessEnvelope(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("BLOGCTL_DATA_DIR", dir)
+	t.Setenv("SYNDIRELAY_DATA_DIR", dir)
 	input := social.DraftInput{
 		ID:     "hello-scott-20261017",
 		Source: social.Source{Kind: "series", Slug: "concurrency-programming", Language: "en", URL: "https://thinkerqaq.com/en/series/concurrency-programming/"},
@@ -48,7 +48,7 @@ func TestSocialBridgeReturnsExtensionCompatibleSuccessEnvelope(t *testing.T) {
 	bridge := &Server{token: "test-token"}
 	request := func(method, path, body string) map[string]any {
 		t.Helper()
-		r := httptest.NewRequest(method, "http://127.0.0.1:32145"+path, strings.NewReader(body))
+		r := httptest.NewRequest(method, "http://127.0.0.1:32146"+path, strings.NewReader(body))
 		r.Header.Set("x-thinkerqaq-token", "test-token")
 		w := httptest.NewRecorder()
 		bridge.handleSocial(w, r, strings.Split(strings.Trim(path, "/"), "/"))
