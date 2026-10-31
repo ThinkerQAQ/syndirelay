@@ -9,7 +9,7 @@ import (
 
 func TestConsoleServesEmbeddedSharedFeatureWithoutExposingBridgeToken(t *testing.T) {
 	s := &Server{}
-	request := httptest.NewRequest("GET", "http://127.0.0.1:32145/console/popup/popup.html", nil)
+	request := httptest.NewRequest("GET", "http://127.0.0.1:32146/console/popup/popup.html", nil)
 	response := httptest.NewRecorder()
 	s.serveConsole(response, request)
 	if response.Code != http.StatusOK {
@@ -47,12 +47,12 @@ func TestConsoleServesEmbeddedSharedFeatureWithoutExposingBridgeToken(t *testing
 func TestConsoleBlocksForgedHostsCrossSiteResourceRequestsAndWrites(t *testing.T) {
 	s := &Server{}
 	requests := []struct{ host, method, path, site, mode string }{
-		{"evil.example:32145", "GET", "/console/popup/popup.html", "", ""},
-		{"127.0.0.1:32145", "POST", "/console/popup/popup.html", "", ""},
-		{"127.0.0.1:32145", "GET", "/console/popup/popup.js", "cross-site", "no-cors"},
+		{"evil.example:32146", "GET", "/console/popup/popup.html", "", ""},
+		{"127.0.0.1:32146", "POST", "/console/popup/popup.html", "", ""},
+		{"127.0.0.1:32146", "GET", "/console/popup/popup.js", "cross-site", "no-cors"},
 	}
 	for _, item := range requests {
-		req := httptest.NewRequest(item.method, "http://127.0.0.1:32145"+item.path, nil)
+		req := httptest.NewRequest(item.method, "http://127.0.0.1:32146"+item.path, nil)
 		req.Host = item.host
 		if item.site != "" {
 			req.Header.Set("Sec-Fetch-Site", item.site)

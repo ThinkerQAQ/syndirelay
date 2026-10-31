@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const blogctlExtensionID = "kbenbblolndleojbmcjcfmkkgfhljmbe"
+const blogctlExtensionID = "npppoiidliogpfjnlhkhfdnffbamagci"
 
 type nativeHostManifest struct {
 	Name           string
@@ -23,7 +23,7 @@ func nativeHostManifestBytes(executable string) ([]byte, error) {
 	}
 	manifest := map[string]any{
 		"name":            nativeHostName,
-		"description":     "BlogCTL local bridge launcher",
+		"description":     "SyndiRelay local bridge launcher",
 		"path":            filepath.Clean(executable),
 		"type":            "stdio",
 		"allowed_origins": []string{"chrome-extension://" + blogctlExtensionID + "/"},
@@ -60,7 +60,7 @@ func writeNativeHostManifest(path, executable string) error {
 
 func runNativeHostSetup(command string, args []string) error {
 	if len(args) != 0 {
-		return fmt.Errorf("usage: blogctl %s", command)
+		return fmt.Errorf("usage: syndirelay %s", command)
 	}
 	executable, err := os.Executable()
 	if err != nil {
@@ -76,13 +76,13 @@ func runNativeHostSetup(command string, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BlogCTL Native Messaging Host registered for %d browser(s).\nExecutable: %s\nReload the browser extension to reconnect.\n", count, executable)
+		fmt.Printf("SyndiRelay Native Messaging Host registered for %d browser(s).\nExecutable: %s\nReload the browser extension to reconnect.\n", count, executable)
 	case "uninstall":
 		count, err := unregisterNativeHost(executable)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("BlogCTL Native Messaging Host unregistered from %d browser(s).\nUser Data and the browser extension were preserved.\n", count)
+		fmt.Printf("SyndiRelay Native Messaging Host unregistered from %d browser(s).\nUser Data and the browser extension were preserved.\n", count)
 	default:
 		return fmt.Errorf("unknown Native Messaging setup command %q", command)
 	}

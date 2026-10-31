@@ -14,7 +14,7 @@ import (
 
 func consoleHostAllowed(host string) bool {
 	name, port, err := net.SplitHostPort(host)
-	if err != nil || port != "32145" {
+	if err != nil || port != "32146" {
 		return false
 	}
 	return name == "127.0.0.1" || name == "localhost"

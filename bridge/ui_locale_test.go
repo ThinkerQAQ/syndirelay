@@ -18,7 +18,7 @@ func TestBridgeUILocaleEndpoint(t *testing.T) {
 
 	put := func(locale string, auth bool) *httptest.ResponseRecorder {
 		body, _ := json.Marshal(map[string]string{"uiLocale": locale})
-		request := httptest.NewRequest(http.MethodPut, "http://127.0.0.1:32145/v1/ui-locale", bytes.NewReader(body))
+		request := httptest.NewRequest(http.MethodPut, "http://127.0.0.1:32146/v1/ui-locale", bytes.NewReader(body))
 		request.Header.Set("content-type", "application/json")
 		if auth {
 			setExtensionAuth(request, "secret")
@@ -36,7 +36,7 @@ func TestBridgeUILocaleEndpoint(t *testing.T) {
 	if got := put("en", true).Code; got != http.StatusOK {
 		t.Fatalf("valid locale status = %d", got)
 	}
-	request := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:32145/v1/ui-locale", nil)
+	request := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:32146/v1/ui-locale", nil)
 	setExtensionAuth(request, "secret")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)

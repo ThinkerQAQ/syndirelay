@@ -34,15 +34,15 @@
       const timeout = setTimeout(() => { pending.delete(id); reject(new Error("BlogCTL Web Console request timed out; check Extension connection")); }, 45000);
       pending.set(id, { resolve, reject, timeout });
       root.postMessage({ channel: "blogctl:console:request:v1", id, type, payload },
-        "http://127.0.0.1:32145");
+        "http://127.0.0.1:32146");
     });
   }
   let webSequence = 0;
   const pending = new Map();
-  if (root.location?.origin === "http://127.0.0.1:32145" &&
+  if (root.location?.origin === "http://127.0.0.1:32146" &&
       root.location?.pathname.startsWith("/console/")) {
     root.addEventListener("message", (event) => {
-      if (event.origin !== "http://127.0.0.1:32145" || event.source !== root ||
+      if (event.origin !== "http://127.0.0.1:32146" || event.source !== root ||
           event.data?.channel !== "blogctl:console:response:v1") return;
       const ticket = pending.get(event.data.id);
       if (!ticket) return;

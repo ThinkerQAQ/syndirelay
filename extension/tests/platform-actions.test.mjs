@@ -23,7 +23,7 @@ test("Extension and Web Console use the same Feature DOM and transport contract"
   assert.match(popup, /BlogCTLDrafts\.setMode/u);
   assert.match(html, /src="transport\.js"/u);
   assert.match(transport, /blogctl:console:request:v1/u);
-  assert.match(transport, /http:\/\/127\.0\.0\.1:32145/u);
+  assert.match(transport, /http:\/\/127\.0\.0\.1:32146/u);
   assert.match(relay, /location\.pathname\.startsWith\("\/console\/"\)/u);
   assert.doesNotMatch(relay, /x-thinkerqaq-token|Cookie:/u);
 });

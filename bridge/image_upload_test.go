@@ -92,7 +92,7 @@ func TestImageInputValidationFailClosed(t *testing.T) {
 	}
 }
 func TestImageBridgeDryRunAndMockR2Upload(t *testing.T) {
-	t.Setenv("BLOGCTL_DATA_DIR", t.TempDir())
+	t.Setenv("SYNDIRELAY_DATA_DIR", t.TempDir())
 	photos := t.TempDir()
 	file := filepath.Join(photos, "photo.png")
 	if err := os.WriteFile(file, smallPNG(t), 0600); err != nil {

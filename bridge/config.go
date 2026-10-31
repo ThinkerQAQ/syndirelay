@@ -154,15 +154,15 @@ func defaultConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "BlogCTL"), nil
+	return filepath.Join(dir, "SyndiRelay"), nil
 }
 
 // ConfigDir returns the single directory used by configuration, logs, and runtime state.
 // A data directory override is supported for isolated tests and custom deployments.
 func ConfigDir() (string, error) {
-	if configured := strings.TrimSpace(os.Getenv("BLOGCTL_DATA_DIR")); configured != "" {
+	if configured := strings.TrimSpace(os.Getenv("SYNDIRELAY_DATA_DIR")); configured != "" {
 		if !filepath.IsAbs(configured) {
-			return "", errors.New("BLOGCTL_DATA_DIR must be an absolute path")
+			return "", errors.New("SYNDIRELAY_DATA_DIR must be an absolute path")
 		}
 		return filepath.Clean(configured), nil
 	}
