@@ -415,15 +415,20 @@ func (s SyncService) Run(ctx context.Context, config SyncConfig, request SyncReq
 	if err != nil {
 		return "", errors.New("node was not found; install Node.js 22 or newer")
 	}
-	npm, err := resolveExecutable(config, "npm")
-	if err != nil {
-		return "", errors.New("npm was not found; install Node.js with npm")
-	}
-
 	env := syncEnvironment(config)
 	var output strings.Builder
 	rendererDependency := filepath.Join(config.EngineRoot, "node_modules", "micromark", "package.json")
-	if _, statErr := os.Stat(rendererDependency); errors.Is(statErr, os.ErrNotExist) {
+	if _, statErr := os.Stat(rendererDependency); statErr != nil {
+		if !errors.Is(statErr, os.ErrNotExist) {
+			return "", fmt.Errorf("inspect Markdown renderer dependency: %w", statErr)
+		}
+		if request.DryRun {
+			return "", errors.New("dry-run requires preinstalled renderer dependencies (run npm ci manually); refusing to modify workspace")
+		}
+		npm, resolveErr := resolveExecutable(config, "npm")
+		if resolveErr != nil {
+			return "", errors.New("npm was not found; install Node.js with npm")
+		}
 		output.WriteString("[setup] installing npm dependencies\n")
 		program, args, invocationErr := npmInvocation(runtime.GOOS, node, npm, []string{"ci"})
 		if invocationErr != nil {

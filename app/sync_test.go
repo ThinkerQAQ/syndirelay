@@ -362,3 +362,72 @@ func TestSyncServicePlatformsOverlapAndKeepFailuresIndependent(t *testing.T) {
 		t.Fatalf("one platform failure affected another: %v", events)
 	}
 }
+
+// --dry-run is a safety boundary: it cannot install npm packages, render/upload
+// external media or call the NativePublisher, even if configured accidentally.
+func TestDryRunNeverInvokesCommandsOrPublishers(t *testing.T) {
+	engineRoot, contentRoot, node, _ := syncTestWorkspace(t)
+	runner := &noOpRunner{}
+	invoked := false
+	platforms := []string{"cnblogs", "juejin", "csdn", "segmentfault", "zhihu", "51cto", "oschina", "toutiao", "devto", "hashnode", "medium"}
+	statuses := map[string]string{}
+	service := SyncService{
+		Runner:   runner,
+		Compiler: testCompilePlatform,
+		NativePublisher: nativePublisherStub{
+			draft: func(context.Context, NativeDraftRequest) (NativeDraftResult, error) {
+				invoked = true
+				return NativeDraftResult{}, errors.New("must never create drafts")
+			},
+			publish: func(context.Context, NativePublishRequest) (NativePublishResult, error) {
+				invoked = true
+				return NativePublishResult{}, errors.New("must never publish")
+			},
+		},
+		OnEvent: func(event SyncEvent) {
+			if event.State == "completed" {
+				statuses[event.Platform] = event.Result
+			}
+		},
+	}
+	_, err := service.Run(context.Background(), SyncConfig{
+		EngineRoot: engineRoot, ContentRoot: contentRoot, DistributionRoot: t.TempDir(),
+		ToolPaths: map[string]string{"node": node, "npm": filepath.Join(t.TempDir(), "NONEXISTENT-npm")},
+	}, SyncRequest{Articles: []string{"example"}, Platforms: platforms, DryRun: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if invoked || runner.commands != 0 {
+		t.Fatalf("dry-run invoked publishing=%t or commands=%d", invoked, runner.commands)
+	}
+	if len(statuses) != len(platforms) {
+		t.Fatalf("expected %d completed platforms, got %#v", len(platforms), statuses)
+	}
+	for _, platform := range platforms {
+		if statuses[platform] != "dry-run" {
+			t.Errorf("%s: %q", platform, statuses[platform])
+		}
+	}
+}
+
+func TestDryRunFailsClosedInsteadOfInstallingNpm(t *testing.T) {
+	engineRoot, contentRoot, node, npm := syncTestWorkspace(t)
+	if err := os.Remove(filepath.Join(engineRoot, "node_modules", "micromark", "package.json")); err != nil {
+		t.Fatal(err)
+	}
+	runner := &noOpRunner{}
+	service := SyncService{Runner: runner, Compiler: testCompilePlatform}
+	output, err := service.Run(context.Background(), SyncConfig{
+		EngineRoot: engineRoot, ContentRoot: contentRoot, DistributionRoot: t.TempDir(),
+		ToolPaths: map[string]string{"node": node, "npm": npm},
+	}, SyncRequest{Articles: []string{"example"}, Platforms: []string{"devto"}, DryRun: true})
+	if err == nil || !strings.Contains(err.Error(), "refusing to modify workspace") {
+		t.Fatalf("output=%q err=%v", output, err)
+	}
+	if runner.commands != 0 {
+		t.Fatalf("dry-run tried to install dependencies: %d commands", runner.commands)
+	}
+	if _, err := os.Stat(filepath.Join(engineRoot, "node_modules", "micromark", "package.json")); !os.IsNotExist(err) {
+		t.Errorf("dependency file unexpectedly changed: %v", err)
+	}
+}

@@ -257,8 +257,12 @@ func (a app) runSync(args []string) error {
 	if a.contentRoot == "" {
 		return errors.New("content repository root is required for sync")
 	}
-	if err := bridge.UpdateWorkspaceRoots(a.contentRoot, a.root); err != nil {
-		fmt.Fprintf(a.out, "[config] unable to persist workspace roots: %v\n", err)
+	// A dry run must be read-only: no Bridge config rewrites, persistent jobs,
+	// draft creation or remote publication are needed to compile a preview.
+	if !options.dryRun {
+		if err := bridge.UpdateWorkspaceRoots(a.contentRoot, a.root); err != nil {
+			return fmt.Errorf("unable to persist workspace roots: %w", err)
+		}
 	}
 
 	if !options.dryRun {
