@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
+	"github.com/ThinkerQAQ/syndirelay/bridge"
 )
 
 func TestNativeMessagingInvocationDetection(t *testing.T) {

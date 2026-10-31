@@ -8,8 +8,10 @@ import (
 )
 
 const (
-	contentRootEnvironment = "BLOG_CONTENT_ROOT"
-	engineRootEnvironment  = "BLOGCTL_ENGINE_ROOT"
+	contentRootEnvironment       = "SYNDIRELAY_CONTENT_ROOT"
+	engineRootEnvironment        = "SYNDIRELAY_HOME"
+	legacyContentRootEnvironment = "BLOG_CONTENT_ROOT"
+	legacyEngineRootEnvironment  = "BLOGCTL_ENGINE_ROOT"
 )
 
 func resolveSyncWorkspace() (string, string, error) {
@@ -29,7 +31,7 @@ func resolveSyncWorkspaceFrom(current string, getenv func(string) string) (strin
 	engineAncestor := findAncestor(current, isEngineRoot)
 	contentAncestor := findAncestor(current, isContentRoot)
 
-	contentRoot, configured, err := configuredRoot(getenv(contentRootEnvironment), isContentRoot)
+	contentRoot, configured, err := configuredRoot(fallbackEnvironment(getenv, contentRootEnvironment, legacyContentRootEnvironment), isContentRoot)
 	if err != nil {
 		return "", "", fmt.Errorf("%s: %w", contentRootEnvironment, err)
 	}
@@ -46,24 +48,31 @@ func resolveSyncWorkspaceFrom(current string, getenv func(string) string) (strin
 		return "", "", fmt.Errorf("content repository not found; run blogctl sync from blog-content or set %s", contentRootEnvironment)
 	}
 
-	engineRoot, configured, err := configuredRoot(getenv(engineRootEnvironment), isEngineRoot)
+	engineRoot, configured, err := configuredRoot(fallbackEnvironment(getenv, engineRootEnvironment, legacyEngineRootEnvironment), isEngineRoot)
 	if err != nil {
 		return "", "", fmt.Errorf("%s: %w", engineRootEnvironment, err)
 	}
 	if !configured {
 		engineRoot = engineAncestor
 		if engineRoot == "" {
-			candidate := filepath.Join(filepath.Dir(contentRoot), "ThinkerQAQ.github.io")
+			candidate := filepath.Join(filepath.Dir(contentRoot), "syndirelay")
 			if isEngineRoot(candidate) {
 				engineRoot = candidate
 			}
 		}
 	}
 	if engineRoot == "" {
-		return "", "", fmt.Errorf("public engine repository not found; set %s to your ThinkerQAQ.github.io checkout", engineRootEnvironment)
+		return "", "", fmt.Errorf("SyndiRelay installation not found; set %s to its independent checkout", engineRootEnvironment)
 	}
 
 	return engineRoot, contentRoot, nil
+}
+
+func fallbackEnvironment(getenv func(string) string, current, legacy string) string {
+	if value := strings.TrimSpace(getenv(current)); value != "" {
+		return value
+	}
+	return getenv(legacy)
 }
 
 func configuredRoot(value string, predicate func(string) bool) (string, bool, error) {
@@ -97,8 +106,7 @@ func findAncestor(start string, predicate func(string) bool) string {
 
 func isEngineRoot(root string) bool {
 	return fileExists(filepath.Join(root, "package.json")) &&
-		fileExists(filepath.Join(root, "astro.config.mjs")) &&
-		directoryExists(filepath.Join(root, "tools", "blogctl"))
+		fileExists(filepath.Join(root, "renderers", "node", "markdown-html.mjs"))
 }
 
 func isContentRoot(root string) bool {

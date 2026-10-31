@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	blogaisearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/aisearch"
+	blogaisearch "github.com/ThinkerQAQ/syndirelay/aisearch"
 )
 
 type aiSearchStats struct {

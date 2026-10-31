@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 var mediumBrowserMarker = regexp.MustCompile("^\\[BLOGCTL_IMAGE_[0-9]{3}\\]$")

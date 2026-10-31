@@ -9,10 +9,10 @@ import (
 
 func makeEngineRoot(t *testing.T, root string) {
 	t.Helper()
-	if err := os.MkdirAll(filepath.Join(root, "tools", "blogctl"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "renderers", "node"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"package.json", "astro.config.mjs"} {
+	for _, name := range []string{"package.json", filepath.Join("renderers", "node", "markdown-html.mjs")} {
 		if err := os.WriteFile(filepath.Join(root, name), []byte("test"), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -34,7 +34,7 @@ func makeContentRoot(t *testing.T, root string) {
 
 func TestResolveSyncWorkspaceFromContentRepositoryFindsSiblingEngine(t *testing.T) {
 	parent := t.TempDir()
-	engineRoot := filepath.Join(parent, "ThinkerQAQ.github.io")
+	engineRoot := filepath.Join(parent, "syndirelay")
 	contentRoot := filepath.Join(parent, "blog-content")
 	makeEngineRoot(t, engineRoot)
 	makeContentRoot(t, contentRoot)
@@ -75,7 +75,7 @@ func TestResolveSyncWorkspaceSupportsExplicitEngineRoot(t *testing.T) {
 
 func TestResolveSyncWorkspaceRejectsInvalidConfiguredContentRoot(t *testing.T) {
 	parent := t.TempDir()
-	engineRoot := filepath.Join(parent, "ThinkerQAQ.github.io")
+	engineRoot := filepath.Join(parent, "syndirelay")
 	makeEngineRoot(t, engineRoot)
 	invalid := filepath.Join(parent, "not-content")
 	if err := os.MkdirAll(invalid, 0o755); err != nil {

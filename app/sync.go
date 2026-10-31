@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	blogassets "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/assets"
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
+	blogassets "github.com/ThinkerQAQ/syndirelay/assets"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 )
 
 type SyncRequest struct {
@@ -422,8 +422,8 @@ func (s SyncService) Run(ctx context.Context, config SyncConfig, request SyncReq
 
 	env := syncEnvironment(config)
 	var output strings.Builder
-	astro := filepath.Join(config.EngineRoot, "node_modules", "astro", "bin", "astro.mjs")
-	if _, statErr := os.Stat(astro); errors.Is(statErr, os.ErrNotExist) {
+	rendererDependency := filepath.Join(config.EngineRoot, "node_modules", "micromark", "package.json")
+	if _, statErr := os.Stat(rendererDependency); errors.Is(statErr, os.ErrNotExist) {
 		output.WriteString("[setup] installing npm dependencies\n")
 		program, args, invocationErr := npmInvocation(runtime.GOOS, node, npm, []string{"ci"})
 		if invocationErr != nil {
@@ -486,8 +486,10 @@ type scriptFailureEvent struct {
 }
 
 func validateSyncWorkspaces(config SyncConfig) error {
-	if !filePresent(filepath.Join(config.EngineRoot, "package.json")) || !filePresent(filepath.Join(config.EngineRoot, "astro.config.mjs")) {
-		return errors.New("Public Engine is not configured or invalid")
+	if !filePresent(filepath.Join(config.EngineRoot, "package.json")) ||
+		(!filePresent(filepath.Join(config.EngineRoot, "renderers", "node", "markdown-html.mjs")) &&
+			!filePresent(filepath.Join(config.EngineRoot, "tools", "blogctl", "renderers", "node", "markdown-html.mjs"))) {
+		return errors.New("SyndiRelay workspace is not configured or invalid")
 	}
 	if !directoryPresent(filepath.Join(config.ContentRoot, "src", "content", "articles")) {
 		return errors.New("Content Repository is not configured or invalid")

@@ -1,0 +1,16 @@
+{
+  "name": "syndirelay",
+  "private": true,
+  "version": "0.1.0-migration",
+  "description": "Independent cross-platform Markdown syndication and publishing",
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test:renderers": "node --test renderers/node/*.test.mjs",
+    "test:extension": "node --test extension/tests/*.test.mjs",
+    "test:go": "go test ./...",
+    "test": "npm run test:renderers && npm run test:extension && npm run test:go"
+  },
+  "dependencies": { "micromark": "4.0.2", "sharp": "0.35.4" }
+}

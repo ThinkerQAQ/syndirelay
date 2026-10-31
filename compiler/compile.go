@@ -12,24 +12,27 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"unicode/utf8"
 
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
-	blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 )
 
 type CompileOptions struct {
-	EngineRoot  string
-	ContentRoot string
-	Publishing  PublishingConfig
-	Node        string
-	Env         []string
-	Platform    string
-	Articles    []string
-	All         bool
-	DryRun      bool
+	EngineRoot        string
+	Generic           bool   // A standalone Markdown input, not a blog-content source
+	CanonicalOverride string // Optional explicit canonical, never inferred from ThinkerQAQ
+	ContentRoot       string
+	Publishing        PublishingConfig
+	Node              string
+	Env               []string
+	Platform          string
+	Articles          []string
+	All               bool
+	DryRun            bool
 }
 
 func CanonicalURL(slug, language string) string {
@@ -43,6 +46,32 @@ func CanonicalURL(slug, language string) string {
 	}
 	return SiteOrigin + prefix + strings.Join(parts, "/") + "/"
 }
+func canonicalFor(o CompileOptions, slug, language string) string {
+	if o.Generic {
+		return o.CanonicalOverride
+	}
+	return CanonicalURL(slug, language)
+}
+func assetURLFor(o CompileOptions, value string) string {
+	if o.Generic {
+		return strings.TrimSpace(value)
+	}
+	return resolveArticleAssetURL(value)
+}
+func originFor(o CompileOptions) string {
+	if !o.Generic {
+		return SiteOrigin
+	}
+	if o.CanonicalOverride == "" {
+		return ""
+	}
+	u, err := url.Parse(o.CanonicalOverride)
+	if err != nil {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
+
 func resolveArticleAssetURL(value string) string {
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -133,6 +162,32 @@ func normalizeDevtoTags(tags []string) []string {
 	}
 	return result
 }
+
+// Locate the unchanged Markdown compiler in either a legacy workspace or a
+// standalone SyndiRelay installation. Never fall back to an Inkerio installation.
+func findPublishingRenderer(workspace string) (string, error) {
+	candidates := []string{}
+	if workspace != "" {
+		candidates = append(candidates, filepath.Join(workspace, "renderers", "node", "markdown-html.mjs"))
+		candidates = append(candidates, filepath.Join(workspace, "tools", "blogctl", "renderers", "node", "markdown-html.mjs"))
+	}
+	if root := os.Getenv("SYNDIRELAY_HOME"); root != "" {
+		candidates = append(candidates, filepath.Join(root, "renderers", "node", "markdown-html.mjs"))
+	}
+	if executable, err := os.Executable(); err == nil {
+		candidates = append(candidates, filepath.Join(filepath.Dir(executable), "renderers", "node", "markdown-html.mjs"))
+	}
+	if _, filename, _, ok := runtime.Caller(0); ok {
+		candidates = append(candidates, filepath.Join(filepath.Dir(filename), "..", "renderers", "node", "markdown-html.mjs"))
+	}
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && info.Mode().IsRegular() {
+			return candidate, nil
+		}
+	}
+	return "", errors.New("SyndiRelay Markdown renderer is missing; install the package with renderers/node and npm dependencies")
+}
+
 func renderHTML(ctx context.Context, o CompileOptions, markdown string) (string, error) {
 	node := strings.TrimSpace(o.Node)
 	if node == "" {
@@ -142,7 +197,10 @@ func renderHTML(ctx context.Context, o CompileOptions, markdown string) (string,
 			return "", errors.New("node was not found for Markdown HTML renderer")
 		}
 	}
-	renderer := filepath.Join(o.EngineRoot, "tools", "blogctl", "renderers", "node", "markdown-html.mjs")
+	renderer, err := findPublishingRenderer(o.EngineRoot)
+	if err != nil {
+		return "", err
+	}
 	cmd := exec.CommandContext(ctx, node, renderer)
 	cmd.Dir = o.EngineRoot
 	if len(o.Env) > 0 {
@@ -214,8 +272,8 @@ func hashText(value string) string {
 	return hex.EncodeToString(sum[:])
 }
 func compileOne(ctx context.Context, o CompileOptions, profile PlatformConfig, slug string, article Article, source, assetBase string, policy blogpublishing.CopyrightText) (CompiledArticle, error) {
-	canonical := CanonicalURL(slug, profile.Language)
-	body, assets, err := CompilePublishingMarkdown(article.Body, assetBase)
+	canonical := canonicalFor(o, slug, profile.Language)
+	body, assets, err := compilePublishingMarkdown(article.Body, assetBase, false, originFor(o))
 	if err != nil {
 		return CompiledArticle{}, err
 	}
@@ -241,7 +299,7 @@ func compileOne(ctx context.Context, o CompileOptions, profile PlatformConfig, s
 		if o.Platform == "hashnode" {
 			tags = append([]string{}, article.Tags...)
 		}
-		cover := resolveArticleAssetURL(article.CoverImage)
+		cover := assetURLFor(o, article.CoverImage)
 		hashPayload := struct {
 			Title              string   `json:"title"`
 			Description        string   `json:"description"`
@@ -270,7 +328,7 @@ func compileOne(ctx context.Context, o CompileOptions, profile PlatformConfig, s
 			return CompiledArticle{}, err
 		}
 		hashSource = article.Title + "\n" + markdown + "\n<!-- blogctl-html -->\n" + html
-		compiled = CompiledArticle{Version: ProtocolVersion, Slug: slug, Platform: o.Platform, Title: article.Title, Description: truncateRunes(article.Description, limit), Series: article.Series, Markdown: markdown, HTML: html, Language: profile.Language, CanonicalURL: canonical, Tags: append([]string{}, article.Tags...), CoverImageURL: resolveArticleAssetURL(article.CoverImage), Published: false, SourceDir: filepath.Dir(source), Assets: assets}
+		compiled = CompiledArticle{Version: ProtocolVersion, Slug: slug, Platform: o.Platform, Title: article.Title, Description: truncateRunes(article.Description, limit), Series: article.Series, Markdown: markdown, HTML: html, Language: profile.Language, CanonicalURL: canonical, Tags: append([]string{}, article.Tags...), CoverImageURL: assetURLFor(o, article.CoverImage), Published: false, SourceDir: filepath.Dir(source), Assets: assets}
 	}
 	compiled.ContentHash = hashText(hashSource)
 	if !o.DryRun {

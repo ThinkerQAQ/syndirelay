@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
 )
 
 type noOpRunner struct {
@@ -259,8 +259,8 @@ func syncTestWorkspace(t *testing.T) (engineRoot, contentRoot, node, npm string)
 	engineRoot = t.TempDir()
 	contentRoot = t.TempDir()
 	writeTestFile(t, filepath.Join(engineRoot, "package.json"))
-	writeTestFile(t, filepath.Join(engineRoot, "astro.config.mjs"))
-	writeTestFile(t, filepath.Join(engineRoot, "node_modules", "astro", "bin", "astro.mjs"))
+	writeTestFile(t, filepath.Join(engineRoot, "renderers", "node", "markdown-html.mjs"))
+	writeTestFile(t, filepath.Join(engineRoot, "node_modules", "micromark", "package.json"))
 	if err := os.MkdirAll(filepath.Join(contentRoot, "src", "content", "articles"), 0o755); err != nil {
 		t.Fatal(err)
 	}

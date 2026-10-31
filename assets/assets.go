@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
 )
 
 var assetIDPattern = regexp.MustCompile(`^[a-f0-9]{16,64}$`)

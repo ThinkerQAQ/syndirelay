@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
-	blogassets "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/assets"
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
+	blogassets "github.com/ThinkerQAQ/syndirelay/assets"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func validExplicitRemoteID(id string) bool {

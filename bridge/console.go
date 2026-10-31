@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	blogextension "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/extension"
+	blogextension "github.com/ThinkerQAQ/syndirelay/extension"
 )
 
 func consoleHostAllowed(host string) bool {

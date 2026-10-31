@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	runtimeversion "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
+	runtimeversion "github.com/ThinkerQAQ/syndirelay/internal/version"
 )
 
 func TestBlogCTLVersionMatchesExtension(t *testing.T) {

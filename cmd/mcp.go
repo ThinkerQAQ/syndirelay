@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	runtimeversion "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
+	runtimeversion "github.com/ThinkerQAQ/syndirelay/internal/version"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -183,7 +183,7 @@ func mcpTool(name, desc string, readOnly bool) *mcp.Tool {
 }
 
 func newBlogMCPServer(c *mcpBridgeClient) *mcp.Server {
-	server := mcp.NewServer(&mcp.Implementation{Name: "blogctl", Version: runtimeversion.Current}, &mcp.ServerOptions{Instructions: "BlogCTL MCP calls the existing local Bridge, never receives browser cookies or executes arbitrary commands. Read tools are safe. Create always creates a new draft; update requires an explicit remote target; publish-draft requires a draft ID. Ask for explicit publishing intent before side effects. Do not blindly retry a timed-out publishing action; use the same request_id to check the original task, inspect get_task and the remote platform state. Browser extension must be installed and signed in; session refresh is automatic. Images may be sanitized and uploaded only from explicitly authorized local folders. The MCP is not a content editor or Git/deployment tool."})
+	server := mcp.NewServer(&mcp.Implementation{Name: "syndirelay", Version: runtimeversion.Current}, &mcp.ServerOptions{Instructions: "SyndiRelay MCP calls the existing local Bridge, never receives browser cookies or executes arbitrary commands. Read tools are safe. Create always creates a new draft; update requires an explicit remote target; publish-draft requires a draft ID. Ask for explicit publishing intent before side effects. Do not blindly retry a timed-out publishing action; use the same request_id to check the original task, inspect get_task and the remote platform state. Browser extension must be installed and signed in; session refresh is automatic. Images may be sanitized and uploaded only from explicitly authorized local folders. The MCP is not a content editor or Git/deployment tool."})
 	addRead := func(name, desc, method, path string) {
 		mcp.AddTool(server, mcpTool(name, desc, true), func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, mcpResult, error) {
 			raw, err := c.call(ctx, method, path, nil)

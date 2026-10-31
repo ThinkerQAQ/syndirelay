@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	blogr2 "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/storage/r2"
+	blogr2 "github.com/ThinkerQAQ/syndirelay/storage/r2"
 )
 
 func r2FallbackObject(input DraftInput, image RehostImage) (string, string) {

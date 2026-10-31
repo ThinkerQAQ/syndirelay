@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	blogbridge "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
+	blogbridge "github.com/ThinkerQAQ/syndirelay/bridge"
 )
 
 type app struct {
@@ -29,14 +29,14 @@ func main() {
 	}
 	if len(os.Args) > 1 && (os.Args[1] == "install" || os.Args[1] == "uninstall") {
 		if err := runNativeHostSetup(os.Args[1], os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, "blogctl:", err)
+			fmt.Fprintln(os.Stderr, "syndirelay:", err)
 			os.Exit(1)
 		}
 		return
 	}
 	if len(os.Args) > 1 && (os.Args[1] == "-mcp-stdio" || os.Args[1] == "mcp-stdio") {
 		if err := runMCPStdio(); err != nil {
-			fmt.Fprintln(os.Stderr, "blogctl mcp:", err)
+			fmt.Fprintln(os.Stderr, "syndirelay mcp:", err)
 			os.Exit(1)
 		}
 		return
@@ -56,7 +56,7 @@ func main() {
 	}
 	a := app{root: root, contentRoot: contentRoot, runner: osRunner{dir: root}, out: os.Stdout}
 	if err := a.run(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, "blogctl:", err)
+		fmt.Fprintln(os.Stderr, "syndirelay:", err)
 		os.Exit(1)
 	}
 }
@@ -66,7 +66,7 @@ func rootsForCommand(args []string) (string, string, error) {
 		return "", "", nil
 	}
 	command := args[0]
-	if command == "social" {
+	if command == "social" || command == "compile" {
 		return "", "", nil
 	}
 	if command == "sync" || command == "toutiao" {
@@ -103,6 +103,8 @@ func (a app) run(args []string) error {
 		return a.runDiagrams(args)
 	case "search":
 		return a.runSearch(args)
+	case "compile":
+		return a.runCompileFile(args)
 	case "sync":
 		return a.runSync(args)
 	case "social":
@@ -113,9 +115,9 @@ func (a app) run(args []string) error {
 		return runToutiaoProbe(args, a.out)
 	default:
 		if cliLocale() == "zh-CN" {
-			return fmt.Errorf("未知命令 %q；请运行 blogctl help", command)
+			return fmt.Errorf("未知命令 %q；请运行 syndirelay help", command)
 		}
-		return fmt.Errorf("unknown command %q; run blogctl help", command)
+		return fmt.Errorf("unknown command %q; run syndirelay help", command)
 	}
 }
 
@@ -173,43 +175,32 @@ func cliLocale() string {
 
 func (a app) printHelp() {
 	if cliLocale() == "zh-CN" {
-		fmt.Fprintln(a.out, `blogctl - ThinkerQAQ 博客开发与分发工具
+		fmt.Fprintln(a.out, `SyndiRelay - 独立 Markdown 内容编译与分发工具
 
 用法：
-  blogctl help
-  blogctl preview | dev | build | check | test
-  blogctl site build --content-root <path>
-  blogctl ai-search <prepare|sync|verify> [options]
-  blogctl diagrams [plantuml|drawio]
-  blogctl search <build|inventory|submit|audit|notify> [options]
-  blogctl sync --article <slug> --platforms <list> [--dry-run] [--changed] [--draft]
-  blogctl social <channels|source|create|list|show|stage|reconcile|publish> [options]
-  blogctl doctor
-  blogctl install | uninstall
-  blogctl toutiao probe --har <HAR-file> [--confirm-create-draft]
+  syndirelay compile --file <article.md> --platform <platform> [--canonical-url <https-url>]
+  syndirelay sync --article <slug> --platforms <list> [--dry-run] [--changed]
+  syndirelay social <channels|source|create|list|show|stage|reconcile|publish> [options]
+  syndirelay mcp-stdio
+  syndirelay doctor
+  syndirelay install | uninstall
 
-文章分发 sync 请在 blog-content 仓库执行；网站构建命令在 ThinkerQAQ.github.io 引擎仓库执行。
-scripts/ 存放仓库级 Node 构建、验证和渲染脚本。`)
+普通 Markdown 无需 Inkerio，compile 只预览编译结果而不会发布。
+旧博客构建、搜索通知和 AI Search 命令迁移后不再是 SyndiRelay 的核心能力。`)
 		return
 	}
-
-	fmt.Fprintln(a.out, `blogctl - Inkerio blog developer tool
+	fmt.Fprintln(a.out, `SyndiRelay - independent Markdown compiler and syndication tool
 
 Usage:
-  blogctl
-  blogctl preview | dev | build | check | test
-  blogctl site build --content-root <path>
-  blogctl ai-search <prepare|sync|verify> [options]
-  blogctl diagrams [plantuml|drawio]
-  blogctl search <build|inventory|submit|audit|notify> [options]
-  blogctl sync --article <slug> --platforms <list> [--dry-run] [--changed] [--draft]
-  blogctl social <channels|source|create|list|show|stage|reconcile|publish> [options]
-  blogctl doctor
-  blogctl install | uninstall
-  blogctl toutiao probe --har <HAR-file> [--confirm-create-draft]
+  syndirelay compile --file <article.md> --platform <platform> [--canonical-url <https-url>]
+  syndirelay sync --article <slug> --platforms <list> [--dry-run] [--changed]
+  syndirelay social <channels|source|create|list|show|stage|reconcile|publish> [options]
+  syndirelay mcp-stdio
+  syndirelay doctor
+  syndirelay install | uninstall
 
-Run sync from the blog-content repository. Engine commands still run from ThinkerQAQ.github.io.
-scripts/ contains repository-level Node build, validation and rendering entrypoints.`)
+Generic compile needs no Inkerio and never publishes to a remote platform.
+Legacy site build/search commands remain in source only during migration.`)
 }
 
 func findRepositoryRoot() (string, error) {
@@ -219,7 +210,7 @@ func findRepositoryRoot() (string, error) {
 	}
 	root := findAncestor(current, isEngineRoot)
 	if root == "" {
-		return "", errors.New("not inside the ThinkerQAQ public engine repository")
+		return "", errors.New("not inside a SyndiRelay checkout")
 	}
 	return root, nil
 }

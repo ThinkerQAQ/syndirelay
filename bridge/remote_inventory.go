@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 // Remote inventory is account-scoped rather than associated with any local

@@ -1,7 +1,7 @@
 package compiler
 
 import (
-	blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 	"reflect"
 	"strings"
 	"testing"

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
+	"github.com/ThinkerQAQ/syndirelay/internal/version"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func setExtensionAuth(request *http.Request, token string) {

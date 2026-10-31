@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/internal/version"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 const (

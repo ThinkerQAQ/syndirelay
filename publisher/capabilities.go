@@ -1,6 +1,6 @@
 package publisher
 
-import blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
+import blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 
 type PlatformCapabilities = blogplatform.Capabilities
 

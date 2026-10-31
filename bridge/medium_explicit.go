@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strings"
 
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 // Medium has an existing, verified browser-native transport in the bridge.

@@ -15,8 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	runtimeversion "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
-	blogr2 "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/storage/r2"
+	runtimeversion "github.com/ThinkerQAQ/syndirelay/internal/version"
+	blogr2 "github.com/ThinkerQAQ/syndirelay/storage/r2"
 )
 
 const imagePipelineVersion = "v1"

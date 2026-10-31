@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 type cnBlogsBindingTransport func(*http.Request) (*http.Response, error)

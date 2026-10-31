@@ -3,7 +3,7 @@ package social
 import (
 	"context"
 	"errors"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/social/buffer"
+	"github.com/ThinkerQAQ/syndirelay/social/buffer"
 	"os"
 	"path/filepath"
 	"strings"

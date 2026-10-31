@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
+	"github.com/ThinkerQAQ/syndirelay/bridge"
+	"github.com/ThinkerQAQ/syndirelay/internal/version"
 )
 
 const (

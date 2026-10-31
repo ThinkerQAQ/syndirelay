@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
 )
 
 func TestPrepareConcurrentPlatformsRenderEachSharedAssetOnce(t *testing.T) {

@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 type mediumRoundTripFunc func(*http.Request) (*http.Response, error)

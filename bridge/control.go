@@ -20,12 +20,12 @@ import (
 	"strings"
 	"time"
 
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/internal/version"
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	"github.com/ThinkerQAQ/syndirelay/internal/version"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 )
 
 type articleSummary struct {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 )
 
 type searchDiffPayload struct {

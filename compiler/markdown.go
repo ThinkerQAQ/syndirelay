@@ -170,9 +170,13 @@ func assetForDiagram(kind, source, base string) (Asset, error) {
 	}
 	return Asset{}, fmt.Errorf("unsupported diagram kind: %s", kind)
 }
-func absoluteRootLinks(line string) string {
-	line = mdRootLinkPattern.ReplaceAllString(line, "${1}"+SiteOrigin+"/${2}")
-	return htmlRootLinkPattern.ReplaceAllString(line, "${1}"+SiteOrigin+"/${3}")
+func absoluteRootLinks(line string) string { return absoluteRootLinksWithOrigin(line, SiteOrigin) }
+func absoluteRootLinksWithOrigin(line, origin string) string {
+	if origin == "" {
+		return line
+	}
+	line = mdRootLinkPattern.ReplaceAllString(line, "${1}"+origin+"/${2}")
+	return htmlRootLinkPattern.ReplaceAllString(line, "${1}"+origin+"/${3}")
 }
 func escapeAlt(v string) string {
 	v = strings.ReplaceAll(v, "\\", "\\\\")
@@ -182,12 +186,12 @@ func escapeAlt(v string) string {
 
 // Medium cannot preserve the horizontal layout of long PRE text diagrams.
 func CompileMediumPublishingMarkdown(markdown, base string) (string, []Asset, error) {
-	return compilePublishingMarkdown(markdown, base, true)
+	return compilePublishingMarkdown(markdown, base, true, SiteOrigin)
 }
 func CompilePublishingMarkdown(markdown, base string) (string, []Asset, error) {
-	return compilePublishingMarkdown(markdown, base, false)
+	return compilePublishingMarkdown(markdown, base, false, SiteOrigin)
 }
-func compilePublishingMarkdown(markdown, base string, mediumASCII bool) (string, []Asset, error) {
+func compilePublishingMarkdown(markdown, base string, mediumASCII bool, origin string) (string, []Asset, error) {
 	lines := strings.Split(normalizeNewlines(markdown), "\n")
 	out := make([]string, 0, len(lines))
 	assets := map[string]Asset{}
@@ -218,7 +222,7 @@ func compilePublishingMarkdown(markdown, base string, mediumASCII bool) (string,
 		}
 		o, ok := fenceStart(lines[i])
 		if !ok {
-			out = append(out, absoluteRootLinks(lines[i]))
+			out = append(out, absoluteRootLinksWithOrigin(lines[i], origin))
 			i++
 			continue
 		}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 )
 
 const articleFixture = `---

@@ -2,7 +2,7 @@ package bridge
 
 import (
 	"encoding/json"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/social"
+	"github.com/ThinkerQAQ/syndirelay/social"
 	"net/http"
 	"net/http/httptest"
 	"strings"

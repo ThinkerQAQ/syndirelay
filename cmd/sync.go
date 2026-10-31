@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
+	"github.com/ThinkerQAQ/syndirelay/bridge"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 )
 
 type syncOptions struct {

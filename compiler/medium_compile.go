@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 )
 
 type compileContext struct {
@@ -107,10 +107,11 @@ func resolveMediumFragmentLinks(blocks []mediumBlock, canonical string) {
 }
 
 func buildMediumPayload(article Article, slug string, profile PlatformConfig, compiledMarkdown string, policy ...blogpublishing.CopyrightText) (mediumPayload, []string) {
-	canonical := CanonicalURL(slug, profile.Language)
+	return buildMediumPayloadWithCanonical(article, profile, compiledMarkdown, CanonicalURL(slug, profile.Language), resolveArticleAssetURL(article.CoverImage), policy...)
+}
+func buildMediumPayloadWithCanonical(article Article, profile PlatformConfig, compiledMarkdown, canonical, coverURL string, policy ...blogpublishing.CopyrightText) (mediumPayload, []string) {
 	blocks, warnings := parseMediumBlocks(compiledMarkdown)
 	resolveMediumFragmentLinks(blocks, canonical)
-	coverURL := resolveArticleAssetURL(article.CoverImage)
 	content := blocks
 	if coverURL != "" {
 		content = append([]mediumBlock{{Kind: "image", URL: coverURL, Alt: article.CoverImageAlt}}, blocks...)
@@ -242,11 +243,12 @@ func renderMediumBlocks(blocks []mediumBlock) string {
 }
 
 func buildMediumCopyHTML(article Article, slug string, profile PlatformConfig, compiledMarkdown string, policy ...blogpublishing.CopyrightText) string {
-	canonical := CanonicalURL(slug, profile.Language)
+	return buildMediumCopyHTMLWithCanonical(article, profile, compiledMarkdown, CanonicalURL(slug, profile.Language), resolveArticleAssetURL(article.CoverImage), policy...)
+}
+func buildMediumCopyHTMLWithCanonical(article Article, profile PlatformConfig, compiledMarkdown, canonical, coverURL string, policy ...blogpublishing.CopyrightText) string {
 	blocks, _ := parseMediumBlocks(compiledMarkdown)
 	resolveMediumFragmentLinks(blocks, canonical)
 	body := renderMediumBlocks(blocks)
-	coverURL := resolveArticleAssetURL(article.CoverImage)
 	coverHTML := ""
 	if coverURL != "" {
 		coverHTML = "<figure class=\"cover\"><img src=\"" + mediumEscapeHTML(coverURL) + "\" alt=\"" + mediumEscapeHTML(article.CoverImageAlt) + "\"></figure>\n"
@@ -321,13 +323,23 @@ func jsonStringify(value any) (string, error) {
 
 func compileMedium(ctx compileContext) (CompiledArticle, error) {
 	article := ctx.article
-	portable, assets, err := CompileMediumPublishingMarkdown(article.Body, ctx.assetBase)
+	portable, assets, err := compilePublishingMarkdown(article.Body, ctx.assetBase, true, originFor(ctx.options))
 	if err != nil {
 		return CompiledArticle{}, err
 	}
 	portable = strings.TrimSpace(portable)
-	payload, warnings := buildMediumPayload(article, ctx.slug, ctx.profile, portable, ctx.policy)
-	fallback := buildMediumCopyHTML(article, ctx.slug, ctx.profile, portable, ctx.policy)
+	var payload mediumPayload
+	var warnings []string
+	var fallback string
+	if ctx.options.Generic {
+		canonical := canonicalFor(ctx.options, ctx.slug, ctx.profile.Language)
+		cover := assetURLFor(ctx.options, article.CoverImage)
+		payload, warnings = buildMediumPayloadWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
+		fallback = buildMediumCopyHTMLWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
+	} else {
+		payload, warnings = buildMediumPayload(article, ctx.slug, ctx.profile, portable, ctx.policy)
+		fallback = buildMediumCopyHTML(article, ctx.slug, ctx.profile, portable, ctx.policy)
+	}
 	hashValue, err := jsonStringify(struct {
 		Payload          mediumPayload `json:"payload"`
 		FallbackHTML     string        `json:"fallbackHTML"`
@@ -357,8 +369,8 @@ func compileMedium(ctx compileContext) (CompiledArticle, error) {
 	}
 	return CompiledArticle{
 		Version: ProtocolVersion, Slug: ctx.slug, Platform: "medium", Title: article.Title, Description: article.Description,
-		Markdown: markdown, HTML: html, Language: ctx.profile.Language, CanonicalURL: CanonicalURL(ctx.slug, ctx.profile.Language),
-		NativeCanonicalURL: payload.CanonicalURL, Tags: payload.Tags, CoverImageURL: resolveArticleAssetURL(article.CoverImage),
+		Markdown: markdown, HTML: html, Language: ctx.profile.Language, CanonicalURL: canonicalFor(ctx.options, ctx.slug, ctx.profile.Language),
+		NativeCanonicalURL: payload.CanonicalURL, Tags: payload.Tags, CoverImageURL: assetURLFor(ctx.options, article.CoverImage),
 		Published: false, Payload: payloadJSON, FallbackHTML: fallback, RequiresFallback: false, Warnings: warnings,
 		ContentHash: hashText(hashValue), SourceDir: ctx.sourceDir, Assets: assets,
 	}, nil

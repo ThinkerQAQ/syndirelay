@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	blogbridge "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
+	blogbridge "github.com/ThinkerQAQ/syndirelay/bridge"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 )
 
 func (a app) runSearch(args []string) error {

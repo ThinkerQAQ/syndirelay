@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 )
 
 const DefaultAssetBaseURL = "https://pub-366a15b6733345039775c083a1fffb3e.r2.dev/"

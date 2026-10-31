@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 type hashnodeCandidateView struct {

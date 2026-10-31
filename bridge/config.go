@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 	"github.com/pelletier/go-toml/v2"
 )
 

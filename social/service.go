@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/social/buffer"
+	"github.com/ThinkerQAQ/syndirelay/social/buffer"
 )
 
 type BufferAPI interface {

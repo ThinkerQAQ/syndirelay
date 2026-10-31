@@ -1,6 +1,6 @@
 package compiler
 
-import blogpublishing "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publishing"
+import blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 
 const DefaultAssetBaseURL = blogpublishing.DefaultAssetBaseURL
 

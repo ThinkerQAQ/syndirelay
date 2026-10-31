@@ -1,4 +1,4 @@
-module github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl
+module github.com/ThinkerQAQ/syndirelay
 
 go 1.24.1
 

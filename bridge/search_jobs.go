@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 )
 
 type searchSubmissionTaskPayload struct {

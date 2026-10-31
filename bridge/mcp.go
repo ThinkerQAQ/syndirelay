@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 )
 
 // MCP does not receive cookies. The extension reads the pending platforms and

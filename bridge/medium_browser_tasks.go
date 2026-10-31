@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func (h *mediumBrowserUploadHub) queueBrowserTask(ctx context.Context, task *mediumPendingUpload) (mediumBrowserUploadReply, error) {

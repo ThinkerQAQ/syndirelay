@@ -3,7 +3,7 @@ package bridge
 import (
 	"testing"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func TestJuejinBindingStateMatchesPublishedDraftID(t *testing.T) {

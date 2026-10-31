@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func juejinDraftID(binding publisher.PublicationBinding) string {

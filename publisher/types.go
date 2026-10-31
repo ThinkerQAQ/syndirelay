@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	blogr2 "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/storage/r2"
+	blogr2 "github.com/ThinkerQAQ/syndirelay/storage/r2"
 )
 
 type BrowserCookie struct {

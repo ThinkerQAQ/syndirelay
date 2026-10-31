@@ -6,7 +6,7 @@ import path from "node:path";
 
 import sharp from "sharp";
 
-import { ensureJar, renderSvg } from "../../../../scripts/plantuml/runtime.mjs";
+import { ensureJar, renderSvg } from "../../scripts/plantuml/runtime.mjs";
 
 const MAX_DIMENSION = 4096;
 

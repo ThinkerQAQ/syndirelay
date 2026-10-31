@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/bridge"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/social"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/social/buffer"
+	"github.com/ThinkerQAQ/syndirelay/bridge"
+	"github.com/ThinkerQAQ/syndirelay/social"
+	"github.com/ThinkerQAQ/syndirelay/social/buffer"
 )
 
 func (a app) runSocial(args []string) error {

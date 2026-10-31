@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	blogapp "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/app"
+	blogapp "github.com/ThinkerQAQ/syndirelay/app"
 	"net/http"
 	"net/http/httptest"
 	"os"

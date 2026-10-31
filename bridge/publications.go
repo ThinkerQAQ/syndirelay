@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	blogplatform "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/platform"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 func (s *Server) handlePublications(response http.ResponseWriter) {

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	blogcompiler "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/compiler"
-	"github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/publisher"
+	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
+	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
 type mediumBindingView struct {

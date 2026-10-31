@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	blogsearch "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/search"
-	blogsite "github.com/ThinkerQAQ/ThinkerQAQ.github.io/tools/blogctl/site"
+	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
+	blogsite "github.com/ThinkerQAQ/syndirelay/site"
 )
 
 func (a app) runSite(args []string) error {

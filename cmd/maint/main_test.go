@@ -24,7 +24,7 @@ func TestExtensionZipContainsLicense(t *testing.T) {
 }
 
 func TestExecutableZipContainsLicenseAndPermissions(t *testing.T) {
-	source := filepath.Join(t.TempDir(), "blogctl-linux-amd64")
+	source := filepath.Join(t.TempDir(), "syndirelay-linux-amd64")
 	if err := os.WriteFile(source, []byte("test binary"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -36,13 +36,25 @@ func TestExecutableZipContainsLicenseAndPermissions(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(licenses, "example.org", "library", "LICENSE"), []byte("BSD fixture license"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if err := zipExecutable(source, archive, []byte("MIT fixture license"), licenses); err != nil {
+	runtimeRoot := t.TempDir()
+	for _, name := range []string{"package.json", "package-lock.json", "renderers/node/markdown-html.mjs", "renderers/node/publishing-image.mjs", "renderers/node/sanitize-image.mjs", "scripts/plantuml/runtime.mjs", "scripts/plantuml/core.mjs"} {
+		destination := filepath.Join(runtimeRoot, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(destination), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(destination, []byte("fixture:"+name), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := zipExecutable(source, archive, []byte("MIT fixture license"), licenses, runtimeRoot); err != nil {
 		t.Fatal(err)
 	}
 	checkZip(t, archive, map[string]string{
-		"blogctl-linux-amd64": "test binary",
-		"LICENSE":             "MIT fixture license",
+		"syndirelay-linux-amd64": "test binary",
+		"LICENSE":                "MIT fixture license",
 		"THIRD_PARTY_LICENSES/example.org/library/LICENSE": "BSD fixture license",
+		"package.json":                     "fixture:package.json",
+		"renderers/node/markdown-html.mjs": "fixture:renderers/node/markdown-html.mjs",
 	})
 	z, err := zip.OpenReader(archive)
 	if err != nil {
@@ -50,7 +62,7 @@ func TestExecutableZipContainsLicenseAndPermissions(t *testing.T) {
 	}
 	defer z.Close()
 	for _, entry := range z.File {
-		if entry.Name == "blogctl-linux-amd64" && entry.Mode()&0111 == 0 {
+		if entry.Name == "syndirelay-linux-amd64" && entry.Mode()&0111 == 0 {
 			t.Fatal("zip must preserve Unix executable permission")
 		}
 	}
