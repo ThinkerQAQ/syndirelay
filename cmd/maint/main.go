@@ -84,8 +84,11 @@ func verify() error {
 func packageRelease() error {
 	// Publish only if a fresh upstream license collection was produced.
 	licenseRoot := filepath.Join(buildDir, "publish-licenses")
+	if err := validateReleaseLicenses(licenseRoot, "go.mod", "package-lock.json"); err != nil {
+		return fmt.Errorf("third-party license review incomplete: %w", err)
+	}
 	if _, err := thirdPartyLicenseFiles(licenseRoot); err != nil {
-		return fmt.Errorf("third-party license bundle missing: %w; run go-licenses save first", err)
+		return fmt.Errorf("third-party license bundle missing: %w", err)
 	}
 	if err := os.RemoveAll(releaseDir); err != nil {
 		return err
