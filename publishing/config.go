@@ -151,6 +151,18 @@ func DefaultConfig() Config {
 }
 
 func mergeDefaults(config Config) Config {
+	// Normalize is called from concurrently compiled platform plans. A Config
+	// is passed by value, but its Platforms map is not: mutations without a
+	// copy can crash with "concurrent map writes" when multiple goroutines
+	// normalize the same original configuration. Never mutate caller-owned
+	// maps; make every normalization independent.
+	if config.Platforms != nil {
+		cloned := make(map[string]PlatformConfig, len(config.Platforms))
+		for name, platform := range config.Platforms {
+			cloned[name] = platform
+		}
+		config.Platforms = cloned
+	}
 	defaults := DefaultConfig()
 	if config.Site.LegacyOrigins == nil {
 		config.Site.LegacyOrigins = []string{}
