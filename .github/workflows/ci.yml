@@ -40,6 +40,10 @@ jobs:
         if: runner.os != 'Windows'
         shell: bash
         run: bash scripts/connect-chatgpt-mcp.test.sh
+      - name: Validate native Windows MCP Tunnel setup without network
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/connect-chatgpt-mcp.windows.test.ps1
       - name: Test copied image renderer and browser extension
         run: npm run test:renderers && npm run test:extension
       - name: Build independent SyndiRelay executable

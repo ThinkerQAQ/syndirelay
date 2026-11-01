@@ -15,24 +15,20 @@ TOOL
 chmod +x "$ROOT/bin/tunnel-client"
 export SYNDIRELAY_TEST_RECORD="$ROOT/calls"
 export TUNNEL_CLIENT_BIN="$ROOT/bin/tunnel-client"
-export SYNDIRELAY_RUNTIME_KEY_FILE="$ROOT/config/runtime-key"
 export SYNDIRELAY_TUNNEL_PROFILE_DIR="$ROOT/config"
 export SYNDIRELAY_MCP_COMMAND='/private/syndirelay mcp-stdio'
-# No credential: fail closed, no tunnel-client invocation.
-if "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_test123 >"$ROOT/out" 2>&1; then echo 'Missing-key check failed' >&2; exit 1; fi
+unset CONTROL_PLANE_API_KEY || true
+unset SYNDIRELAY_RUNTIME_KEY_REF || true
+if "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_test123 >"$ROOT/out" 2>&1; then echo 'Missing authorization should fail' >&2; exit 1; fi
 [[ ! -e "$ROOT/calls" ]]
-# Existing key permissions are checked without inspecting its contents.
-printf 'test-credential-fixture\n' > "$ROOT/config/runtime-key"
-chmod 644 "$ROOT/config/runtime-key"
-if "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_test123 >"$ROOT/out" 2>&1; then echo 'File-mode check failed' >&2; exit 1; fi
-chmod 600 "$ROOT/config/runtime-key"
+export CONTROL_PLANE_API_KEY='offline-fixture-not-a-real-secret'
 "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_test123 >"$ROOT/out"
 grep -q -- '--alias syndirelay' "$ROOT/calls"
 grep -q -- '--tunnel-id tunnel_test123' "$ROOT/calls"
-grep -q -- '--runtime-api-key file:' "$ROOT/calls"
+grep -q -- '--runtime-api-key env:CONTROL_PLANE_API_KEY' "$ROOT/calls"
 grep -q -- '--mcp-command /private/syndirelay mcp-stdio' "$ROOT/calls"
 [[ "$(wc -l < "$ROOT/calls")" == 2 ]]
-if "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_invalid! >"$ROOT/out" 2>&1; then echo 'Tunnel-ID check failed' >&2; exit 1; fi
+if "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_invalid! >"$ROOT/out" 2>&1; then echo 'Invalid tunnel ID was accepted' >&2; exit 1; fi
 "$SCRIPT_DIR/connect-chatgpt-mcp.sh" tunnel_test123 --status >"$ROOT/out"
 grep -q '"healthy":true' "$ROOT/out"
 echo 'SyndiRelay Tunnel setup tests passed'

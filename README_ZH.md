@@ -47,7 +47,7 @@ Windows PowerShell 使用 `go build -o syndirelay.exe ./cmd`，自行创建 `.md
 
 [Inkerio](https://github.com/ThinkerQAQ/inkerio) 负责通用静态博客引擎，[inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) 负责公开样例，[ThinkerQAQ.github.io](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) 只负责个人网站配置与部署。SyndiRelay 的单文件编译不依赖上述仓库。
 
-连接 ChatGPT 应先使用[专用安全 Tunnel 配置](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel)。本机 MCP 已运行、Tunnel 已启动、ChatGPT 插件已注册是三个独立状态；不要复用 BlogCTL 的旧 Tunnel，也不要将运行密钥写入 Git。
+ChatGPT 的[专用 Tunnel 安装说明](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel)现已区分 **Windows 原生 PowerShell**、Linux 和 macOS 三套流程。**Windows 不要求 WSL/Ubuntu**；已获授权的 Tunnel 运行凭据可以复用，不需要为 SyndiRelay 新申请一次性密钥。MCP、Tunnel 和 ChatGPT 插件连通性须分别验收，禁止将凭据写入 Git。
 
 ## 开发与测试
 
