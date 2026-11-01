@@ -107,7 +107,14 @@ func makeImpactEvent(c bridgeConfig, a blogcompiler.CompiledArticle, publicURL s
 	}
 	channels := []impactChannel{{Platform: a.Platform, Language: a.Language, URL: publicURL}}
 	if a.CanonicalURL != canonical {
-		channels = append(channels, impactChannel{Platform: "blog", Language: a.Language, URL: a.CanonicalURL})
+		// Match the existing site's channel identity by its public origin.
+		// A generic "blog" label conflicts with previously imported channels
+		// (e.g. platform "example.org") for the exact same URL and language.
+		canonicalHost, err := url.Parse(a.CanonicalURL)
+		if err != nil || canonicalHost.Hostname() == "" || len(canonicalHost.Hostname()) > 80 {
+			return impactEvent{}, errors.New("invalid canonical channel hostname")
+		}
+		channels = append(channels, impactChannel{Platform: strings.ToLower(canonicalHost.Hostname()), Language: a.Language, URL: a.CanonicalURL})
 	}
 	work := impactWork{ExternalID: a.Slug, Kind: "article", Title: a.Title, CanonicalURL: canonical, Enabled: c.Impact.MonitorNew, Channels: channels}
 	payload := impactPayload{SelectedIDs: []string{a.Slug}, Manifest: impactManifest{SchemaVersion: 1, SourceID: c.Impact.SourceID, Producer: "SyndiRelay", Works: []impactWork{work}}}
