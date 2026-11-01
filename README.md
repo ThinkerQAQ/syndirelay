@@ -116,20 +116,7 @@ Set `SYNDIRELAY_CONTENT_ROOT` and `SYNDIRELAY_HOME` explicitly for CLI repositor
 
 ## 4. Optional Features
 
-### 4.1. Case1: Create a draft with the browser extension
-
-Complete [2.2](#22-get-the-source-and-build) on the same operating system as your Edge or Chrome browser. Keep the terminal in the checkout. Windows does not require WSL.
-
-1. Run `./syndirelay install` (PowerShell: `.\syndirelay.exe install`) to register the Native Messaging host.
-2. After `Native Messaging Host registered` appears, open `edge://extensions` or `chrome://extensions`, enable developer mode, choose **Load unpacked**, and select the checkout's `extension/` directory.
-3. Open SyndiRelay from the browser toolbar's extensions menu and confirm its Bridge connection. It listens on `127.0.0.1:32146`; if needed, run `./syndirelay --bridge` (PowerShell: `.\syndirelay.exe --bridge`) and keep that terminal running.
-4. Configure `content_root`, `engine_root`, and the site URL as shown in section 3; see [4.2](#42-case2-distribute-articles-from-an-inkerio-content-repository) for the content repository requirements.
-5. Sign in to the target platform in the same browser. Return to the extension, select an article and platform, preview it, then use the supported draft creation action.
-6. Open the draft URL returned in the task result and check its title and body.
-
-Keep the executable at its registered path; rerun `install` if you move it. If the extension cannot connect, verify that it uses the same OS installation and reload it after registration. Platform login and an available adapter operation are required for remote writes.
-
-### 4.2. Case2: Distribute articles from an Inkerio content repository
+### 4.1. Case1: Distribute articles from an Inkerio content repository
 
 A repository created from [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) can serve both your website and SyndiRelay. No second content repository is needed. CLI sync expects `src/content/articles/` and `src/data/content-manifest.json`.
 
@@ -147,7 +134,20 @@ $env:SYNDIRELAY_CONTENT_ROOT = 'C:\sites\my-content'
 .\syndirelay.exe sync --article your-article-slug --platforms devto --dry-run
 ```
 
-The command must exit successfully and print the selected article compiled for `devto`. `--dry-run` leaves publishing state unchanged. To create a remote draft, follow [4.1](#41-case1-create-a-draft-with-the-browser-extension).
+The command must exit successfully and print the selected article compiled for `devto`. `--dry-run` leaves publishing state unchanged. To create a remote draft after the preview, continue to the next section for the browser extension.
+
+### 4.2. Case2: Create a draft with the browser extension
+
+Use a native SyndiRelay executable on the same OS as your Edge or Chrome browser. If you already have a content repository, you can skip the optional Inkerio preview above. Complete [2.2](#22-get-the-source-and-build) and keep the terminal in the checkout. Windows does not require WSL.
+
+1. Run `./syndirelay install` (PowerShell: `.\syndirelay.exe install`) to register the Native Messaging host.
+2. After `Native Messaging Host registered` appears, open `edge://extensions` or `chrome://extensions`, enable developer mode, choose **Load unpacked**, and select the checkout's `extension/` directory.
+3. Open SyndiRelay from the browser toolbar's extensions menu and confirm its Bridge connection. It listens on `127.0.0.1:32146`; if needed, run `./syndirelay --bridge` (PowerShell: `.\syndirelay.exe --bridge`) and keep that terminal running.
+4. As shown in section 3, point `content_root` to an existing supported content repository, `engine_root` to the SyndiRelay checkout, and set your site URL. Inkerio Content Template repositories must contain `src/content/articles/` and `src/data/content-manifest.json`.
+5. Sign in to the target platform in the same browser. Return to the extension, select an article and platform, preview it, then use the supported draft creation action.
+6. Open the draft URL returned in the task result and check its title and body.
+
+Keep the executable at its registered path; rerun `install` if you move it. If the extension cannot connect, verify that it uses the same OS installation and reload it after registration. Platform login and an available adapter operation are required for remote writes.
 
 ### 4.3. Case3: Connect an MCP client
 
@@ -170,7 +170,11 @@ Windows clients should use the native executable, for example `"command": "C:\\t
 
 ### 4.4. Case4: Connect ChatGPT
 
-Complete the build in section 2 and prepare your own Tunnel ID in ChatGPT. Install the official [tunnel-client](https://github.com/openai/tunnel-client/releases/latest) for your OS, add `tunnel-client` to your system `PATH`, and configure an authorized Tunnel runtime credential using `CONTROL_PLANE_API_KEY` or `SYNDIRELAY_RUNTIME_KEY_REF` (`env:NAME` or `file:ABSOLUTE_PATH`). On Linux/macOS, credential files must have mode `0600`. Existing authorized credentials can be reused.
+Complete the build in section 2, then follow this order. A Tunnel ID and a runtime credential are separate values:
+
+1. In OpenAI Platform [Tunnels management](https://platform.openai.com/settings/organization/tunnels), create or select a Tunnel for the relevant ChatGPT workspace and copy its full `tunnel_...` ID. Creating a Tunnel requires Tunnels Manage permission.
+2. At [Runtime API Keys](https://platform.openai.com/settings/organization/api-keys), reuse an authorized runtime key with **Tunnels Read + Use** permissions or create a restricted key with those permissions. Supply it via `CONTROL_PLANE_API_KEY`, or set `SYNDIRELAY_RUNTIME_KEY_REF` to `env:NAME` or `file:ABSOLUTE_PATH`. On Linux/macOS, a credential file must have mode `0600`. **No new one-time or per-project API key is needed**, but a valid runtime credential is required; do not use an admin key instead.
+3. Install the official [tunnel-client](https://github.com/openai/tunnel-client/releases/latest) for your operating system, ensure `tunnel-client` is on `PATH`, then run the commands below. Never commit the actual credential to Git.
 
 Linux / macOS, from the checkout:
 
@@ -187,7 +191,7 @@ Windows PowerShell:
 .\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
 ```
 
-Add that Tunnel in ChatGPT and call `list_platforms`. A healthy Tunnel alone does not verify the ChatGPT connection. Keep the Bridge local.
+Use `--status` to confirm that the SyndiRelay runtime is running and healthy. In [ChatGPT connector settings](https://chatgpt.com/#settings/Connectors), choose **Connection: Tunnel** and select or paste the same Tunnel ID. Call `list_platforms` and confirm an actual tool response; a healthy local runtime alone does not verify ChatGPT connectivity. If the Tunnel is missing, check workspace scope and Tunnels Read + Use permissions. Keep the Bridge local.
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is a separate, optional integration and is disabled by default.
 
