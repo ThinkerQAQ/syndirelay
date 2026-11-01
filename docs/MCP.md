@@ -29,23 +29,42 @@ When connecting to a ChatGPT or other MCP client, attach a *dedicated local STDI
 
 ## Connect to ChatGPT through a dedicated Secure MCP Tunnel
 
-The local `mcp-stdio` server is ready to serve **14 named MCP tools** when started from the Windows native executable (v0.1.193 or later), but a separate outgoing Tunnel and ChatGPT connector must be configured. **Do not reuse the BlogCTL Tunnel.** Keep the old connection for rollback while bringing SyndiRelay online.
+**Default rule: run both SyndiRelay MCP and the Tunnel client natively on the user's OS.** The official [`tunnel-client` releases](https://github.com/openai/tunnel-client/releases/latest) include builds for Windows, macOS and Linux. Windows users never need Ubuntu or WSL. The local `syndirelay mcp-stdio` server exposes 14 MCP tools; a separately associated Tunnel ID and ChatGPT connection are additional steps.
 
-A private runtime API key with **Tunnels Read/Use** permissions and the separately created Tunnel ID are required. Never paste a runtime key into ChatGPT, a GitHub issue, a shell command line, or a repository. The Tunnel ID is *not* the runtime API key.
+A Secure MCP Tunnel uses **an existing authorized runtime credential** (Tunnels Read + Use). It does **not** need a fresh/one-time API key for each application. Reuse an authorized user/session environment reference; do not copy another application's credential profile, hard-code a secret in a script, or commit it to Git. The Tunnel ID is an identifier, not a credential.
 
-On Linux/WSL (where `tunnel-client` is installed), save your own authorized runtime key into the private file `~/.config/tunnel-client/syndirelay-runtime-key` using a local secure editor. Restrict access with `chmod 600 ~/.config/tunnel-client/syndirelay-runtime-key`; the parent directory must be private. Do not copy another app's API key/profile. Then run:
+### Windows (recommended default for Windows users)
 
-```sh
-# Replace with your dedicated SyndiRelay Tunnel ID.
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_SYNDIRELAY_TUNNEL_ID
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_SYNDIRELAY_TUNNEL_ID --status
+1. Build/install `syndirelay-windows-amd64.exe` and its private `Data/`, Extension and renderer dependencies on Windows. Keep the installed browser Native Host on Windows.
+2. Download the **Windows** `tunnel-client` ZIP from the [official latest release](https://github.com/openai/tunnel-client/releases/latest) and extract `tunnel-client.exe` next to SyndiRelay or into a directory on `PATH`. The script deliberately fails instead of silently launching WSL.
+3. In a regular **Windows PowerShell** session that already has access to your authorized Tunnel runtime credential, set `CONTROL_PLANE_API_KEY` using your established secure method (do not place the value inside the repository or in a committed PowerShell profile). This is not a request to create a new key.
+4. Run the standalone Windows setup:
+
+```powershell
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
 ```
 
-The script uses `tunnel-client runtimes connect` with the existing native Windows binary at `C:\software\Coding\SyndiRelay\syndirelay-windows-amd64.exe` through WSL when present. On macOS or native Linux it uses `syndirelay` on `PATH`. Override `TUNNEL_CLIENT_BIN`, `SYNDIRELAY_MCP_COMMAND`, `SYNDIRELAY_TUNNEL_PROFILE_DIR` and `SYNDIRELAY_RUNTIME_KEY_FILE` for other installations. The script fails closed on absent credentials, unsafe file permissions, invalid Tunnel ID, or a legacy BlogCTL executable; it never starts a second publishing Bridge or overwrites a BlogCTL profile.
+The Windows launcher uses the real Windows `tunnel-client.exe`, the Windows `syndirelay-windows-amd64.exe mcp-stdio`, and a separate Windows profile under `%LOCALAPPDATA%\SyndiRelay\tunnel`. For nonstandard locations pass `-TunnelClientPath` and `-SyndiRelayPath` (absolute paths). For an existing named environment reference use `-RuntimeKeyRef env:VARIABLE`; a private file reference `file:C:\private\path` is also supported. It never edits the older BlogCTL Native Host or user data.
 
-Once `runtimes status syndirelay` reports a running and ready tunnel, go to **ChatGPT Settings → Plugins → Add custom MCP server**, choose **Tunnel**, paste the SyndiRelay-specific Tunnel ID, select the supported authentication for that tunnel, then verify its named tools. Do not register the old BlogCTL tunnel ID by mistake. Check `list_platforms` and `list_articles` first; no publishing write is needed for an end-to-end connection smoke test. If the ChatGPT UI still shows BlogCTL only, connector registration/discovery is **not complete** even when local MCP STDIO works.
+### Linux / macOS
 
-These are three distinct states: **(1) native MCP works locally, (2) dedicated outgoing tunnel is healthy, (3) ChatGPT connector is installed and actually invokes SyndiRelay**. Do not report all three as complete when only (1) is verified.
+Install the native `syndirelay` and native `tunnel-client` executable on the **same host**. Expose your existing authorized runtime credential in `CONTROL_PLANE_API_KEY` through your private process manager, or select `SYNDIRELAY_RUNTIME_KEY_REF=env:VARIABLE` / `file:/private/path`. Then:
+
+```sh
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID --status
+```
+
+Do not rely on a Windows `C:\...` path or WSL drive mounts. Both scripts refuse an absent runtime credential or legacy BlogCTL MCP executable. Linux/macOS Native Messaging installation, when used, is separate from Tunnel setup.
+
+### Optional WSL bridge (advanced, not the Windows default)
+
+WSL can carry the outbound Tunnel connection to an explicitly specified **Windows** `syndirelay.exe mcp-stdio` when the user already has WSL. This is optional and should never be required in setup docs for normal Windows users. Set `SYNDIRELAY_MCP_COMMAND` explicitly if you choose it; it is not autodetected.
+
+### Connect the ChatGPT plugin
+
+Once the Tunnel reports healthy and ready, go to **ChatGPT Plugins → Add custom MCP server → Tunnel**, select/paste the SyndiRelay-specific Tunnel ID and review the requested permissions. Test read-only `list_platforms` / `list_articles` first. The three states remain separate: **native MCP running; Tunnel ready; ChatGPT plugin registered and tools called**. Do not report success until the third state is verified.
 
 ## Available operations and authorization
 

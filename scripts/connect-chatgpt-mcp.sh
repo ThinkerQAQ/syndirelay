@@ -10,11 +10,12 @@ Usage: scripts/connect-chatgpt-mcp.sh tunnel_<id> [--status]
 Preconditions:
   - tunnel-client in PATH (or set TUNNEL_CLIENT_BIN)
   - a separate, authorized OpenAI Tunnel ID
-  - a private runtime API key file, 0600, at:
-      ~/.config/tunnel-client/syndirelay-runtime-key
-    or set SYNDIRELAY_RUNTIME_KEY_FILE to an absolute file path.
-  - the SyndiRelay native executable on the same OS as the signed-in browser;
-    override SYNDIRELAY_MCP_COMMAND if not automatically detected.
+  - An existing authorized runtime credential in CONTROL_PLANE_API_KEY,
+    or SYNDIRELAY_RUNTIME_KEY_REF=env:VARIABLE / file:/private/path.
+    A new or one-time key is not required for each project.
+  - Native Linux/macOS `syndirelay` executable on PATH;
+    override SYNDIRELAY_MCP_COMMAND for an explicit native path.
+  - Windows users should run connect-chatgpt-mcp.ps1 natively instead.
 
 The script installs/reuses only the alias `syndirelay` and never touches BlogCTL.
 It does not create a remote Tunnel or a ChatGPT connector automatically.
@@ -33,23 +34,33 @@ if [[ "$MODE" == --status ]]; then
 fi
 
 PROFILE_DIR="${SYNDIRELAY_TUNNEL_PROFILE_DIR:-$HOME/.config/tunnel-client}"
-KEY_FILE="${SYNDIRELAY_RUNTIME_KEY_FILE:-$PROFILE_DIR/syndirelay-runtime-key}"
-[[ "$KEY_FILE" = /* ]] || { echo 'Runtime key file must be an absolute path' >&2; exit 2; }
-[[ -f "$KEY_FILE" && ! -L "$KEY_FILE" && -s "$KEY_FILE" ]] || {
-  echo "Missing private runtime API key file: $KEY_FILE" >&2
-  echo 'Create your own runtime key in OpenAI Platform and save it locally; do not paste it into ChatGPT.' >&2
-  exit 1
-}
-# GNU stat on Linux/WSL; BSD stat on macOS.
-KEY_MODE="$(stat -c '%a' "$KEY_FILE" 2>/dev/null || stat -f '%Lp' "$KEY_FILE")"
-if [[ "$KEY_MODE" != 600 ]]; then
-  echo 'Runtime key file must have mode 0600' >&2; exit 1
+KEY_ARGS=()
+KEY_REF="${SYNDIRELAY_RUNTIME_KEY_REF:-}"
+if [[ -z "$KEY_REF" && -n "${CONTROL_PLANE_API_KEY:-}" ]]; then
+  KEY_REF='env:CONTROL_PLANE_API_KEY'
 fi
+if [[ -z "$KEY_REF" ]]; then
+  echo 'Provide an existing authorized Tunnel runtime credential through CONTROL_PLANE_API_KEY or SYNDIRELAY_RUNTIME_KEY_REF; no new per-project key is required.' >&2
+  exit 1
+fi
+case "$KEY_REF" in
+  env:*)
+    KEY_ENV="${KEY_REF#env:}"
+    [[ "$KEY_ENV" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || { echo 'Invalid credential environment variable' >&2; exit 2; }
+    [[ -n "${!KEY_ENV:-}" ]] || { echo 'Selected runtime credential environment variable is empty' >&2; exit 1; }
+    ;;
+  file:*)
+    KEY_FILE="${KEY_REF#file:}"
+    [[ "$KEY_FILE" = /* && -f "$KEY_FILE" && ! -L "$KEY_FILE" && -s "$KEY_FILE" ]] || { echo 'Credential must be a nonempty regular absolute file' >&2; exit 1; }
+    KEY_MODE="$(stat -c '%a' "$KEY_FILE" 2>/dev/null || stat -f '%Lp' "$KEY_FILE")"
+    [[ "$KEY_MODE" == 600 ]] || { echo 'Runtime credential file must have mode 0600' >&2; exit 1; }
+    ;;
+  *) echo 'Use env:NAME or file:/absolute/path, not a literal secret' >&2; exit 2;;
+esac
+KEY_ARGS=(--runtime-api-key "$KEY_REF")
 
 if [[ -n "${SYNDIRELAY_MCP_COMMAND:-}" ]]; then
   MCP_COMMAND="$SYNDIRELAY_MCP_COMMAND"
-elif [[ -x /mnt/c/software/Coding/SyndiRelay/syndirelay-windows-amd64.exe ]]; then
-  MCP_COMMAND='/mnt/c/software/Coding/SyndiRelay/syndirelay-windows-amd64.exe mcp-stdio'
 elif command -v syndirelay >/dev/null 2>&1; then
   MCP_COMMAND="$(command -v syndirelay) mcp-stdio"
 else
@@ -66,7 +77,7 @@ chmod 700 "$PROFILE_DIR"
   --name SyndiRelay \
   --description 'SyndiRelay local MCP: article reading, previews and authorized publication' \
   --tunnel-id "$TUNNEL_ID" \
-  --runtime-api-key "file:$KEY_FILE" \
+  "${KEY_ARGS[@]}" \
   --profile syndirelay \
   --profile-dir "$PROFILE_DIR" \
   --mcp-command "$MCP_COMMAND" \
