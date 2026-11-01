@@ -13,6 +13,7 @@ git clone https://github.com/ThinkerQAQ/syndirelay.git
 cd syndirelay
 npm ci
 go build -o syndirelay ./cmd
+printf '# My article\n\nMy original text.\n' > hello.md
 ./syndirelay compile --file ./hello.md --platform devto
 ```
 

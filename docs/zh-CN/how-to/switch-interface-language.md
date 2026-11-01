@@ -1,4 +1,4 @@
-# 切换 BlogCTL 界面语言
+# 切换 SyndiRelay 界面语言
 
 浏览器扩展和 Web Console 使用同一套界面与翻译资源。
 

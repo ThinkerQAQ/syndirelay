@@ -1,24 +1,21 @@
-# Configure the workspace
+# Configure a SyndiRelay workspace
 
-Open **Settings → Content and paths** in the connected Extension/Console.
+SyndiRelay can compile a single Markdown file **without any blog workspace**. Repository-aware article selection and the optional browser Console need only an explicitly selected content root; Inkerio is not a required runtime dependency.
 
-| Field | Select |
+## Local paths
+
+| Setting | Meaning |
 | --- | --- |
-| Engine Root | Root containing `package.json`, `astro.config.mjs` and `tools/blogctl/` |
-| Content Root | Root containing `src/content/articles/` |
+| `SYNDIRELAY_HOME` | Absolute root of the local executable, Node renderer dependencies, Extension and optional diagram scripts |
+| `SYNDIRELAY_DATA_DIR` | Absolute, local-only private directory for jobs, logs, configuration and publication bindings |
+| Content Root | Directory containing `src/content/articles/` (for repository-aware publishing) |
+| Site origin / canonical URL | Your own HTTPS domain; must be explicitly configured for content-repository publishing |
+| Engine Root (older UI) | **Legacy compatibility only**; optional if you also maintain an Inkerio website |
 
-Select repository roots, not `src/content/` or the executable directory. Save, leave Settings, then reopen and confirm the paths. Check local articles on Create/Update; Detect lists remote account content.
+In the Extension/Console open **Settings → Content and paths**, choose the real content repository folder, save, reopen Settings, and confirm the paths. Use **Create/Update** for local content selection, and **Detect** for an authorized remote account inventory. Detection is not required for standalone `compile --file`.
 
-## Windows and WSL
+Do not select `src/content/` itself when the UI expects a repository root. On Windows, run a Windows Native Host to access a Windows Edge/Chrome profile. WSL and native Windows are different bridge processes and do not share browser cookies automatically.
 
-Windows Bridge paths use Windows syntax, such as `C:\code\blog-content`. A Linux Bridge in WSL uses Linux paths. A Windows browser requires a Windows Native Messaging executable even if source files are edited in WSL.
+For existing BlogCTL installations, copy the old `Data/` to a separate private backup and follow [Windows side-by-side](windows-side-by-side.md). Do not point two independent running products at a writable shared database. The local Bridge uses port **32146**; the former BlogCTL port was 32145.
 
-CLI `sync` uses its current directory or `BLOG_CONTENT_ROOT` and `BLOGCTL_ENGINE_ROOT` to discover repositories. Saved UI paths do not override those discovery rules. See [CLI](../reference/cli.md).
-
-## Move or share Data
-
-Set absolute `BLOGCTL_DATA_DIR` before starting the process. Stop the previous Bridge, back up/copy existing Data, start at the new location and inspect Settings and Tasks. The override does not copy files or translate workspace paths.
-
-For WSL social commands sharing a Windows installation, use its `/mnt/c/.../Data` directory and pass explicit Linux `--content-root` where saved paths are Windows paths. Avoid concurrent runtimes overwriting incompatible workspace paths in the same configuration.
-
-See [Configuration](../reference/configuration.md) for directory defaults and TOML keys.
+Configure your own copyright policy and canonical origin as explained in [identity and copyright](../reference/copyright-and-identity.md), and inspect [configuration](../reference/configuration.md) for persisted TOML fields.

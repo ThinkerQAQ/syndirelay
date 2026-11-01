@@ -13,20 +13,20 @@
 默认地址属于运行 Bridge 的机器。Windows PowerShell：
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:32145/v1/health
+Invoke-RestMethod http://127.0.0.1:32146/v1/health
 ```
 
 Linux 或 macOS：
 
 ```bash
-curl --fail http://127.0.0.1:32145/v1/health
+curl --fail http://127.0.0.1:32146/v1/health
 ```
 
 连接被拒绝时，先打开扩展以触发 Native Messaging，再检查注册、文件路径、执行权限和启动错误。接口能响应也可能是旧进程，需核对其版本。
 
 ## 3. 检查扩展
 
-在 `edge://extensions` 或 `chrome://extensions` 确认 BlogCTL 已启用，解压目录仍然存在。扩展错误和 service worker 控制台可用于定位本地主机启动失败。替换文件后需要重新加载扩展。
+在 `edge://extensions` 或 `chrome://extensions` 确认 SyndiRelay 扩展已启用，解压目录仍然存在。扩展错误和 service worker 控制台可用于定位本地主机启动失败。替换文件后需要重新加载扩展。
 
 健康接口正常、工作台操作失败时，检查扩展转发和旧标签页。从当前扩展重新打开工作台，确认连接状态后再提交任务。
 

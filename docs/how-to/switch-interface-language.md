@@ -1,8 +1,8 @@
-# Change the BlogCTL interface language
+# Change the SyndiRelay interface language
 
 The browser Extension and Web Console share the same interface and translation resources.
 
-Open **Settings → Interface & language** and select **Follow browser language / Simplified Chinese / English**. Auto follows the browser's language; Chinese is the fallback when it cannot be resolved. A successful choice is saved to `ui_locale` in BlogCTL's `blogctl.toml`, so the next launch and the other UI host use the same preference. The Bridge must be connected for the change to persist.
+Open **Settings → Interface & language** and select **Follow browser language / Simplified Chinese / English**. Auto follows the browser's language; Chinese is the fallback when it cannot be resolved. A successful choice is saved to `ui_locale` in SyndiRelay's `blogctl.toml`, so the next launch and the other UI host use the same preference. The Bridge must be connected for the change to persist.
 
 | Preference | Result |
 | --- | --- |

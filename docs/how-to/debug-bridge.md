@@ -13,20 +13,20 @@ Run the intended executable's `install` command again after moving it. Match the
 The default endpoint is local to the machine running the Bridge:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:32145/v1/health
+Invoke-RestMethod http://127.0.0.1:32146/v1/health
 ```
 
 On Linux or macOS:
 
 ```bash
-curl --fail http://127.0.0.1:32145/v1/health
+curl --fail http://127.0.0.1:32146/v1/health
 ```
 
 If the connection is refused, open the Extension to trigger Native Messaging, then inspect registration, executable permissions/path and process startup errors. A reachable endpoint may belong to an older process; compare its version with the package you installed.
 
 ## 3. Check the Extension
 
-In `edge://extensions` or `chrome://extensions`, confirm BlogCTL is enabled and its unpacked directory still exists. Inspect the Extension's errors or service-worker console for native-host launch failures. Reload after replacing its files.
+In `edge://extensions` or `chrome://extensions`, confirm the SyndiRelay Extension is enabled and its unpacked directory still exists. Inspect the Extension's errors or service-worker console for native-host launch failures. Reload after replacing its files.
 
 Health responding while Console operations fail points to the Extension/relay or a stale browser tab. Reopen the Console from the active Extension and check the connection status before submitting a task.
 

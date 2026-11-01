@@ -1,19 +1,20 @@
-# BlogCTL 文档
+# SyndiRelay 文档
 
-[English](../index.md) · [Inkerio 引擎文档](../../../../docs/zh-CN/index.md)
+[English](../index.md) · [项目首页](../../README_ZH.md) · [Inkerio 引擎](https://github.com/ThinkerQAQ/inkerio)
 
-BlogCTL 是 Inkerio 配套的管理与分发工具，负责文章装配、多平台分发、搜索引擎提交与本地工作台。Astro 页面、内容 Schema 和网站部署放在博客引擎文档中。
+**SyndiRelay 是由 BlogCTL 拆分出来的独立 Markdown 编译与内容分发工具。** 静态网站由 Inkerio 生成；SyndiRelay 可选地负责编译和站外分发。单文件编译不需要安装博客引擎或个人内容仓库。
 
-| 要做什么 | 对应文档 |
+| 目标 | 文档 |
 | --- | --- |
-| 安装程序和浏览器扩展 | [快速开始](quick-start.md) |
-| ChatGPT MCP 与本机 Bridge 集成 | [MCP 接入](../MCP.md) |
-| 在新机器安装并对照界面操作 | [新人上手教程](tutorial/first-run-on-new-machine.md) |
-| 创建第一篇远端草稿 | [第一次发布教程](tutorial/first-publish.md) |
-| 理解 Bridge、会话和发布模型 | [核心概念](concepts/index.md) |
-| 配置或排查具体问题 | [操作指南](how-to/index.md) |
-| 查命令、TOML 与接口 | [参考手册](reference/index.md) |
-| 查看已有操作实例 | [示例](examples/index.md) |
-| 理解模块边界 | [架构](architecture/index.md) |
+| 本地编译一篇文章 | [快速开始](quick-start.md) |
+| 在 Windows/macOS/Linux 配置 CLI 与浏览器扩展 | [新机器安装](tutorial/first-run-on-new-machine.md) |
+| 通过 STDIO MCP 接入、避免开放 Bridge | [MCP](../MCP.md) |
+| 配置内容路径、站点身份与版权 | [工作区](how-to/configure-workspace.md)、[版权和身份](reference/copyright-and-identity.md) |
+| 理解各平台的草稿和发布操作 | [发布工作流](guide/workflows.md) |
+| 查 CLI 与旧版搜索 CI 命令 | [CLI 参考](reference/cli.md) |
+| 理解模块和本地数据边界 | [架构](architecture/index.md) |
+| 对接 Reverfolio 作品影响力统计 | [可选影响力统计](reverfolio.md) |
+| 审查公开源码或发布安装包前的条件 | [开源与发布验收](../compliance/PUBLICATION_READINESS.md) |
+| 查看 BlogCTL 拆分与兼容性档案 | [迁移档案](../migration/README.md) |
 
-Agent 开发规则见仓库根目录的 [AGENTS.md](../../../../AGENTS.md) 和 [BlogCTL Agent Contract](../../AGENTS.md)。
+目前仓库仍为 Private，链接需要访问权限。远端草稿、更新与发布必须取得账号授权，并按平台实际支持能力执行。编译成功不等于取得远程接口授权。公开安装包仍需完成第三方许可证与安全审核。

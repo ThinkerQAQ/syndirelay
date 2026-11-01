@@ -1,4 +1,4 @@
-# SyndiRelay private-release license audit (2026-10-31)
+# SyndiRelay binary-release license audit (reviewed 2026-11-01)
 
 **Do not make this repository public or upload binary Releases solely because the core code is MIT.** License compatibility, bundled notices, platform API authorization and clean-machine operation are separate release conditions.
 
@@ -38,6 +38,6 @@ This is only a format example: **a release manifest must list *all* actual pinne
 
 1. Collect and review current upstream license texts for all nine Go requirements and 61 npm lock entries, including optional macOS/Windows/Linux Sharp+libvips binaries. Resolve the missing libvips license-text evidence and any LGPL obligations.
 2. Produce the pinned manifest and independently verify every SHA-256 checksum against original license files; do not invent or substitute license text.
-3. Validate complete installation and rendering on actual macOS/Windows/Linux environments. GitHub Actions is currently blocked before runner startup by private-repo account billing/spending limit.
+3. Validate complete installation and rendering on actual macOS/Windows/Linux environments. GitHub Actions currently has green 3-OS build/test runs; those do **not** verify real installation/Extension/remote publishing or complete license redistribution.
 4. Conduct platform-by-platform authorization review for authenticated publishing, especially 51CTO and Medium; read-only API checks do not prove remote writes.
 5. Once all conditions pass, create Release packages, verify their contents and checksums and preserve existing user Data/ and extension identities.

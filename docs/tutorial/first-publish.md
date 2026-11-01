@@ -4,7 +4,7 @@ This walkthrough uses DEV.to as an example. Start with one article and one platf
 
 ## Prepare the article and account
 
-Complete [BlogCTL installation](../quick-start.md) and the [Inkerio content tutorial](../../../../docs/tutorial/first-site.md). In **Settings**, set the engine and content roots. For the public template, the root slug `sample-article` has both Chinese and English versions.
+Complete [SyndiRelay installation](../quick-start.md) and the [Inkerio content tutorial](https://github.com/ThinkerQAQ/inkerio/blob/main/docs/tutorial/first-site.md). For repository-based publishing, set an explicit content root and your own site/copyright policy in **Settings**; the engine root is optional. For the public template, the root slug `sample-article` has both Chinese and English versions.
 
 In the platform's settings, choose `en` for DEV.to. Sign in to DEV.to in the browser profile running the Extension, or configure its API key. Other browser platforms need their own signed-in sessions. An interface-language change does not change article language.
 

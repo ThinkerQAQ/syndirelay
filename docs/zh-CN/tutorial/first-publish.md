@@ -4,7 +4,7 @@
 
 ## 准备文章与账号
 
-先完成 [BlogCTL 安装](../quick-start.md)和 [Inkerio 内容教程](../../../../../docs/zh-CN/tutorial/first-site.md)，在「设置」填写引擎与内容路径。公开模板的原文 slug `sample-article` 同时有中英文版本。
+先完成 [SyndiRelay 安装](../quick-start.md)和 [Inkerio 内容教程](https://github.com/ThinkerQAQ/inkerio/blob/main/docs/zh-CN/tutorial/first-site.md)，从内容仓库分发时在「设置」填写内容仓库及自己站点的版权/Canonical 配置，引擎路径可省略。公开模板的原文 slug `sample-article` 同时有中英文版本。
 
 在 DEV.to 分发设置中选择 `en`，并在运行扩展的浏览器配置中登录 DEV.to，或配置其 API Key。其他浏览器平台分别需要自己的登录会话。切换界面语言不会切换文章语言。
 
