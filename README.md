@@ -4,7 +4,7 @@
 
 **SyndiRelay is an independent Markdown compilation and cross-platform syndication toolkit.** It started as BlogCTL, but no longer requires an Inkerio/Astro engine or a ThinkerQAQ website checkout. It supports standalone Markdown input, optional repository-aware publishing, a local browser Bridge and Extension, STDIO MCP tools, and optional publication-impact handoff to Reverfolio.
 
-**Availability:** This repository is **private during the public-source audit**. There is no approved SyndiRelay binary/extension Release yet. Existing `ThinkerQAQ.github.io` BlogCTL downloads are *historical builds, not SyndiRelay installers*. Open-sourcing the source and distributing precompiled binaries are separate decisions; see [public-source and binary release gates](docs/compliance/PUBLICATION_READINESS.md).
+**Availability:** This repository is **private during the public-source audit**. There is no approved SyndiRelay binary/extension Release yet. The old `ThinkerQAQ.github.io` BlogCTL Releases have now been **retired**; their binaries were historical builds, not SyndiRelay installers. Open-sourcing the source and distributing precompiled binaries are separate decisions; see [public-source and binary release gates](docs/compliance/PUBLICATION_READINESS.md).
 
 ## What it does
 

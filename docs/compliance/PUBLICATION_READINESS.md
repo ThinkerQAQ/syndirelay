@@ -13,7 +13,7 @@ Status checked: **2026-11-01**. SyndiRelay remains **private**; this document de
 | Authenticated platform adapters | 11 formatter targets; external posting uses platform-dependent API/session/Bridge paths | Authorization and explicit target behavior need per-platform assessment |
 | Third-party bundled scripts | Extension bundles `log-editor-vendor.js` and `i18next-vendor.js` | Complete provenance and embedded-license notices not yet verified |
 | npm dependencies | `package-lock.json` includes Sharp and optional platform libvips packages | Full licenses/redistribution conditions not yet documented |
-| Historical BlogCTL Releases | Former website has 23 BlogCTL releases and an Inkerio release at the time of review | Historical download packages include unresolved `fhttp` licensing evidence; retire separately |
+| Historical BlogCTL Releases | At the review snapshot the former website had 23 BlogCTL Releases and 1 Inkerio Release | Historical download packages included unresolved `fhttp` licensing evidence; the website Release attachments have now been removed after archiving the original GitHub metrics (Git tags retained) |
 
 ## Before making this *existing* private repository public
 

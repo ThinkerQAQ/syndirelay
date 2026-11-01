@@ -2,7 +2,7 @@
 
 SyndiRelay 是独立的 Markdown 编译与内容分发工具，不依赖 Inkerio 或 Astro。软件的 MIT 协议不等于使用者文章的版权协议。
 
-**当前仍处于私有迁移阶段**：许可证和平台授权未审完，不提供公开的安装包。不要从旧 BlogCTL 的 Release 下载文件并当作 SyndiRelay 使用。
+**当前仍处于私有迁移阶段**：许可证和平台授权未审完，不提供公开的安装包。旧 BlogCTL Release 已从网站仓库退役，历史安装包不是 SyndiRelay 安装程序。
 
 ## 从源码安装
 

@@ -2,7 +2,7 @@
 
 SyndiRelay is an independent Markdown compiler and content syndication toolkit. No Inkerio or Astro engine is required. Its open-source MIT license does not grant rights over users' content.
 
-**Migration status:** The standalone source is in the private [SyndiRelay repository](https://github.com/ThinkerQAQ/syndirelay). Public release packages are blocked until third-party license and publishing-platform authorization review passes. Do not download the older BlogCTL release expecting a SyndiRelay installer.
+**Migration status:** The standalone source is in the private [SyndiRelay repository](https://github.com/ThinkerQAQ/syndirelay). Public release packages are blocked until third-party license and publishing-platform authorization review passes. Old BlogCTL Release downloads have been retired from the website repository; they were never SyndiRelay installers.
 
 ## Install from source
 
