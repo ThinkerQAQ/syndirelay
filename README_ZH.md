@@ -116,20 +116,7 @@ CLI 选择仓库时，请按下文显式设置 `SYNDIRELAY_CONTENT_ROOT` 和 `SY
 
 ## 4. Optional Features
 
-### 4.1. Case1: 通过浏览器扩展创建草稿
-
-先完成 [2.2](#22-获取源码并构建)，在浏览器所在的操作系统构建原生程序，并保持终端位于源码仓库。Windows 不需要 WSL。扩展需要 Edge 或 Chrome。
-
-1. 执行 `./syndirelay install`（PowerShell：`.\syndirelay.exe install`）注册 Native Messaging Host。
-2. 看到 `Native Messaging Host registered` 后，打开 `edge://extensions` 或 `chrome://extensions`，启用开发者模式，点击“加载解压缩的扩展”，选择仓库内的 `extension/` 目录。
-3. 从浏览器工具栏的扩展菜单打开 SyndiRelay，确认 Bridge 已连接。默认地址为 `127.0.0.1:32146`；如需手动启动，执行 `./syndirelay --bridge`（PowerShell：`.\syndirelay.exe --bridge`），保持该终端运行。
-4. 按第 3 节配置 `content_root`、`engine_root` 和站点地址；已有内容仓库的要求见 [4.2](#42-case2-分发-inkerio-内容仓库中的文章)。
-5. 在同一浏览器登录目标平台，返回扩展选择文章和平台，先预览，再执行该平台支持的创建草稿操作。
-6. 查看任务结果，打开返回的草稿链接，核对标题与正文。
-
-注册后请保持可执行文件路径不变；移动后重新执行 `install`。如扩展无法连接，检查是否使用同一操作系统的安装，并在注册后重新加载扩展。远程写入要求平台已登录，且适配器支持所选操作。
-
-### 4.2. Case2: 分发 Inkerio 内容仓库中的文章
+### 4.1. Case1: 分发 Inkerio 内容仓库中的文章
 
 通过 [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) 创建的仓库，可以同时用于建站和 SyndiRelay 分发，无需再建第二个内容仓库。CLI 同步要求存在 `src/content/articles/` 和 `src/data/content-manifest.json`。
 
@@ -147,7 +134,20 @@ $env:SYNDIRELAY_CONTENT_ROOT = 'C:\sites\my-content'
 .\syndirelay.exe sync --article your-article-slug --platforms devto --dry-run
 ```
 
-命令应正常退出，并输出所选文章在 `devto` 平台的编译结果。`--dry-run` 不修改发布状态；创建远程草稿请继续按 [4.1](#41-case1-通过浏览器扩展创建草稿) 操作。
+命令应正常退出，并输出所选文章在 `devto` 平台的编译结果。`--dry-run` 不修改发布状态。预览通过后，如需创建远程草稿，继续下一节通过浏览器扩展操作。
+
+### 4.2. Case2: 通过浏览器扩展创建草稿
+
+使用与 Edge 或 Chrome 浏览器位于同一操作系统的原生程序；如果已有内容仓库，可以跳过上一节的 Inkerio 专用预览。先完成 [2.2](#22-获取源码并构建)，并保持终端位于 SyndiRelay 源码仓库。Windows 不需要 WSL。
+
+1. 执行 `./syndirelay install`（PowerShell：`.\syndirelay.exe install`）注册 Native Messaging Host。
+2. 看到 `Native Messaging Host registered` 后，打开 `edge://extensions` 或 `chrome://extensions`，启用开发者模式，点击“加载解压缩的扩展”，选择仓库内的 `extension/` 目录。
+3. 从浏览器工具栏的扩展菜单打开 SyndiRelay，确认 Bridge 已连接。默认地址为 `127.0.0.1:32146`；如需手动启动，执行 `./syndirelay --bridge`（PowerShell：`.\syndirelay.exe --bridge`），保持该终端运行。
+4. 按第 3 节将 `content_root` 指向已有的受支持内容仓库，将 `engine_root` 指向 SyndiRelay 源码目录，并配置站点地址。若使用 Inkerio Content Template，仓库需包含 `src/content/articles/` 和 `src/data/content-manifest.json`。
+5. 在同一浏览器登录目标平台，返回扩展选择文章和平台，先预览，再执行该平台支持的创建草稿操作。
+6. 查看任务结果，打开返回的草稿链接，核对标题与正文。
+
+注册后请保持可执行文件路径不变；移动后重新执行 `install`。如扩展无法连接，检查是否使用同一操作系统的安装，并在注册后重新加载扩展。远程写入要求平台已登录，且适配器支持所选操作。
 
 ### 4.3. Case3: 连接 MCP 客户端
 
@@ -170,7 +170,11 @@ Windows 客户端使用原生程序，例如 `"command": "C:\\tools\\syndirelay\
 
 ### 4.4. Case4: 连接 ChatGPT
 
-先完成第 2 节构建，并在 ChatGPT 中准备自己的 Tunnel ID。安装对应系统的官方 [tunnel-client](https://github.com/openai/tunnel-client/releases/latest)，将 `tunnel-client` 放入系统 `PATH`，通过 `CONTROL_PLANE_API_KEY` 或 `SYNDIRELAY_RUNTIME_KEY_REF`（`env:NAME` 或 `file:ABSOLUTE_PATH`）配置已授权的 Tunnel 运行凭据。Linux/macOS 的凭据文件权限须为 `0600`。已有授权凭据可以复用。
+先完成第 2 节构建，再按以下顺序连接 ChatGPT。Tunnel ID 和运行凭据是两个不同的东西：
+
+1. 打开 OpenAI Platform 的 [Tunnels 管理页](https://platform.openai.com/settings/organization/tunnels)，为对应 ChatGPT 工作区创建或选择已有 Tunnel，复制完整的 `tunnel_...` ID。创建 Tunnel 需要 Tunnels 管理权限。
+2. 在 [Runtime API Keys](https://platform.openai.com/settings/organization/api-keys) 中复用已有、具备 **Tunnels Read + Use** 权限的运行密钥，或创建具有上述权限的受限密钥。将密钥通过环境变量 `CONTROL_PLANE_API_KEY` 提供，或让 `SYNDIRELAY_RUNTIME_KEY_REF` 指向 `env:NAME` / `file:ABSOLUTE_PATH`。Linux/macOS 的密钥文件权限必须为 `0600`。**不需要为每个项目新建一次性 API Key**；但运行 Tunnel 必须有有效授权凭据，不能用管理密钥代替。
+3. 安装与你的系统匹配的官方 [tunnel-client](https://github.com/openai/tunnel-client/releases/latest)，确保 `tunnel-client` 可在 `PATH` 中找到，然后执行下面对应系统的命令。不要把实际密钥写入 README 或 Git。
 
 Linux / macOS，在仓库目录执行：
 
@@ -187,7 +191,7 @@ Windows PowerShell：
 .\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
 ```
 
-在 ChatGPT 添加该 Tunnel，并调用 `list_platforms`。仅 Tunnel 状态正常，还不能证明 ChatGPT 已连通。Bridge 保持本地监听。
+用 `--status` 确认 SyndiRelay 运行实例正在运行且健康，然后打开 [ChatGPT 连接设置](https://chatgpt.com/#settings/Connectors)，选择 **Connection: Tunnel**，选中或粘贴上述同一个 Tunnel ID。连接后调用 `list_platforms`，确认收到实际工具响应；仅 Tunnel 运行正常不代表 ChatGPT 已连通。如看不到 Tunnel，请核对所属工作区与 Tunnels Read + Use 权限。Bridge 保持本地监听。
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) 影响力统计为独立的可选集成，默认关闭。
 
