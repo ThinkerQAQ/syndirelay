@@ -49,6 +49,12 @@ For Windows PowerShell, build with `go build -o syndirelay.exe ./cmd`, write a l
 
 For ChatGPT, use the [native Windows PowerShell setup or Linux/macOS setup](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel). The Tunnel client and SyndiRelay run natively on each platform; **WSL is optional, not a Windows requirement**. An existing authorized Tunnel credential can be reused without generating a new per-app key. A locally working MCP and a connected ChatGPT plugin are separate states.
 
+## Optional: use the same content repository as Inkerio
+
+If your site was created from the [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template), you **already have** a content repository. Point SyndiRelay's local workspace `content_root` at that checkout and set `[publishing.site].origin` to your own public site URL. You do not need a second `blog-content` repository or an Inkerio runtime to use SyndiRelay.
+
+For example, the same `alice.github.io` repository can power GitHub Pages through Inkerio and supply Markdown to SyndiRelay for explicitly authorized off-site publishing. Site identity and copyright remain user-owned: with `mode = "auto"`, an explicitly configured local copyright policy takes precedence; otherwise SyndiRelay can read `src/content/site/copyright.json`. The independent [Inkerio README](https://github.com/ThinkerQAQ/inkerio) explains the complete blog-creation workflow.
+
 ## Develop and validate
 
 ```sh

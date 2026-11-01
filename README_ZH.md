@@ -49,6 +49,12 @@ Windows PowerShell 使用 `go build -o syndirelay.exe ./cmd`，自行创建 `.md
 
 ChatGPT 的[专用 Tunnel 安装说明](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel)现已区分 **Windows 原生 PowerShell**、Linux 和 macOS 三套流程。**Windows 不要求 WSL/Ubuntu**；已获授权的 Tunnel 运行凭据可以复用，不需要为 SyndiRelay 新申请一次性密钥。MCP、Tunnel 和 ChatGPT 插件连通性须分别验收，禁止将凭据写入 Git。
 
+## 可选：复用 Inkerio 的内容仓库
+
+如果通过 [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) 创建了博客，**这就是现成的内容仓库**。只需将 SyndiRelay 的本地工作区 `content_root` 指向这个仓库，并在 `[publishing.site].origin` 配置自己的站点地址；无需再创建第二个 `blog-content`，也不需要让 SyndiRelay 依赖 Inkerio 引擎。
+
+例如，同一个 `alice.github.io` 仓库既可以由 Inkerio 构建为 GitHub Pages 网站，也可以在用户明确授权后由 SyndiRelay 读取并分发。域名与版权始终由用户管理：`mode = "auto"` 时优先使用 SyndiRelay 本地显式配置的版权声明，未配置时才读取内容仓库的 `src/content/site/copyright.json`。建站流程统一见 [Inkerio README](https://github.com/ThinkerQAQ/inkerio)。
+
 ## 开发与测试
 
 ```sh
