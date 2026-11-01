@@ -4,7 +4,7 @@
 
 **SyndiRelay 是独立的 Markdown 编译与多平台内容分发工具。** 它由 BlogCTL 拆分而来，不再要求安装 Inkerio/Astro 引擎，也不依赖 ThinkerQAQ 的个人网站。主要提供单文件 Markdown 编译、可选的内容仓库分发、本地浏览器 Bridge/Extension、STDIO MCP，以及可选的 Reverfolio 影响力统计对接。
 
-**公开状态：仍为 Private，处于源码公开前的审查阶段。** 尚无经过完整验收的 SyndiRelay 二进制文件或浏览器扩展 Release。旧 `ThinkerQAQ.github.io` 中的 BlogCTL Release 已经**退役并移除下载附件**；原二进制不能当作 SyndiRelay 新版本安装包。公开源码和公开分发可执行文件是两个不同的决策，详见[开源与发布验收清单](docs/compliance/PUBLICATION_READINESS.md)。
+**公开状态：SyndiRelay 源码以 MIT 许可证公开。** 二进制与浏览器扩展 Release 尚未完成验收；历史 BlogCTL Release 已退役。源码公开和安装包发布是两项独立的决策，详见开源及发布审核文档。
 
 ## 功能与边界
 
@@ -22,7 +22,7 @@
 
 ## 本地编译快速开始
 
-准备 Go **1.24+**、Node.js **22+**、npm 和 Git。当前克隆仓库需要已有的 GitHub 私有仓库访问权限。
+准备 Go **1.24+**、Node.js **22+**、npm 和 Git。
 
 ```sh
 git clone https://github.com/ThinkerQAQ/syndirelay.git

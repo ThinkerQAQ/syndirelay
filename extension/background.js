@@ -1626,8 +1626,9 @@ async function handleMessage(message) {
       const id = String(message.id || "").trim();
       if (!id) throw new Error("job id is required");
       const result = await fetchJSON(`/v1/jobs/${encodeURIComponent(id)}`);
-      if (result?.job && ["running", "queued", "waiting"].includes(result.job.state) &&
-          (result.job.platforms ?? []).includes("medium")) beginMediumUploadPump();
+      // A CLI/MCP job might be inspected before the periodic alarm fires.
+      // Wake its transport without replaying the publishing operation.
+      wakeBrowserPumpsForJobs(result?.job ? [result.job] : []);
       return { ok: true, job: result?.job };
     }
     case "blogctl.jobs.clear": {

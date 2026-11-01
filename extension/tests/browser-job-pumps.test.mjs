@@ -28,3 +28,13 @@ test("MCP alarm actually checks the Bridge job list and wakes pumps without requ
   assert.match(wake, /if \(active\.medium\) beginMediumUploadPump\(\)/u);
   assert.doesNotMatch(wake, /POST|\/v1\/sync\/jobs|publishAfter/u);
 });
+
+
+// A caller reading its CLI/MCP job should wake the required transport
+// immediately rather than waiting for the next MV3 30-second alarm.
+test("reading a CLI/MCP publishing job wakes Toutiao without a UI dispatch", async () => {
+  const source = await readFile(new URL("../background.js", import.meta.url), "utf8");
+  const getJob = source.match(/case "blogctl\.job\.get": \{([\s\S]*?)\n    \}/u)?.[1] ?? "";
+  assert.match(getJob, /wakeBrowserPumpsForJobs\(result\?\.job \? \[result\.job\] : \[\]\)/u);
+  assert.doesNotMatch(getJob, /chrome\.tabs\.(create|update)|active:\s*true|window\.focus|\/v1\/sync\/jobs/u);
+});

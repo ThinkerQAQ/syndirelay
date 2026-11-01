@@ -4,8 +4,11 @@ SyndiRelay original code is MIT; copied Inkerio PlantUML helper code is also fro
 
 Historical BlogCTL binaries through v0.1.193 included the `tls-client` / `fhttp` transport; the `fhttp` license could not be verified for the complete old distribution. The new source and Go module exclude those dependencies; source cleanup does not retrospectively repair old release ZIPs or establish third-party API authorization.
 
-The private migration repo is not yet approved for public releases. Package creation requires complete, current dependency license texts for every GOOS/GOARCH target and a review of actual npm runtime modules; `cmd/maint package` fails closed if its verified license bundle is missing. Runtime Node dependencies are installed by the user with `npm ci`, not silently vendored in this source repository.
+Source publication is separate from approval for binary or Extension Releases. Package creation requires complete, current dependency license texts for every GOOS/GOARCH target and a review of actual npm runtime modules; `cmd/maint package` fails closed if its verified license bundle is missing. Runtime Node dependencies are installed by the user with `npm ci`, not silently vendored in this source repository.
 
 Some platform publisher implementations interact with authenticated browser sessions and may use private or undocumented endpoints. That is a separate contractual/authorization issue from open-source licensing. Keep integrations unadvertised and do not publish or automatically run them until platform-by-platform review. A browser session or Cookie does not by itself grant authority to automate an endpoint.
 
 Never include users' content, session Cookies, access tokens, configuration secrets or local publishing databases in the repository or any downloadable package.
+
+
+Bundled Extension runtime attributions: see [Extension third-party notices](extension/THIRD_PARTY_NOTICES.md), including the seven pinned CodeMirror-related MIT license files and the existing i18next MIT license file.

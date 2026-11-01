@@ -87,8 +87,20 @@ func LoadCopyright(contentRoot, language string) (CopyrightText, error) {
 	return validateCopyrightText(policies["zh"], language)
 }
 
-// ResolveCopyright implements explicit SyndiRelay override > content-owned
-// policy > empty. Explicit mode choices allow a user to enforce either source.
+// configuredCopyrightText reports whether the user attempted to configure this
+// locale. A partially filled policy is not the same as an absent policy: auto
+// mode must reject it rather than silently fall back to a different source.
+func configuredCopyrightText(text CopyrightText) bool {
+	return strings.TrimSpace(text.Title) != "" ||
+		strings.TrimSpace(text.Notice) != "" ||
+		strings.TrimSpace(text.Photo) != "" ||
+		strings.TrimSpace(text.Syndication) != "" ||
+		strings.TrimSpace(text.Source) != ""
+}
+
+// ResolveCopyright uses explicit local configuration first in auto mode,
+// content-owned policy only when no local text is set, then empty. Explicit
+// content/none modes always override this precedence.
 func ResolveCopyright(config CopyrightConfig, contentRoot, language string) (CopyrightText, error) {
 	mode := strings.ToLower(strings.TrimSpace(config.Mode))
 	if mode == "" {
@@ -102,8 +114,12 @@ func ResolveCopyright(config CopyrightConfig, contentRoot, language string) (Cop
 	default:
 		return CopyrightText{}, fmt.Errorf("unsupported publishing copyright mode %q", mode)
 	}
-	if mode != "content" && strings.TrimSpace(override.Syndication) != "" {
-		return validateCopyrightText(override, language)
+	if mode != "content" && configuredCopyrightText(override) {
+		policy, err := validateCopyrightText(override, language)
+		if err != nil {
+			return CopyrightText{}, fmt.Errorf("configured %s copyright policy is invalid: %w", language, err)
+		}
+		return policy, nil
 	}
 	if mode == "config" {
 		return CopyrightText{}, errors.New("copyright mode=config requires an explicit syndication text for the article language")

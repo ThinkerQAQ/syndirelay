@@ -1,6 +1,6 @@
 # SyndiRelay binary-release license audit (reviewed 2026-11-01)
 
-**Do not make this repository public or upload binary Releases solely because the core code is MIT.** License compatibility, bundled notices, platform API authorization and clean-machine operation are separate release conditions.
+**Public source visibility does not authorize binary or Extension Releases solely because the core code is MIT.** License compatibility, bundled notices, platform API authorization and clean-machine operation are separate release conditions.
 
 ## Dependency evidence
 

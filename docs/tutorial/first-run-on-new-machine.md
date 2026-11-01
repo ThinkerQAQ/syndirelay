@@ -1,6 +1,6 @@
 # Install SyndiRelay from source on a new machine
 
-SyndiRelay is independent of Inkerio. **This guide requires authorized access to the current private source repository.** Public installer bundles are not yet approved. Begin with a read-only local compile; connect a browser only if you intend to use an authorized publishing workflow.
+SyndiRelay is independent of Inkerio. **This guide uses the public source repository; public installers remain separately gated.** Public installer bundles are not yet approved. Begin with a read-only local compile; connect a browser only if you intend to use an authorized publishing workflow.
 
 ## 1. Prerequisites and source
 
