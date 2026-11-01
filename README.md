@@ -191,7 +191,7 @@ Windows PowerShell:
 .\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
 ```
 
-Use `--status` to confirm that the SyndiRelay runtime is running and healthy. In [ChatGPT connector settings](https://chatgpt.com/#settings/Connectors), choose **Connection: Tunnel** and select or paste the same Tunnel ID. Call `list_platforms` and confirm an actual tool response; a healthy local runtime alone does not verify ChatGPT connectivity. If the Tunnel is missing, check workspace scope and Tunnels Read + Use permissions. Keep the Bridge local.
+Use the status command shown above to confirm that the SyndiRelay runtime is running and healthy. In [ChatGPT connector settings](https://chatgpt.com/#settings/Connectors), choose **Connection: Tunnel** and select or paste the same Tunnel ID. Call `list_platforms` and confirm an actual tool response; a healthy local runtime alone does not verify ChatGPT connectivity. If the Tunnel is missing, check workspace scope and Tunnels Read + Use permissions. Keep the Bridge local.
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is a separate, optional integration and is disabled by default.
 
