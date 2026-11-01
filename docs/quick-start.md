@@ -2,7 +2,7 @@
 
 SyndiRelay is an independent Markdown compiler and content syndication toolkit. No Inkerio or Astro engine is required. Its open-source MIT license does not grant rights over users' content.
 
-**Migration status:** The standalone source is in the private [SyndiRelay repository](https://github.com/ThinkerQAQ/syndirelay). Public release packages are blocked until third-party license and publishing-platform authorization review passes. Old BlogCTL Release downloads have been retired from the website repository; they were never SyndiRelay installers.
+**Availability:** [SyndiRelay source](https://github.com/ThinkerQAQ/syndirelay) is public under MIT; standalone executable and Extension Releases remain separately gated by distribution-license, platform-authorization and real-machine verification. Retired BlogCTL downloads are not SyndiRelay installers.
 
 ## Install from source
 
@@ -17,7 +17,7 @@ printf '# My article\n\nMy original text.\n' > hello.md
 ./syndirelay compile --file ./hello.md --platform devto
 ```
 
-A private repository checkout requires authorized access. The command only compiles an article to JSON locally; it does **not** create a draft, upload an image, or publish a post. For generated raster assets or diagrams, configure an HTTPS `--asset-base-url` explicitly.
+Anyone may clone the public source. The command only compiles an article to JSON locally; it does **not** create a draft, upload an image, or publish a post. For generated raster assets or diagrams, configure an HTTPS `--asset-base-url` explicitly.
 
 ## Connect a blog-content folder
 

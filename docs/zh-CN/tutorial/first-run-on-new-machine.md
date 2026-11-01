@@ -1,6 +1,6 @@
 # 在新机器从源码安装 SyndiRelay
 
-SyndiRelay 不依赖 Inkerio。**当前仓库仍为 Private，需要已经授权的 GitHub 账号才能克隆。** 公开安装包尚未完成许可证和安全验收。建议先只做本地 Markdown 编译，再按需配置浏览器与授权发布流程。
+SyndiRelay 不依赖 Inkerio。**源码仓库已经公开，可直接克隆；安装包尚未完成许可证和安全验收。**建议先只做本地 Markdown 编译，再按需配置浏览器与授权发布流程。
 
 ## 1. 环境与源码
 
@@ -42,7 +42,7 @@ Windows PowerShell 中用 `go build -o syndirelay.exe ./cmd` 编译，通过编�
 
 | 情况 | 检查 |
 | --- | --- |
-| 无法克隆 | 仓库仍为 Private，需要 GitHub 访问权限 |
+| 无法克隆 | 核对公开仓库 URL 和 Git／网络配置 |
 | 编译图表失败 | Node 渲染依赖是否安装、素材 URL 是否明确配置 |
 | 找不到 Native Host | 程序系统、安装路径、`install` 是否匹配 |
 | 扩展无法连接 | 当前版本扩展/Host、端口 32146、浏览器授权 |

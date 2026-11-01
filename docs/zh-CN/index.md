@@ -14,7 +14,7 @@
 | 查 CLI 与旧版搜索 CI 命令 | [CLI 参考](reference/cli.md) |
 | 理解模块和本地数据边界 | [架构](architecture/index.md) |
 | 对接 Reverfolio 作品影响力统计 | [可选影响力统计](reverfolio.md) |
-| 审查公开源码或发布安装包前的条件 | [开源与发布验收](../compliance/PUBLICATION_READINESS.md) |
+| 查看源码审查记录及安装包发布条件 | [开源与发布验收](../compliance/PUBLICATION_READINESS.md) |
 | 查看 BlogCTL 拆分与兼容性档案 | [迁移档案](../migration/README.md) |
 
-目前仓库仍为 Private，链接需要访问权限。远端草稿、更新与发布必须取得账号授权，并按平台实际支持能力执行。编译成功不等于取得远程接口授权。公开安装包仍需完成第三方许可证与安全审核。
+本仓库源码已公开，并采用 MIT 许可证。远端草稿、更新与发布必须取得账号授权，并按平台实际支持能力执行。编译成功不等于取得远程接口授权。公开安装包仍需完成第三方许可证与安全审核。

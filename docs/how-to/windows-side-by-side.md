@@ -1,8 +1,8 @@
-# Windows side-by-side installation (private migration)
+# Windows side-by-side installation (public source, separate local data)
 
 Install SyndiRelay in `C:\Apps\SyndiRelay`, alongside the existing BlogCTL directory. **Never overwrite** the original installation or data. Use an independent browser extension ID, Native Messaging Host (`com.thinkerqaq.syndirelay`), local port `32146`, and data directory.
 
-The Windows runtime directory contains `syndirelay-windows-amd64.exe`, `extension/`, `renderers/`, `scripts/plantuml/`, `package.json`, `package-lock.json`, `node_modules/`, and `Data/`. `src/` is the optional local clone of the private repository for updates. Use `npm ci` within the runtime directory. The CLI and MCP do not require Inkerio.
+The Windows runtime directory contains `syndirelay-windows-amd64.exe`, `extension/`, `renderers/`, `scripts/plantuml/`, `package.json`, `package-lock.json`, `node_modules/`, and `Data/`. `src/` is the optional local clone of the public source repository for updates. Use `npm ci` within the runtime directory. The CLI and MCP do not require Inkerio.
 
 Configuration migration: preserve a **private local copy** of old `Data/` (jobs, publication bindings, social records, article artifacts and user settings) while excluding stale `bridge.json`, `bridge.log`, and `com.thinkerqaq.blogctl.json`. Update only the copied TOML's `engine_root`, `distribution_root`, `publication_bindings_path`, and `log_directory` to paths under SyndiRelay. Leave the old BlogCTL files unchanged. This is a snapshot, not shared live state: future writes are independent.
 

@@ -19,4 +19,4 @@ The ThinkerQAQ production wrapper now pins the standalone Inkerio engine for sta
 3. Per-platform policy/authorization audit, particularly nonpublic APIs and browser-session workflows. No protocol spoofing or unauthorised automation.
 4. Chrome Extension identity, Native Host version and existing local Data directory migration: no overwriting the old BlogCTL installation or user data.
 5. Remove site-only legacy commands after the production wrapper has been decoupled; validate remote publishing in dry-run mode with explicit user permissions.
-6. Keep repository **Private** until the separate [source-publication review](../compliance/PUBLICATION_READINESS.md) passes. The private repository currently has PR, squash-merge and 3-OS CI; branch protection is limited under the current plan (403).
+6. The **source repository is now Public** following the [source audit](../compliance/PUBLICATION_READINESS.md). Protected main, PR-only Squash Merge and the three-OS CI are enabled; binary/Extension Release and live platform acceptance remain separate gates.

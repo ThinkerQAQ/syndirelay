@@ -1,6 +1,6 @@
 # Install SyndiRelay from source on a new machine
 
-SyndiRelay is independent of Inkerio. **This guide uses the public source repository; public installers remain separately gated.** Public installer bundles are not yet approved. Begin with a read-only local compile; connect a browser only if you intend to use an authorized publishing workflow.
+SyndiRelay is independent of Inkerio. **The source repository is public; binary and Extension installers remain separately gated.** Begin with a read-only local compile; connect a browser only if you intend to use an authorized publishing workflow.
 
 ## 1. Prerequisites and source
 
@@ -42,7 +42,7 @@ Run `./syndirelay mcp-stdio` locally and connect the limited STDIO tool interfac
 
 | Symptom | Check |
 | --- | --- |
-| Clone denied | Repository still private; source access is required |
+| Clone denied | Verify the public GitHub repository URL and Git/network connectivity |
 | Compile fails to render a diagram | Install renderer dependencies; provide explicit asset URL when needed |
 | Native Host missing | Correct OS binary, install path and `syndirelay install` |
 | Extension fails to connect | Same native host/extension version, local port 32146, browser allowed |

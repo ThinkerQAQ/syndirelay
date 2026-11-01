@@ -2,11 +2,11 @@
 
 SyndiRelay 是独立的 Markdown 编译与内容分发工具，不依赖 Inkerio 或 Astro。软件的 MIT 协议不等于使用者文章的版权协议。
 
-**当前仍处于私有迁移阶段**：许可证和平台授权未审完，不提供公开的安装包。旧 BlogCTL Release 已从网站仓库退役，历史安装包不是 SyndiRelay 安装程序。
+**源码已经公开并采用 MIT 许可**；可执行文件和浏览器扩展仍待单独完成分发许可、真实机器与平台授权验收，暂不提供正式安装包。旧 BlogCTL 下载不属于新版 SyndiRelay。
 
 ## 从源码安装
 
-需要 Go 1.24+、Node.js 22+。仓库 Private，克隆需要已授权的 GitHub 账号。
+需要 Go 1.24+、Node.js 22+ 和 Git，公开源码可直接克隆。
 
 ```sh
 git clone https://github.com/ThinkerQAQ/syndirelay.git
