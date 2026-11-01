@@ -43,7 +43,7 @@ func TestImpactPublicMetadataAndStableIdentity(t *testing.T) {
 		}
 	}
 	work := first.Payload.Manifest.Works[0]
-	if work.CanonicalURL != "https://example.org/articles/article/" || work.Channels[1].URL != a.CanonicalURL || work.ExternalID != "article" {
+	if work.CanonicalURL != "https://example.org/articles/article/" || work.Channels[1].URL != a.CanonicalURL || work.Channels[1].Platform != "example.org" || work.ExternalID != "article" {
 		t.Fatalf("primary language or provenance lost: %+v", work)
 	}
 	if first.Payload.Manifest.SourceID != "fixture" || first.Payload.Manifest.Producer != "SyndiRelay" {
