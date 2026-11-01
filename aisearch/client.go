@@ -86,7 +86,7 @@ func normalizeSyncConfig(config SyncConfig) (SyncConfig, error) {
 		return config, errors.New("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_AI_SEARCH_TOKEN are required")
 	}
 	if config.InstanceName == "" {
-		config.InstanceName = "thinkerqaq-blog"
+		config.InstanceName = "syndirelay"
 	}
 	if config.BlogOrigin == "" {
 		config.BlogOrigin = DefaultBlogOrigin

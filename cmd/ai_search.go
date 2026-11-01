@@ -199,7 +199,7 @@ func (a app) runAISearchSync(args []string) error {
 	token := strings.TrimSpace(os.Getenv("CLOUDFLARE_AI_SEARCH_TOKEN"))
 	instance := strings.TrimSpace(os.Getenv("CLOUDFLARE_AI_SEARCH_INSTANCE"))
 	if instance == "" {
-		instance = "thinkerqaq-blog"
+		instance = "syndirelay"
 	}
 	blogOrigin := strings.TrimSpace(os.Getenv("BLOG_ORIGIN"))
 	if blogOrigin == "" {
@@ -353,7 +353,7 @@ func (a app) runAISearchVerify(args []string) error {
 	token := strings.TrimSpace(os.Getenv("CLOUDFLARE_AI_SEARCH_TOKEN"))
 	instance := strings.TrimSpace(os.Getenv("CLOUDFLARE_AI_SEARCH_INSTANCE"))
 	if instance == "" {
-		instance = "thinkerqaq-blog"
+		instance = "syndirelay"
 	}
 	if accountID == "" || token == "" {
 		return errors.New("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_AI_SEARCH_TOKEN are required")

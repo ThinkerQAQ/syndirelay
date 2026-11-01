@@ -1555,6 +1555,8 @@ async function handleMessage(message) {
       return {
         ok: true,
         platforms: result?.platforms ?? [],
+        site: result?.site ?? {},
+        copyright: result?.copyright ?? {},
         compiler: result?.compiler ?? {},
         assets: result?.assets ?? {},
         assetStatus: result?.assetStatus ?? {},
@@ -1565,10 +1567,14 @@ async function handleMessage(message) {
         platforms: message.platforms ?? [],
         compiler: message.compiler,
         assets: message.assets,
+        site: message.site,
+        copyright: message.copyright,
       }));
       return {
         ok: true,
         platforms: result?.platforms ?? [],
+        site: result?.site ?? {},
+        copyright: result?.copyright ?? {},
         compiler: result?.compiler ?? {},
         assets: result?.assets ?? {},
         assetStatus: result?.assetStatus ?? {},

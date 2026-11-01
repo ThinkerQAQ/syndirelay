@@ -40,7 +40,7 @@ test("shared asset save and platform save are independent", async () => {
 
   assert.match(
     publishing,
-    /BlogCTLPopup\.send\("blogctl\.publishing\.save", \{\s*platforms: \[current\],\s*\}\)/u,
+    /BlogCTLPopup\.send\("blogctl\.publishing\.save", \{\s*platforms: \[current\],site:identity\.site,copyright:identity\.copyright,\s*\}\)/u,
   );
   assert.doesNotMatch(publishing, /compiler:\s*runtime\.compiler/u);
   assert.doesNotMatch(publishing, /assets:\s*runtime\.assets/u);

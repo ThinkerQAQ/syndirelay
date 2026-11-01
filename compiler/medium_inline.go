@@ -84,12 +84,13 @@ func mediumAbsoluteHref(href string) string {
 	if href == "" || strings.HasPrefix(href, "#") {
 		return href
 	}
-	base, _ := url.Parse(SiteOrigin)
+	// Relative links must not silently be redirected to the developer's blog.
+	// The source compiler already expands root links when an explicit origin exists.
 	ref, err := url.Parse(href)
 	if err != nil {
 		return href
 	}
-	return base.ResolveReference(ref).String()
+	return ref.String()
 }
 
 func mediumFindInlineToken(source string) (mediumInlineToken, bool) {

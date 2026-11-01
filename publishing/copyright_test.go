@@ -3,30 +3,22 @@ package publishing
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
-func TestCopyrightPolicyBilingualAndComplete(t *testing.T) {
+func TestCopyrightIsUnbrandedWithoutOwnerConfiguration(t *testing.T) {
 	for _, language := range []string{"zh-CN", "en"} {
-		copy := Copyright(language)
-		if copy.Title == "" || copy.Notice == "" || copy.Photo == "" || copy.Syndication == "" || copy.Source == "" {
-			t.Fatalf("incomplete policy for %s: %+v", language, copy)
+		if v := Copyright(language); v.Syndication != "" || v.Source != "" {
+			t.Fatalf("unexpected bundled author identity: %+v", v)
 		}
-		if !strings.Contains(copy.Notice, "ThinkerQAQ") || !strings.Contains(copy.Syndication, "ThinkerQAQ") || !strings.Contains(copy.Photo, "ThinkerQAQ") {
-			t.Fatalf("missing attribution for %s", language)
-		}
-	}
-	if Copyright("en").Title == Copyright("zh-CN").Title {
-		t.Fatal("policy should be localized")
 	}
 }
 
-func TestLoadCopyrightPrefersContentAndRetainsLegacyFallback(t *testing.T) {
+func TestLoadCopyrightPrefersContentAndMissingFileHasNoBrand(t *testing.T) {
 	root := t.TempDir()
 	fallback, err := LoadCopyright(root, "en")
-	if err != nil || fallback != Copyright("en") {
-		t.Fatalf("legacy fallback: %v %+v", err, fallback)
+	if err != nil || fallback.Syndication != "" {
+		t.Fatalf("missing copyright must be empty: %+v %v", fallback, err)
 	}
 	filename := filepath.Join(root, "src", "content", "site", "copyright.json")
 	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
@@ -40,9 +32,45 @@ func TestLoadCopyrightPrefersContentAndRetainsLegacyFallback(t *testing.T) {
 	if err != nil || result.Syndication != "CUSTOM COPYRIGHT" {
 		t.Fatalf("content override: %v %+v", err, result)
 	}
-	zh, err := LoadCopyright(root, "zh-CN")
-	if err != nil || zh.Title != "甲" {
-		t.Fatalf("chinese locale: %v %+v", err, zh)
+}
+
+func TestResolveCopyrightOverridePrecedenceAndModes(t *testing.T) {
+	root := t.TempDir()
+	filename := filepath.Join(root, "src", "content", "site", "copyright.json")
+	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
+		t.Fatal(err)
+	}
+	data := `{"zh":{"syndication":"CONTENT-ZH","source":"原文"},"en":{"syndication":"CONTENT-EN","source":"Original"}}`
+	if err := os.WriteFile(filename, []byte(data), 0600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := CopyrightConfig{Mode: "auto", ZH: CopyrightText{Syndication: "MY-ZH", Source: "来源"}, EN: CopyrightText{Syndication: "MY-EN"}}
+	result, err := ResolveCopyright(cfg, root, "zh-CN")
+	if err != nil || result.Syndication != "MY-ZH" {
+		t.Fatalf("auto override: %+v %v", result, err)
+	}
+	result, err = ResolveCopyright(cfg, root, "en")
+	if err != nil || result.Syndication != "MY-EN" || result.Source != "Original article" {
+		t.Fatalf("en override: %+v %v", result, err)
+	}
+	cfg.EN = CopyrightText{}
+	result, err = ResolveCopyright(cfg, root, "en")
+	if err != nil || result.Syndication != "CONTENT-EN" {
+		t.Fatalf("content fallback: %+v %v", result, err)
+	}
+	cfg.Mode = "content"
+	result, err = ResolveCopyright(cfg, root, "zh-CN")
+	if err != nil || result.Syndication != "CONTENT-ZH" {
+		t.Fatalf("content selection: %+v %v", result, err)
+	}
+	cfg.Mode = "none"
+	result, err = ResolveCopyright(cfg, root, "zh-CN")
+	if err != nil || result.Syndication != "" {
+		t.Fatalf("none: %+v %v", result, err)
+	}
+	cfg.Mode = "config"
+	if _, err := ResolveCopyright(cfg, root, "en"); err == nil {
+		t.Fatal("missing config must fail")
 	}
 }
 

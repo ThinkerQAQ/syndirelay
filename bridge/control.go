@@ -476,7 +476,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 				"sitemapURL": config.Search.SitemapURL, "fingerprintURL": config.Search.FingerprintURL,
 				"googleProperty": config.Search.GoogleProperty,
 			}, Schema: []toolField{
-				{Key: "origin", Label: "站点域名", Type: "text", Description: "HTTPS Origin，例如 https://thinkerqaq.com；不包含页面路径。"},
+				{Key: "origin", Label: "站点域名", Type: "text", Description: "HTTPS Origin，例如 https://your-site.example；不包含页面路径。"},
 				{Key: "urlListURL", Label: "TXT URL 清单", Type: "text", Description: "必须属于站点域名；用于增量和全量提交的 URL 清单。"},
 				{Key: "sitemapURL", Label: "XML Sitemap", Type: "text", Description: "必须属于站点域名；用于 Sitemap 提交和索引页链接。"},
 				{Key: "fingerprintURL", Label: "内容指纹清单", Type: "text", Description: "可选，同站点 JSON 清单；留空不读取指纹，增量将保守视为内容变化。"},

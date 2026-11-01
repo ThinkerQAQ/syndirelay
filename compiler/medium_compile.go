@@ -331,15 +331,10 @@ func compileMedium(ctx compileContext) (CompiledArticle, error) {
 	var payload mediumPayload
 	var warnings []string
 	var fallback string
-	if ctx.options.Generic {
-		canonical := canonicalFor(ctx.options, ctx.slug, ctx.profile.Language)
-		cover := assetURLFor(ctx.options, article.CoverImage)
-		payload, warnings = buildMediumPayloadWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
-		fallback = buildMediumCopyHTMLWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
-	} else {
-		payload, warnings = buildMediumPayload(article, ctx.slug, ctx.profile, portable, ctx.policy)
-		fallback = buildMediumCopyHTML(article, ctx.slug, ctx.profile, portable, ctx.policy)
-	}
+	canonical := canonicalFor(ctx.options, ctx.slug, ctx.profile.Language)
+	cover := assetURLFor(ctx.options, article.CoverImage)
+	payload, warnings = buildMediumPayloadWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
+	fallback = buildMediumCopyHTMLWithCanonical(article, ctx.profile, portable, canonical, cover, ctx.policy)
 	hashValue, err := jsonStringify(struct {
 		Payload          mediumPayload `json:"payload"`
 		FallbackHTML     string        `json:"fallbackHTML"`

@@ -151,7 +151,7 @@ func CompileFile(ctx context.Context, options FileCompileOptions) (CompiledArtic
 	slug := strings.TrimSuffix(filepath.Base(full), filepath.Ext(full))
 	settings := CompileOptions{EngineRoot: root, Generic: true, CanonicalOverride: options.CanonicalURL,
 		Node: options.Node, Platform: options.Platform, DryRun: true}
-	policy := blogpublishing.Copyright(profile.Language) // footer disabled; never inserted in generic output
+	policy := blogpublishing.CopyrightText{} // no author-specific fallback
 	var out CompiledArticle
 	if options.Platform == "medium" {
 		out, err = compileMedium(compileContext{options: settings, profile: profile, slug: slug,

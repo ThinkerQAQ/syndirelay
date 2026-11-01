@@ -8,9 +8,10 @@ import (
 	blogplatform "github.com/ThinkerQAQ/syndirelay/platform"
 )
 
-const DefaultAssetBaseURL = "https://pub-366a15b6733345039775c083a1fffb3e.r2.dev/"
+const DefaultAssetBaseURL = ""
 
 type FooterConfig struct {
+	SiteName string `json:"-" toml:"-"` // calculated at compile time; never persisted per platform
 	Enabled  bool   `json:"enabled" toml:"enabled"`
 	Template string `json:"template" toml:"template"`
 }
@@ -58,7 +59,40 @@ type AssetsConfig struct {
 	R2    R2Config `json:"r2" toml:"r2"`
 }
 
+type SiteConfig struct {
+	Origin        string   `json:"origin" toml:"origin"`
+	NameZH        string   `json:"nameZh" toml:"name_zh"`
+	NameEN        string   `json:"nameEn" toml:"name_en"`
+	ArticlesZH    string   `json:"articlesZh" toml:"articles_zh"`
+	ArticlesEN    string   `json:"articlesEn" toml:"articles_en"`
+	LegacyOrigins []string `json:"legacyOrigins,omitempty" toml:"legacy_origins"`
+}
+
+func (s SiteConfig) DisplayName(language string) string {
+	if language == "en" && strings.TrimSpace(s.NameEN) != "" {
+		return strings.TrimSpace(s.NameEN)
+	}
+	if language != "en" && strings.TrimSpace(s.NameZH) != "" {
+		return strings.TrimSpace(s.NameZH)
+	}
+	parsed, err := url.Parse(s.Origin)
+	if err == nil {
+		return parsed.Hostname()
+	}
+	return ""
+}
+
+func (s SiteConfig) ArticlePath(language string) string {
+	prefix := s.ArticlesZH
+	if language == "en" {
+		prefix = s.ArticlesEN
+	}
+	return "/" + strings.Trim(strings.TrimSpace(prefix), "/") + "/"
+}
+
 type Config struct {
+	Site      SiteConfig                `json:"site" toml:"site"`
+	Copyright CopyrightConfig           `json:"copyright" toml:"copyright"`
 	Compiler  CompilerConfig            `json:"compiler" toml:"compiler"`
 	Assets    AssetsConfig              `json:"assets" toml:"assets"`
 	Platforms map[string]PlatformConfig `json:"platforms" toml:"platforms"`
@@ -105,12 +139,9 @@ func DefaultConfig() Config {
 		Compiler: CompilerConfig{
 			Mermaid: MermaidConfig{Format: "png", Width: 1200, Scale: 2},
 		},
-		Assets: AssetsConfig{
-			Store: "r2",
-			R2: R2Config{
-				PublicBaseURL: DefaultAssetBaseURL,
-			},
-		},
+		Site:      SiteConfig{ArticlesZH: "/articles/", ArticlesEN: "/en/articles/"},
+		Copyright: CopyrightConfig{Mode: "auto"},
+		Assets:    AssetsConfig{Store: "none"},
 		Platforms: make(map[string]PlatformConfig),
 	}
 	for _, platform := range blogplatform.IDs() {
@@ -121,6 +152,18 @@ func DefaultConfig() Config {
 
 func mergeDefaults(config Config) Config {
 	defaults := DefaultConfig()
+	if config.Site.LegacyOrigins == nil {
+		config.Site.LegacyOrigins = []string{}
+	}
+	if config.Site.ArticlesZH == "" {
+		config.Site.ArticlesZH = defaults.Site.ArticlesZH
+	}
+	if config.Site.ArticlesEN == "" {
+		config.Site.ArticlesEN = defaults.Site.ArticlesEN
+	}
+	if config.Copyright.Mode == "" {
+		config.Copyright.Mode = "auto"
+	}
 	if config.Compiler.Mermaid.Format == "" {
 		config.Compiler.Mermaid.Format = defaults.Compiler.Mermaid.Format
 	}
@@ -133,9 +176,7 @@ func mergeDefaults(config Config) Config {
 	if config.Assets.Store == "" {
 		config.Assets.Store = defaults.Assets.Store
 	}
-	if config.Assets.R2.PublicBaseURL == "" {
-		config.Assets.R2.PublicBaseURL = defaults.Assets.R2.PublicBaseURL
-	}
+
 	if config.Platforms == nil {
 		config.Platforms = map[string]PlatformConfig{}
 	}
@@ -180,8 +221,8 @@ func Normalize(config Config) (Config, error) {
 	}
 
 	config.Assets.Store = strings.ToLower(strings.TrimSpace(config.Assets.Store))
-	if config.Assets.Store != "r2" {
-		return config, errors.New("publishing asset store must be r2")
+	if config.Assets.Store != "r2" && config.Assets.Store != "none" {
+		return config, errors.New("publishing asset store must be r2 or none")
 	}
 	config.Assets.R2.Bucket = strings.TrimSpace(config.Assets.R2.Bucket)
 	config.Assets.R2.PublicBaseURL = strings.TrimSpace(config.Assets.R2.PublicBaseURL)
@@ -189,12 +230,51 @@ func Normalize(config Config) (Config, error) {
 	config.Assets.R2.SecretAccessKey = strings.TrimSpace(config.Assets.R2.SecretAccessKey)
 	config.Assets.R2.AccountID = strings.TrimSpace(config.Assets.R2.AccountID)
 	config.Assets.R2.Endpoint = strings.TrimSpace(config.Assets.R2.Endpoint)
-	if config.Assets.R2.PublicBaseURL == "" {
-		return config, errors.New("publishing R2 publicBaseUrl is required")
+	if config.Assets.Store == "r2" {
+		if config.Assets.R2.PublicBaseURL == "" {
+			return config, errors.New("publishing R2 publicBaseUrl is required when asset store=r2")
+		}
+		publicBase, err := url.Parse(config.Assets.R2.PublicBaseURL)
+		if err != nil || publicBase.Scheme != "https" || publicBase.Host == "" || publicBase.User != nil {
+			return config, errors.New("publishing R2 publicBaseUrl must be an HTTPS URL")
+		}
 	}
-	publicBase, err := url.Parse(config.Assets.R2.PublicBaseURL)
-	if err != nil || publicBase.Scheme != "https" || publicBase.Host == "" {
-		return config, errors.New("publishing R2 publicBaseUrl must be an HTTPS URL")
+	config.Site.Origin = strings.TrimRight(strings.TrimSpace(config.Site.Origin), "/")
+	if config.Site.Origin != "" {
+		u, err := url.Parse(config.Site.Origin)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Path != "" && u.Path != "/") {
+			return config, errors.New("publishing site origin must be a bare HTTPS origin")
+		}
+	}
+	for _, legacy := range config.Site.LegacyOrigins {
+		u, err := url.Parse(legacy)
+		if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Path != "" && u.Path != "/") {
+			return config, errors.New("legacy origins must be bare HTTPS origins")
+		}
+	}
+	for _, prefix := range []string{config.Site.ArticlesZH, config.Site.ArticlesEN} {
+		if !strings.HasPrefix(prefix, "/") || !strings.HasSuffix(prefix, "/") || strings.Contains(prefix, "..") || strings.ContainsAny(prefix, "?#") {
+			return config, errors.New("publishing article prefixes must be absolute paths ending in /")
+		}
+	}
+	config.Copyright.Mode = strings.ToLower(strings.TrimSpace(config.Copyright.Mode))
+	switch config.Copyright.Mode {
+	case "auto", "content", "config", "none":
+	default:
+		return config, errors.New("publishing copyright mode must be auto, config, content, or none")
+	}
+	if config.Copyright.Mode == "config" && (strings.TrimSpace(config.Copyright.ZH.Syndication) == "" || strings.TrimSpace(config.Copyright.EN.Syndication) == "") {
+		return config, errors.New("copyright mode=config requires both zh and en text")
+	}
+	if config.Copyright.ZH.Syndication != "" {
+		if _, err := validateCopyrightText(config.Copyright.ZH, "zh"); err != nil {
+			return config, err
+		}
+	}
+	if config.Copyright.EN.Syndication != "" {
+		if _, err := validateCopyrightText(config.Copyright.EN, "en"); err != nil {
+			return config, err
+		}
 	}
 
 	for platform, value := range config.Platforms {

@@ -1,9 +1,10 @@
 "use strict";
 
 (function (root) {
-  const state = { initialized: false, active: false, editing: false, platforms: [], tools: [] };
+  const state = { initialized: false, active: false, editing: false, platforms: [], tools: [], site: {}, copyright: {} };
   let platformSelect, languageSelect, changedOnly, footerEnabled, footerTemplate, canonicalMode;
   let trackingEnabled, trackingSource, trackingMedium, trackingCampaign;
+  let siteOrigin, siteZH, siteEN, copyrightMode, copyrightZH, copyrightEN;
   let platformAccessConfig, preview, editButton, cancelButton, saveButton, resetButton, editActions, message;
 
   function currentPlatform() {
@@ -103,6 +104,7 @@
     const canUpdateDraft = platform?.capabilities?.draftUpdate !== false;
     languageSelect.disabled = !editing;
     changedOnly.disabled = !editing || !canUpdateDraft;
+    for (const field of [siteOrigin,siteZH,siteEN,copyrightMode,copyrightZH,copyrightEN]) field.disabled=!editing;
     footerEnabled.disabled = !editing;
     footerTemplate.disabled = !editing;
     canonicalMode.disabled = !editing;
@@ -141,8 +143,12 @@
   }
 
   function trackedUrl() {
-    const prefix = languageSelect.value === "en" ? "/en/articles/" : "/articles/";
-    const url = new URL(`https://thinkerqaq.com${prefix}example/`);
+    const prefix = languageSelect.value === "en" ? (state.site.articlesEn || "/en/articles/") : (state.site.articlesZh || "/articles/");
+    const origin = siteOrigin.value.trim();
+    if (!origin) return "(请先配置站点 Origin)";
+    let url;
+    try { url = new URL(`${origin}${prefix}example/`); }
+    catch { return "(站点 Origin 无效)"; }
     if (!trackingEnabled.checked) return url.toString();
     const values = {
       utm_source: trackingSource.value.trim(),
@@ -170,11 +176,15 @@
     }
     const english = languageSelect.value === "en";
     const rendered = footerTemplate.value
-      .replaceAll("{site}", english ? "ThinkerQAQ's personal blog" : "ThinkerQAQ 的个人博客")
+      .replaceAll("{site}", (english ? siteEN.value.trim() : siteZH.value.trim()) || (() => {try{return new URL(siteOrigin.value.trim()).hostname;}catch{return "";}})())
       .replaceAll("{title}", english ? "Example article" : "示例文章")
       .replaceAll("{url}", trackedUrl())
       .trim();
     lines.push(rendered || "Footer 模板为空。");
+    const mode=copyrightMode.value;
+    const configured=(english?copyrightEN:copyrightZH).value.trim();
+    const policy=mode === "none" ? "" : mode === "content" ? "(从 Content Repository 读取)" : configured || (mode==="config" ? "(缺少必填版权说明)" : "(从 Content Repository 读取；不存在则不附加)");
+    lines.push(`版权声明: ${policy}`);
     preview.textContent = lines.join("\n\n");
   }
 
@@ -197,6 +207,27 @@
     trackingMedium.value = tracking.medium || "";
     trackingCampaign.value = tracking.campaign || "";
     updatePreview();
+  }
+
+  function writeIdentity() {
+    siteOrigin.value = state.site.origin || "";
+    siteZH.value = state.site.nameZh || "";
+    siteEN.value = state.site.nameEn || "";
+    copyrightMode.value = state.copyright.mode || "auto";
+    copyrightZH.value = state.copyright.zh?.syndication || "";
+    copyrightEN.value = state.copyright.en?.syndication || "";
+  }
+
+  function readIdentity() {
+    return {
+      site: { ...state.site, origin:siteOrigin.value.trim(),nameZh:siteZH.value.trim(),nameEn:siteEN.value.trim() },
+      copyright: {
+        ...state.copyright,
+        mode:copyrightMode.value,
+        zh:{...state.copyright.zh,syndication:copyrightZH.value.trim()},
+        en:{...state.copyright.en,syndication:copyrightEN.value.trim()},
+      },
+    };
   }
 
   function readForm() {
@@ -247,15 +278,27 @@
       BlogCTLPopup.setMessage(message, "启用 Tracking 时 Source 不能为空。", "error");
       return;
     }
+    const identity=readIdentity();
+    if (identity.copyright.mode === "config" && (!identity.copyright.zh.syndication || !identity.copyright.en.syndication)) {
+      BlogCTLPopup.setMessage(message, "仅使用本工具配置时，需要填写中英文版权说明。", "error");
+      return;
+    }
+    if (!identity.site.origin) {
+      BlogCTLPopup.setMessage(message, "请先设置站点 Origin，或使用不需要站点来源的独立 Markdown 编译入口。", "error");
+      return;
+    }
     saveButton.disabled = true;
-    BlogCTLPopup.setMessage(message, "正在保存平台配置…");
+    BlogCTLPopup.setMessage(message, "正在保存平台和站点版权配置…");
     try {
       const accessTool = accessToolFor(current.id);
       if (accessTool) await saveAccessTool(accessTool, platformAccessConfig);
       const response = await BlogCTLPopup.send("blogctl.publishing.save", {
-        platforms: [current],
+        platforms: [current],site:identity.site,copyright:identity.copyright,
       });
       state.platforms = response.platforms ?? [];
+      state.site=response.site ?? identity.site;
+      state.copyright=response.copyright ?? identity.copyright;
+      writeIdentity();
       renderPlatformSelect();
       platformSelect.value = current.id;
       writeForm(currentPlatform());
@@ -284,7 +327,10 @@
         BlogCTLPopup.send("blogctl.tools"),
       ]);
       state.platforms = response.platforms ?? [];
+      state.site=response.site ?? {};
+      state.copyright=response.copyright ?? {};
       state.tools = toolsResponse.tools ?? [];
+      writeIdentity();
       state.editing = false;
       renderPlatformSelect();
       setEditing(false);
@@ -307,6 +353,12 @@
     trackingSource = document.getElementById("trackingSource");
     trackingMedium = document.getElementById("trackingMedium");
     trackingCampaign = document.getElementById("trackingCampaign");
+    siteOrigin=document.getElementById("publishingSiteOrigin");
+    siteZH=document.getElementById("publishingSiteZH");
+    siteEN=document.getElementById("publishingSiteEN");
+    copyrightMode=document.getElementById("publishingCopyrightMode");
+    copyrightZH=document.getElementById("publishingCopyrightZH");
+    copyrightEN=document.getElementById("publishingCopyrightEN");
     preview = document.getElementById("publishingPreview");
     editButton = document.getElementById("editPublishing");
     cancelButton = document.getElementById("cancelPublishing");
@@ -328,11 +380,12 @@
       }
       updatePreview();
     });
-    for (const element of [footerEnabled, footerTemplate, canonicalMode, trackingEnabled, trackingSource, trackingMedium, trackingCampaign]) {
+    for (const element of [siteOrigin,siteZH,siteEN,copyrightMode,copyrightZH,copyrightEN,footerEnabled, footerTemplate, canonicalMode, trackingEnabled, trackingSource, trackingMedium, trackingCampaign]) {
       element.addEventListener(element.tagName === "SELECT" || element.type === "checkbox" ? "change" : "input", updatePreview);
     }
     editButton.addEventListener("click", () => setEditing(true));
     cancelButton.addEventListener("click", () => {
+      writeIdentity();
       writeForm(currentPlatform());
       setEditing(false);
       BlogCTLPopup.setMessage(message);

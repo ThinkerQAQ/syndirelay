@@ -18,28 +18,28 @@ import (
 func TestBuildGoogleRequestQueueKeepsOnlyEligibleNotIndexedURLs(t *testing.T) {
 	now := time.Date(2026, 9, 26, 3, 0, 0, 0, time.UTC)
 	results := []searchInspectionResult{
-		{URL: "https://thinkerqaq.com/indexed/", Verdict: "PASS", IndexingState: "INDEXING_ALLOWED"},
-		{URL: "https://thinkerqaq.com/ok/", Verdict: "FAIL", IndexingState: "INDEXING_ALLOWED", RobotsTxtState: "ALLOWED"},
-		{URL: "https://thinkerqaq.com/never-crawled/", Verdict: "NEUTRAL", IndexingState: "INDEXING_STATE_UNSPECIFIED", RobotsTxtState: "ROBOTS_TXT_STATE_UNSPECIFIED"},
-		{URL: "https://thinkerqaq.com/meta/", Verdict: "FAIL", IndexingState: "BLOCKED_BY_META_TAG"},
-		{URL: "https://thinkerqaq.com/header/", Verdict: "FAIL", IndexingState: "BLOCKED_BY_HTTP_HEADER"},
-		{URL: "https://thinkerqaq.com/robots/", Verdict: "FAIL", IndexingState: "INDEXING_ALLOWED", RobotsTxtState: "DISALLOWED"},
+		{URL: "https://example.invalid/indexed/", Verdict: "PASS", IndexingState: "INDEXING_ALLOWED"},
+		{URL: "https://example.invalid/ok/", Verdict: "FAIL", IndexingState: "INDEXING_ALLOWED", RobotsTxtState: "ALLOWED"},
+		{URL: "https://example.invalid/never-crawled/", Verdict: "NEUTRAL", IndexingState: "INDEXING_STATE_UNSPECIFIED", RobotsTxtState: "ROBOTS_TXT_STATE_UNSPECIFIED"},
+		{URL: "https://example.invalid/meta/", Verdict: "FAIL", IndexingState: "BLOCKED_BY_META_TAG"},
+		{URL: "https://example.invalid/header/", Verdict: "FAIL", IndexingState: "BLOCKED_BY_HTTP_HEADER"},
+		{URL: "https://example.invalid/robots/", Verdict: "FAIL", IndexingState: "INDEXING_ALLOWED", RobotsTxtState: "DISALLOWED"},
 	}
 	queue := buildGoogleRequestQueue(results, googleIndexRequestQueue{}, now)
 	if len(queue.Items) != 2 {
 		t.Fatalf("queue items = %#v", queue.Items)
 	}
-	if queue.Items[0].URL != "https://thinkerqaq.com/never-crawled/" || queue.Items[0].Status != "queued" {
+	if queue.Items[0].URL != "https://example.invalid/never-crawled/" || queue.Items[0].Status != "queued" {
 		t.Fatalf("queue item 0 = %#v", queue.Items[0])
 	}
-	if queue.Items[1].URL != "https://thinkerqaq.com/ok/" || queue.Items[1].Status != "queued" {
+	if queue.Items[1].URL != "https://example.invalid/ok/" || queue.Items[1].Status != "queued" {
 		t.Fatalf("queue item 1 = %#v", queue.Items[1])
 	}
 }
 
 func TestBuildGoogleRequestQueuePreservesRequestedState(t *testing.T) {
 	now := time.Date(2026, 9, 26, 3, 0, 0, 0, time.UTC)
-	url := "https://thinkerqaq.com/a/"
+	url := "https://example.invalid/a/"
 	previous := googleIndexRequestQueue{
 		JobID:     "request-job-1",
 		CreatedAt: "2026-09-25T00:00:00Z",
@@ -63,7 +63,7 @@ func TestBuildGoogleRequestQueuePreservesRequestedState(t *testing.T) {
 
 func TestBuildGoogleRequestQueueNeverAutoRequeuesRequestedURL(t *testing.T) {
 	now := time.Date(2026, 9, 26, 3, 0, 0, 0, time.UTC)
-	url := "https://thinkerqaq.com/a/"
+	url := "https://example.invalid/a/"
 	previous := googleIndexRequestQueue{
 		Items: []googleIndexRequestItem{{
 			URL: url, Status: "requested", RequestedAt: now.Add(-30 * 24 * time.Hour).Format(time.RFC3339),
@@ -94,9 +94,9 @@ func TestSearchIndexWriteRequiresBridgeAuthorization(t *testing.T) {
 func TestReconcileInspectionInventoryPrunesRemovedURLs(t *testing.T) {
 	state := searchInspectionState{
 		Results: []searchInspectionResult{
-			{URL: "https://thinkerqaq.com/a/", Verdict: "PASS"},
-			{URL: "https://thinkerqaq.com/b/", Verdict: "FAIL"},
-			{URL: "https://thinkerqaq.com/removed/", Verdict: "FAIL"},
+			{URL: "https://example.invalid/a/", Verdict: "PASS"},
+			{URL: "https://example.invalid/b/", Verdict: "FAIL"},
+			{URL: "https://example.invalid/removed/", Verdict: "FAIL"},
 		},
 		Inspected: 3,
 		Total:     3,
@@ -104,8 +104,8 @@ func TestReconcileInspectionInventoryPrunesRemovedURLs(t *testing.T) {
 	inventory := searchInventoryState{
 		Total: 2,
 		URLs: []string{
-			"https://thinkerqaq.com/a/",
-			"https://thinkerqaq.com/b/",
+			"https://example.invalid/a/",
+			"https://example.invalid/b/",
 		},
 	}
 	reconcileInspectionInventory(&state, inventory)
@@ -128,15 +128,15 @@ func TestGoogleRequestQueueSystemicFailurePausesWithoutAdvancing(t *testing.T) {
 		State:        "running",
 		CurrentIndex: 0,
 		Items: []googleIndexRequestItem{
-			{URL: "https://thinkerqaq.com/a/", Status: "queued"},
-			{URL: "https://thinkerqaq.com/b/", Status: "queued"},
+			{URL: "https://example.invalid/a/", Status: "queued"},
+			{URL: "https://example.invalid/b/", Status: "queued"},
 		},
 	}
 	if err := saveSearchIndexState(state); err != nil {
 		t.Fatal(err)
 	}
 
-	body := `{"url":"https://thinkerqaq.com/a/","result":"failed","error":"Google Search Console returned an inspection error"}`
+	body := `{"url":"https://example.invalid/a/","result":"failed","error":"Google Search Console returned an inspection error"}`
 	request := httptest.NewRequest(http.MethodPost, "/v1/search/index/google/request-queue/result", strings.NewReader(body))
 	setExtensionAuth(request, "token")
 	request.Header.Set("content-type", "application/json")
@@ -171,9 +171,9 @@ func TestGoogleRequestQueueStopsAfterThreeFailures(t *testing.T) {
 	state.Google.RequestQueue = googleIndexRequestQueue{
 		State: "running",
 		Items: []googleIndexRequestItem{
-			{URL: "https://thinkerqaq.com/a/", Status: "queued"},
-			{URL: "https://thinkerqaq.com/b/", Status: "queued"},
-			{URL: "https://thinkerqaq.com/c/", Status: "queued"},
+			{URL: "https://example.invalid/a/", Status: "queued"},
+			{URL: "https://example.invalid/b/", Status: "queued"},
+			{URL: "https://example.invalid/c/", Status: "queued"},
 		},
 	}
 	if err := saveSearchIndexState(state); err != nil {
@@ -181,9 +181,9 @@ func TestGoogleRequestQueueStopsAfterThreeFailures(t *testing.T) {
 	}
 
 	for _, url := range []string{
-		"https://thinkerqaq.com/a/",
-		"https://thinkerqaq.com/b/",
-		"https://thinkerqaq.com/c/",
+		"https://example.invalid/a/",
+		"https://example.invalid/b/",
+		"https://example.invalid/c/",
 	} {
 		body := "{\"url\":\"" + url + "\",\"result\":\"ui_changed\",\"error\":\"selector missing\"}"
 		request := httptest.NewRequest(http.MethodPost, "/v1/search/index/google/request-queue/result", strings.NewReader(body))
@@ -215,8 +215,8 @@ func TestGoogleRequestQueueProcessingPublishesHeartbeat(t *testing.T) {
 	state.Google.RequestQueue = googleIndexRequestQueue{
 		State: "running",
 		Items: []googleIndexRequestItem{
-			{URL: "https://thinkerqaq.com/a/", Status: "queued"},
-			{URL: "https://thinkerqaq.com/b/", Status: "queued"},
+			{URL: "https://example.invalid/a/", Status: "queued"},
+			{URL: "https://example.invalid/b/", Status: "queued"},
 		},
 	}
 	job, err := server.ensureGoogleRequestTask(&state.Google.RequestQueue)
@@ -227,7 +227,7 @@ func TestGoogleRequestQueueProcessingPublishesHeartbeat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	request := httptest.NewRequest(http.MethodPost, "/v1/search/index/google/request-queue/result", strings.NewReader(`{"url":"https://thinkerqaq.com/a/","result":"processing","error":""}`))
+	request := httptest.NewRequest(http.MethodPost, "/v1/search/index/google/request-queue/result", strings.NewReader(`{"url":"https://example.invalid/a/","result":"processing","error":""}`))
 	setExtensionAuth(request, "token")
 	request.Header.Set("content-type", "application/json")
 	response := httptest.NewRecorder()
@@ -244,7 +244,7 @@ func TestGoogleRequestQueueProcessingPublishesHeartbeat(t *testing.T) {
 	if updated == nil || updated.Progress.Message != "正在处理第 1 / 2 个 URL" {
 		t.Fatalf("job = %#v", updated)
 	}
-	if updated.Detail["currentItemStatus"] != "processing" || updated.Detail["currentUrl"] != "https://thinkerqaq.com/a/" {
+	if updated.Detail["currentItemStatus"] != "processing" || updated.Detail["currentUrl"] != "https://example.invalid/a/" {
 		t.Fatalf("job detail = %#v", updated.Detail)
 	}
 }

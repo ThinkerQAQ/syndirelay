@@ -1,6 +1,9 @@
 package bridge
 
-import "testing"
+import (
+	publishing "github.com/ThinkerQAQ/syndirelay/publishing"
+	"testing"
+)
 
 func TestPublishingAssetStatusReportsReadyWithoutExposingSecrets(t *testing.T) {
 	config := defaultBridgeConfig()
@@ -70,5 +73,42 @@ func TestPlatformUpdatePreservesSharedAssetSettings(t *testing.T) {
 	}
 	if got := updated.Publishing.Assets.R2.PublicBaseURL; got != "https://assets.example.com/" {
 		t.Fatalf("R2 public base URL changed while saving platform config: %q", got)
+	}
+}
+
+func TestPublishingIdentityAndCopyrightAreConfigurableAndPersist(t *testing.T) {
+	useIsolatedUserConfigDir(t)
+	cfg := defaultBridgeConfig()
+	cfg.Publishing.Site.Origin = "https://writer.example.org"
+	cfg.Publishing.Site.NameZH = "独立站点"
+	cfg.Publishing.Site.NameEN = "Independent Writer"
+	cfg.Publishing.Site.LegacyOrigins = []string{"https://old.example.org"}
+	cfg.Publishing.Copyright.Mode = "config"
+	cfg.Publishing.Copyright.ZH.Syndication = "© 独立作者。遵循自定义许可。"
+	cfg.Publishing.Copyright.ZH.Source = "原文"
+	cfg.Publishing.Copyright.EN.Syndication = "© Independent Writer, original content under CC BY-NC-SA 4.0."
+	cfg.Publishing.Copyright.EN.Source = "Original article"
+	normalized, err := normalizeBridgeConfig(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := saveBridgeConfig(normalized); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := loadBridgeConfigChecked()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Publishing.Site.Origin != "https://writer.example.org" || loaded.Publishing.Site.NameZH != "独立站点" || loaded.Publishing.Copyright.ZH.Syndication != cfg.Publishing.Copyright.ZH.Syndication {
+		t.Fatalf("TOML lost owner-specific policy: %+v", loaded.Publishing)
+	}
+	payload := publishingControlPayload(loaded)
+	site, ok := payload["site"].(publishing.SiteConfig)
+	if !ok || site.NameEN != "Independent Writer" {
+		t.Fatalf("missing configured site in API payload: %#v", payload["site"])
+	}
+	policy, ok := payload["copyright"].(publishing.CopyrightConfig)
+	if !ok || policy.Mode != "config" || policy.EN.Syndication == "" {
+		t.Fatalf("missing configured copyright in API payload: %#v", payload["copyright"])
 	}
 }

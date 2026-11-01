@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	blogcompiler "github.com/ThinkerQAQ/syndirelay/compiler"
 	"github.com/ThinkerQAQ/syndirelay/publisher"
 )
 
@@ -30,7 +29,7 @@ func devtoCandidatePublished(candidate devtoArticleCandidate) bool {
 	return candidate.Published || strings.TrimSpace(candidate.PublishedAt) != "" || strings.TrimSpace(candidate.PublishedTimestamp) != ""
 }
 
-func devtoArticleMatches(candidate devtoArticleCandidate, slug, title string) bool {
+func devtoArticleMatches(candidate devtoArticleCandidate, slug, title string, origins ...string) bool {
 	if strings.EqualFold(strings.TrimSpace(candidate.Title), strings.TrimSpace(title)) {
 		return true
 	}
@@ -39,9 +38,15 @@ func devtoArticleMatches(candidate devtoArticleCandidate, slug, title string) bo
 		return false
 	}
 	host := parsed.Hostname()
-	// Previously distributed articles still point to the old host during the migration.
-	if !strings.EqualFold(host, strings.TrimPrefix(blogcompiler.SiteOrigin, "https://")) &&
-		!strings.EqualFold(host, "thinkerqaq.github.io") {
+	allowed := false
+	for _, origin := range origins {
+		candidateOrigin, err := url.Parse(strings.TrimSpace(origin))
+		if err == nil && candidateOrigin.Scheme == "https" && strings.EqualFold(host, candidateOrigin.Hostname()) {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
 		return false
 	}
 	segments := strings.Split(strings.Trim(parsed.Path, "/"), "/")
@@ -103,7 +108,7 @@ func (s *Server) handleDevtoArticleSearch(response http.ResponseWriter, request 
 			candidateID := fmt.Sprint(candidate.ID)
 			bound := (candidate.Published && binding.PublishedRemoteID == candidateID) ||
 				(!candidate.Published && binding.RemoteDraftID == candidateID)
-			if bound || devtoArticleMatches(candidate, slug, article.Title) {
+			if bound || devtoArticleMatches(candidate, slug, article.Title, append([]string{s.config.Publishing.Site.Origin}, s.config.Publishing.Site.LegacyOrigins...)...) {
 				candidates = append(candidates, candidate)
 			}
 		}

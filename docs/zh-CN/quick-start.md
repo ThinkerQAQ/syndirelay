@@ -1,76 +1,25 @@
-# 安装 BlogCTL 并连接浏览器
+# SyndiRelay 快速开始
 
-BlogCTL 包含本地 Go 程序、Edge/Chrome 扩展和 Web Console。依赖浏览器账号的操作需要扩展；网站构建还需要 Inkerio 源码和 Node/npm。
+SyndiRelay 是独立的 Markdown 编译与内容分发工具，不依赖 Inkerio 或 Astro。软件的 MIT 协议不等于使用者文章的版权协议。
 
-## 1. 下载匹配文件
+**当前仍处于私有迁移阶段**：许可证和平台授权未审完，不提供公开的安装包。不要从旧 BlogCTL 的 Release 下载文件并当作 SyndiRelay 使用。
 
-从 [Releases](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io/releases/latest) 下载对应系统/CPU 的程序，以及**同一个 BlogCTL Release** 的扩展 ZIP。六种二进制覆盖 Windows、Linux、macOS 的 amd64/arm64。将扩展解压到固定位置。
+## 从源码安装
 
-Release 程序无需安装 Go。Windows 建议先把程序放到长期使用的位置，例如 `C:\software\Coding\blogctl\`。相邻的 `Data/` 保存配置和任务，升级时保留。
+需要 Go 1.24+、Node.js 22+。仓库 Private，克隆需要已授权的 GitHub 账号。
 
-从源码构建时，在引擎根目录运行：
-
-```bash
-go run ./tools/blogctl/cmd/maint build
-.build/out/blogctl help
+```sh
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
+npm ci
+go build -o syndirelay ./cmd
+./syndirelay compile --file ./hello.md --platform devto
 ```
 
-上述命令使用 Bash。Windows 需要带 `.exe` 的程序时，可用 `go build -o blogctl-windows-amd64.exe ./tools/blogctl/cmd` 构建；匹配扩展使用同一源码目录的 `tools/blogctl/extension/`。
+上述命令**仅在本地编译并生成 JSON**，不会创建草稿、上传图片或公开发布。涉及图表图片时，请明确配置自己的 `--asset-base-url`。
 
-## 2. 注册 Native Messaging
+通过 `content_root` 接入博客内容库时，请显式配置 `[publishing.site]` 站点域名、名称及版权说明。详见 [站点身份与版权](reference/copyright-and-identity.md)、[配置参考](reference/configuration.md)。没有域名时会阻止内容库发布，而不是自动指向软件作者的博客。
 
-Windows PowerShell：
+如需通过平台账户操作，先注册新程序的 Native Messaging Host (`./syndirelay install`)，再在 Edge/Chrome 加载 `extension/`。单文件编译不需要浏览器扩展；MCP stdio 使用 `./syndirelay mcp-stdio`，通过本地 Bridge 使用授权平台能力。
 
-```powershell
-& 'C:\software\Coding\blogctl\blogctl-windows-amd64.exe' install
-```
-
-Linux 示例：
-
-```bash
-chmod +x ./blogctl-linux-amd64
-./blogctl-linux-amd64 install
-```
-
-macOS 使用对应的 `blogctl-darwin-*` 文件。`install` 把当前程序注册为浏览器 Native Messaging Host，不会替你加载扩展。移动程序后重新注册。`uninstall` 解除 Host 注册，保留用户数据。
-
-## 3. 加载并打开扩展
-
-1. 在准备使用的浏览器配置中打开 `edge://extensions` 或 `chrome://extensions`。
-2. 开启开发者模式，点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的目录。
-3. 打开 BlogCTL，扩展会按需启动、连接 Bridge。
-4. 确认已连接，再点击「打开工作台」。
-
-工作台地址为 `http://127.0.0.1:32145/console/`。保持扩展启用；直接打开 URL 不会自动建立浏览器转发通道。
-
-## 4. 设置工作区
-
-在「设置」填写 **Engine Root**（Inkerio 引擎）和 **Content Root**（内容仓库）。路径必须能被程序所在系统访问：Windows 程序使用 Windows 路径，WSL Linux 程序使用 Linux 路径。保存后重新打开设置，确认持久化成功。
-
-在引擎目录运行 `blogctl doctor` 检查 Node/npm/Git。与 `help`、`install` 不同，当前 `doctor` 需要在引擎工作目录运行。
-
-## 5. 验证与升级
-
-PowerShell：
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:32145/v1/health
-```
-
-Bash：
-
-```bash
-curl http://127.0.0.1:32145/v1/health
-```
-
-健康响应说明 HTTP 服务正常，还需检查扩展连接指示器。这一步不需要发布平台账号。
-
-升级时保留 `Data/`，一起替换程序和扩展，再从浏览器扩展页重新加载、打开工作台。程序位置变化时重新注册。排查版本不一致时，先确认没有旧 Bridge 进程仍在运行。
-
-下一步查看[创建首个草稿](tutorial/first-publish.md)、[新机器教程](tutorial/first-run-on-new-machine.md)或[连接排查](how-to/debug-bridge.md)。
-
-## 可选：使用 ChatGPT MCP
-
-安装版本匹配的 BlogCTL 程序和 Edge/Chrome 扩展后，可通过独立的 Secure MCP Tunnel 启动 `blogctl -mcp-stdio`。MCP 调用已有 Bridge，并由浏览器扩展同步 Cookie。不要在 WSL 启动独立 Bridge 代替 Windows 的浏览器登录态。参见 [MCP 接入](../MCP.md)。
-
-需要图片上传时，配置 `engine_root`、Node.js 和 Sharp，以及 TOML 顶层 `image_upload_roots` 白名单；先用 `dry_run=true` 验证清理结果。参见 [MCP 图片上传](../MCP.md#private-image-upload-to-r2)。
+原 BlogCTL 的 Windows 数据迁移详见 [并行安装说明](../how-to/windows-side-by-side.md)，务必保留旧 `Data/`、浏览器扩展及历史发布绑定。`--dry-run` 不执行任何远端写入。

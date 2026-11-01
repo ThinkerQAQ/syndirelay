@@ -11,7 +11,7 @@ func TestMediumOnlyASCIIArtworkConversion(t *testing.T) {
 		" ▼                                                   ▼                                                   ▼\n" +
 		"Java Memory Model                                   Go Memory Model                                     CPython Memory Model"
 	source := "Before\n\n~~~text\n" + wide + "\n~~~\n\n~~~text\ncount++\n~~~\n"
-	body, assets, err := CompileMediumPublishingMarkdown(source, DefaultAssetBaseURL)
+	body, assets, err := CompileMediumPublishingMarkdown(source, "https://assets.example.org/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +21,7 @@ func TestMediumOnlyASCIIArtworkConversion(t *testing.T) {
 	if !strings.Contains(body, "![") || !strings.Contains(body, "~~~text\ncount++\n~~~") {
 		t.Fatalf("converted code example or lost diagram: %q", body)
 	}
-	original, plainAssets, err := CompilePublishingMarkdown(source, DefaultAssetBaseURL)
+	original, plainAssets, err := CompilePublishingMarkdown(source, "https://assets.example.org/")
 	if err != nil {
 		t.Fatal(err)
 	}

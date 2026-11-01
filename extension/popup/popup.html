@@ -437,7 +437,7 @@
             </div>
             <div class="section-title">R2 兜底</div>
             <p id="assetStatusDetail" class="card-hint">正在检测共享 R2 配置…</p>
-            <label class="field"><span>R2 Bucket</span><input id="r2Bucket" type="text" placeholder="thinkerqaq-assets"></label>
+            <label class="field"><span>R2 Bucket</span><input id="r2Bucket" type="text" placeholder="your-assets-bucket"></label>
             <label class="field"><span>R2 Public Base URL</span><input id="r2PublicBaseUrl" type="url" placeholder="https://assets.example.com/"></label>
             <label class="field"><span>Access Key ID</span><input id="r2AccessKeyId" type="text" autocomplete="off"></label>
             <label class="field"><span>Secret Access Key</span><input id="r2SecretAccessKey" type="password" autocomplete="new-password" placeholder="未配置"></label>
@@ -473,6 +473,15 @@
             
             <label class="field"><span>内容语言</span><select id="publishingLanguage"><option value="zh-CN">中文</option><option value="en">English</option></select></label>
             
+            <div class="section-title">内容来源与版权（全平台共享）</div>
+            <p class="card-hint">显式配置优先，其次读取 Content Repository 中的版权配置；均不存在时不添加版权声明。修改只影响以后编译，不会更新已创建的草稿。</p>
+            <label class="field"><span>站点 Origin</span><input id="publishingSiteOrigin" type="url" placeholder="https://your-site.example"></label>
+            <label class="field"><span>站点中文名称</span><input id="publishingSiteZH" type="text" placeholder="我的博客"></label>
+            <label class="field"><span>站点英文名称</span><input id="publishingSiteEN" type="text" placeholder="My blog"></label>
+            <label class="field"><span>版权来源</span><select id="publishingCopyrightMode"><option value="auto">自动：显式配置 → Content → 无声明</option><option value="config">仅使用本工具配置</option><option value="content">仅使用 Content 仓库</option><option value="none">不追加版权声明</option></select></label>
+            <label class="field"><span>中文版权说明</span><textarea id="publishingCopyrightZH" rows="4" placeholder="自定义同步文章版权说明（不自动填充开发者信息）"></textarea></label>
+            <label class="field"><span>英文版权说明</span><textarea id="publishingCopyrightEN" rows="4" placeholder="Your own license statement"></textarea></label>
+            <p class="card-hint">各语言版权说明可留空，让 auto 从 Content 读取。商业授权、摄影例外等内容请根据你自己的实际许可填写。</p>
             <div class="section-title">Footer</div>
             <label class="switch-row" for="footerEnabled"><span><strong>启用 Footer</strong><small>同步时追加到平台文章末尾。</small></span><input id="footerEnabled" type="checkbox"></label>
             <label class="field"><span>Footer 模板</span><textarea id="footerTemplate" placeholder="支持 {site} {title} {url}"></textarea></label>

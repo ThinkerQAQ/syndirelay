@@ -70,6 +70,8 @@ func applyPublishingRuntimeConfig(config bridgeConfig, compiler *publishingCompi
 func publishingControlPayload(config bridgeConfig) map[string]any {
 	return map[string]any{
 		"platforms":   publishingViews(config),
+		"site":        config.Publishing.Site,
+		"copyright":   config.Publishing.Copyright,
 		"compiler":    config.Publishing.Compiler,
 		"assets":      publishingAssetsPublicView(config),
 		"assetStatus": publishingAssetStatus(config),
