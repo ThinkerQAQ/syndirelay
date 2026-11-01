@@ -1,6 +1,6 @@
 # 内容与发布流水线
 
-BlogCTL 把同一份 Markdown 原文编译成不同平台接受的格式，文章的权威来源始终是 `blog-content`。
+SyndiRelay 把同一份 Markdown 原文编译成不同平台接受的格式，文章的权威来源始终是 `blog-content`。
 
 ```text
 blog-content Markdown

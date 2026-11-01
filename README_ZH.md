@@ -1,36 +1,61 @@
 # SyndiRelay
 
-[English](README.md) · [迁移来源记录](docs/migration/SOURCE_COMMIT.txt) · [MIT License](LICENSE)
+[English](README.md) · [中文文档](docs/zh-CN/index.md) · [快速开始](docs/zh-CN/quick-start.md) · [MIT 许可证](LICENSE) · [第三方许可声明](THIRD_PARTY_NOTICES.md)
 
-**SyndiRelay 是独立的跨平台 Markdown 内容编译与分发工具**，由 BlogCTL 拆分。完整保留原有 11 个平台的编译规则、草稿与发布适配器、图片处理、Bridge、浏览器扩展和 MCP 源码，但不再需要安装 Inkerio/Astro 引擎。
+**SyndiRelay 是独立的 Markdown 编译与多平台内容分发工具。** 它由 BlogCTL 拆分而来，不再要求安装 Inkerio/Astro 引擎，也不依赖 ThinkerQAQ 的个人网站。主要提供单文件 Markdown 编译、可选的内容仓库分发、本地浏览器 Bridge/Extension、STDIO MCP，以及可选的 Reverfolio 影响力统计对接。
 
-**状态：私有迁移与兼容性审核阶段，尚未公开发布。** 只有编译和本地工具能力完成验证后，才进一步评估各平台接口授权、跨平台打包及旧配置迁移。
+**公开状态：仍为 Private，处于源码公开前的审查阶段。** 尚无经过完整验收的 SyndiRelay 二进制文件或浏览器扩展 Release。旧 `ThinkerQAQ.github.io` 中的 BlogCTL Release 已经**退役并移除下载附件**；原二进制不能当作 SyndiRelay 新版本安装包。公开源码和公开分发可执行文件是两个不同的决策，详见[开源与发布验收清单](docs/compliance/PUBLICATION_READINESS.md)。
 
-## 处理任意 Markdown（只编译，不发布）
+## 功能与边界
 
-需要 Go 1.24+ 和 Node.js 22+，**无需 Inkerio**：
+| 能力 | 必要条件 | 边界 |
+| --- | --- | --- |
+| 将 Markdown 编译为 11 种平台格式 | 本地文件、Go、Node.js | 仅本地生成预览，不发送网络写入 |
+| 预览内容仓库分发 | 指定内容目录、个人站点及版权策略 | `--dry-run` 不修改远程文章或本地发布状态 |
+| 创建、更新、发布远程文章 | 平台授权、操作支持、必要时连接本地浏览器 | 用户明确选择操作及目标，不能假定所有平台都支持 |
+| Bridge、Web Console、浏览器扩展 | 与浏览器系统匹配的本机可执行文件 | Bridge 仅监听 `127.0.0.1:32146`，Cookie 和密钥保留本机 |
+| STDIO MCP | 本地可执行文件及 Bridge | 只暴露命名工具，不开放整个 Bridge 到公网 |
+| 作品传播统计 | 另行连接 Reverfolio | 默认关闭，独立保存数据 |
+| 搜索通知与 AI Search | 可选的站点 CI 与服务商凭据 | 服务端执行，不要求安装网站引擎 |
 
-```bash
+11 种**文章编译格式**：`51cto`、`cnblogs`、`csdn`、`devto`、`hashnode`、`juejin`、`medium`、`oschina`、`segmentfault`、`toutiao`、`zhihu`。**支持编译某个平台，不代表获得其官方 API 授权或已验证远程发布。** 对非公开接口和浏览器登录态自动化必须另行核对平台规则与使用权限。
+
+## 本地编译快速开始
+
+准备 Go **1.24+**、Node.js **22+**、npm 和 Git。当前克隆仓库需要已有的 GitHub 私有仓库访问权限。
+
+```sh
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
 npm ci
 go build -o syndirelay ./cmd
-./syndirelay compile --file ./hello.md --platform devto
-./syndirelay compile --file ./hello.md --platform medium --asset-base-url https://your-cdn.example/
+printf '# 示例文章\n\n这是我自己的原创内容。\n' > example.md
+./syndirelay compile --file ./example.md --platform devto
 ```
 
-输入可以是普通 `# 标题` 加正文的 Markdown，也可包含 YAML Frontmatter。`--canonical-url` 可选，**不会默认写入 ThinkerQAQ 的域名、作者和版权页脚**。图片与图表如需生成分发素材，必须提供明确的 CDN 地址；本命令不会上传、登录或发布。
+此流程不会登录、上传图片、创建草稿或发布。带图表的分发可额外指定自己的 `--asset-base-url https://your-cdn.example/`。从内容仓库分发时，还要显式配置自己的站点 Canonical 域名和版权政策；默认不使用软件作者的站点或作品署名。
 
-完整安装包除 Go 可执行文件外，还须包含 `renderers/`、`scripts/plantuml/`、`package.json`、`package-lock.json`；安装 Node 依赖后，通过 `SYNDIRELAY_HOME` 指定目录。
+Windows PowerShell 使用 `go build -o syndirelay.exe ./cmd`，自行创建 `.md` 文件，再执行 `./syndirelay.exe compile --file ./example.md --platform devto`。
 
-## 不丢失平台编译能力
+## 仓库边界
 
-迁移时，原 BlogCTL 共 356 个跟踪文件完成 SHA-256 比对；11 个平台的同一份测试文章编译 JSON 与旧版**逐字节一致**。包含 Medium 专用格式、文章表格、Canonical、链接、版权页脚和内容哈希。私有用户数据不会迁入新仓库。
+- `compiler/`、`publisher/`、`publishing/`、`platform/`、`renderers/`：编译、平台适配与发布前校验。
+- `bridge/`、`extension/`、`ui/`、`cmd/`：本地 Bridge、浏览器扩展、Web UI 和 MCP。
+- `search/`、`aisearch/` 与旧 `site` 命令：仅为旧部署和站点 CI 保留的兼容功能；正式静态网站由 **Inkerio** 构建。
+- `Data/`、`SYNDIRELAY_DATA_DIR`：本机私有数据库、授权状态和发布绑定，禁止写入 Git 或安装包。
+- [Reverfolio](docs/zh-CN/reverfolio.md)：可选独立作品影响力统计，不默认上传文章正文或凭据。
 
-原 `blog-content` 适配器保留，以保证旧业务兼容。SyndiRelay 的新入口独立解析普通 Markdown；平台发布前仍需用户授权。站点构建及 AI Search 等旧兼容模块暂时保留，确认生产部署改用独立接口后再删除。
+[Inkerio](https://github.com/ThinkerQAQ/inkerio) 负责通用静态博客引擎，[inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) 负责公开样例，[ThinkerQAQ.github.io](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) 只负责个人网站配置与部署。SyndiRelay 的单文件编译不依赖上述仓库。
 
-## 合规与安全
+## 开发与测试
 
-拆仓不能消除非公开平台接口、Cookie 自动化、图片版权等风险。当前私有仓库仅用于迁移与审计，不对外发布新的浏览器扩展或安装包。历史 `tls-client`/`fhttp` 许可问题已从当前依赖中清除，但不追溯影响旧 Release。公开前需完成逐平台合规审核、依赖许可收集及 Windows/macOS/Linux 验收。
+```sh
+npm ci
+go test ./...
+npm run test:renderers
+npm run test:extension
+```
 
-## 可选的影响力统计
+GitHub CI 已覆盖 **Windows、macOS、Linux** 的测试和原生编译；这不等于真实平台账号发布、浏览器安装、三系统整包运行或依赖许可证验收全部通过。公开二进制/扩展仍需完成[发布许可、平台授权和安装验收](docs/compliance/PUBLICATION_READINESS.md)。
 
-[连接 Reverfolio](docs/zh-CN/reverfolio.md)：公开发布成功后，通过本地持久队列登记作品与发布链接。默认关闭，使用自己的站点与目录配置，不交接正文和凭据；分发与统计仍可独立部署。
+**版权边界：** SyndiRelay 原创源码采用 MIT，不改变第三方依赖许可证，也不授权他人转载用户文章、图片或访问第三方服务。项目与所支持的内容平台没有官方从属或背书关系。

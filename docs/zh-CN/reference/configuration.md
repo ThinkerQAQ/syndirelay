@@ -7,9 +7,9 @@
 | 系统 | 默认位置 |
 | --- | --- |
 | Windows | 程序旁的 `Data/` |
-| Linux | 通常为 `~/.config/BlogCTL/`，遵循 `os.UserConfigDir()` |
-| macOS | 通常为 `~/Library/Application Support/BlogCTL/` |
-| 覆盖 | 启动前设置绝对路径 `BLOGCTL_DATA_DIR` |
+| Linux | 通常为 `~/.config/SyndiRelay/`，遵循 `os.UserConfigDir()` |
+| macOS | 通常为 `~/Library/Application Support/SyndiRelay/` |
+| 覆盖 | 启动前设置绝对路径 `SYNDIRELAY_DATA_DIR` |
 
 `jobs.json`、`publications.json`、`distribution/`、日志和 `social/` 属于运行数据，可能包含私有内容。迁移前备份整个目录；设置环境变量不会自动搬文件。
 
@@ -19,7 +19,7 @@ Windows 与 WSL 默认目录和路径语法不同。共享社交草稿时，两�
 
 | 键 | 用途 |
 | --- | --- |
-| `engine_root`、`content_root` | 程序可访问的仓库根目录 |
+| `engine_root`、`content_root` | 可选的旧引擎路径、用于内容库发布的内容仓库根目录 |
 | `ui_locale` | 默认 `auto`，可选 `zh-CN`、`en`，只控制界面 |
 | `log_level`、`log_directory` | 默认 `info`，可选日志目录 |
 | `proxy_enabled`、`proxy_host`、`proxy_port` | HTTP 代理开关、地址和端口 |

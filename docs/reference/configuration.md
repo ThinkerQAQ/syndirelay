@@ -7,9 +7,9 @@ Use Settings in the Extension or Console to edit `blogctl.toml`. Stop the Bridge
 | OS | Default directory |
 | --- | --- |
 | Windows | `Data/` beside the executable |
-| Linux | Usually `~/.config/BlogCTL/`, following `os.UserConfigDir()` |
-| macOS | Usually `~/Library/Application Support/BlogCTL/` |
-| Override | Absolute `BLOGCTL_DATA_DIR`, set before process startup |
+| Linux | Usually `~/.config/SyndiRelay/`, following `os.UserConfigDir()` |
+| macOS | Usually `~/Library/Application Support/SyndiRelay/` |
+| Override | Absolute `SYNDIRELAY_DATA_DIR`, set before process startup; legacy BlogCTL variable names are not preferred for new installations |
 
 `jobs.json`, `publications.json`, `distribution/`, logs and `social/` are runtime state. They may contain private data. Back up the directory before moving an installation; an environment override does not migrate files.
 
@@ -19,7 +19,7 @@ Windows and WSL have separate defaults and path syntax. Shared social drafts nee
 
 | Key | Meaning |
 | --- | --- |
-| `engine_root`, `content_root` | Checkout roots accessible to the executable |
+| `engine_root`, `content_root` | Legacy optional engine root; explicit content checkout for repository-based publishing |
 | `ui_locale` | `auto` (default), `zh-CN`, or `en`; interface only |
 | `log_level`, `log_directory` | Default level `info`, optional log output path |
 | `proxy_enabled`, `proxy_host`, `proxy_port` | Enable and select an HTTP proxy |
@@ -77,7 +77,7 @@ Running indexing tasks block site edits. Queued tasks retain their site identity
 | `[publishing.assets]` | `store` (`r2`) |
 | `[publishing.assets.r2]` | `bucket`, `public_base_url`, `account_id`, `endpoint`, `access_key_id`, `secret_access_key` |
 
-When a platform's `.footer.enabled` is true, BlogCTL preserves its existing `template` (including UTM source links) and **appends a localized copyright notice plus the untracked original article URL**. The notice and Inkerio's page notice read the same content-owned `src/content/site/copyright.json` under the configured `content_root`; editing it takes effect on the next compilation without rebuilding BlogCTL. Missing content copyright files no longer cause the old developer policy to be embedded. Configure your own policy or leave the statement absent. Older `blogctl.toml` files keep their existing footer template and gain the new notice automatically. Turning off `.footer.enabled` disables both the traditional footer and the copyright notice. Native Canonical URL settings are unchanged. Existing remote posts are not rewritten until an explicitly requested Create/Update.
+When a platform's `.footer.enabled` is true, SyndiRelay preserves its existing `template` (including UTM source links) and **appends a localized copyright notice plus the untracked original article URL**. The notice and Inkerio's page notice read the same content-owned `src/content/site/copyright.json` under the configured `content_root`; editing it takes effect on the next compilation without rebuilding SyndiRelay. Missing content copyright files no longer cause the old developer policy to be embedded. Configure your own policy or leave the statement absent. Older `blogctl.toml` files keep their existing footer template and gain the new notice automatically. Turning off `.footer.enabled` disables both the traditional footer and the copyright notice. Native Canonical URL settings are unchanged. Existing remote posts are not rewritten until an explicitly requested Create/Update.
 
 Dotted rows are nested under the platform section, for example `[publishing.platforms.devto.footer]`. DEV.to, Medium and Hashnode default to English and native canonical mode; other registered platforms use their default language and footer mode. Article language selects an existing source translation; it does not translate text.
 

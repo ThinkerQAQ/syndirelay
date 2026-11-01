@@ -1,4 +1,4 @@
-# BlogCTL Examples
+# SyndiRelay Examples
 
 - [Site assembly from the real public content template](site-assembly.md)
 - [Safe preview of a selected article](dry-run.md)

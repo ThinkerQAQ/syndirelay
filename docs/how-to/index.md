@@ -1,10 +1,10 @@
-# BlogCTL How-to
+# SyndiRelay how-to guides
 
-- [Switch the interface language](switch-interface-language.md)
-- [Configure workspace and persistent data](configure-workspace.md)
-- [Check existing remote articles before creating](detect-before-create.md)
-- [Diagnose Bridge/Extension connection](debug-bridge.md)
-- [Diagnose search-index submissions](diagnose-index-submission.md)
-- [Use the complete publishing workflow](../guide/workflows.md)
-
-Configuration fields live only in the [Configuration Reference](../reference/configuration.md).
+- [Configure a standalone workspace](configure-workspace.md) — local content root, site identity, private data.
+- [Install side-by-side with legacy BlogCTL on Windows](windows-side-by-side.md) — avoid overwriting existing user state.
+- [Debug the local Bridge](debug-bridge.md) — Native Host, Extension and port 32146.
+- [Inspect before creating a remote article](detect-before-create.md) — avoid duplicate drafts.
+- [Switch interface language](switch-interface-language.md) — English/Chinese UI.
+- [Search submission diagnostics](diagnose-index-submission.md) — optional site-owned search provider integration.
+- [Optional Reverfolio impact tracking](reverfolio.md) — a separate product and data store.
+- [Publication readiness](../compliance/PUBLICATION_READINESS.md) — public-source and binary/Extension gates.

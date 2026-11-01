@@ -1,8 +1,8 @@
 # 通过 Buffer 发布短内容
 
-BlogCTL 的社交短内容独立于长文分发。用户或外部 AI 编写英文文案，BlogCTL 校验内容源、追加带跟踪参数的链接，并记录内容版本。工作台提供预览与编辑，再由显式操作创建 Buffer 私有草稿和公开发布。
+SyndiRelay 的社交短内容独立于长文分发。用户或外部 AI 编写英文文案，SyndiRelay 校验内容源、追加带跟踪参数的链接，并记录内容版本。工作台提供预览与编辑，再由显式操作创建 Buffer 私有草稿和公开发布。
 
-BlogCTL 本身不调用 LLM 生成摘要，也不通过 LinkedIn 浏览器 Cookie 发帖。X、Bluesky 需要先在 Buffer 连接对应频道。
+SyndiRelay 本身不调用 LLM 生成摘要，也不通过 LinkedIn 浏览器 Cookie 发帖。X、Bluesky 需要先在 Buffer 连接对应频道。
 
 ## 配置
 
@@ -15,7 +15,7 @@ api_key = "YOUR_PERSONAL_BUFFER_API_KEY"
 
 也可以在「设置 → 社交平台 → Buffer API」填写。Bridge 返回值会遮蔽 Key。配置为空时可使用 `BUFFER_API_KEY`，但交互式 Bash 的环境变量不一定传入 Windows 或非交互 Bridge。
 
-Windows 与 WSL 操作同一批草稿时，必须指向同一 Data 目录。Windows 默认是程序旁的 `Data/`，Linux 通常是 `~/.config/BlogCTL/`。在 WSL 设置绝对 `BLOGCTL_DATA_DIR`，指向挂载的 Windows Data；保存的内容路径若是 Windows 路径，CLI 需传 Linux 可访问的 `--content-root`。
+Windows 与 WSL 操作同一批草稿时，必须指向同一 Data 目录。Windows 默认是程序旁的 `Data/`，Linux 通常是 `~/.config/SyndiRelay/`。在 WSL 设置绝对 `SYNDIRELAY_DATA_DIR`，指向挂载的 Windows Data；保存的内容路径若是 Windows 路径，CLI 需传 Linux 可访问的 `--content-root`。
 
 不要提交 API Key、真实 `blogctl.toml` 或 `Data/social/*.json`。
 

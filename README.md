@@ -1,43 +1,61 @@
 # SyndiRelay
 
-[简体中文](README_ZH.md) · [Source migration record](docs/migration/SOURCE_COMMIT.txt) · [MIT License](LICENSE)
+[简体中文](README_ZH.md) · [Documentation](docs/index.md) · [Quick start](docs/quick-start.md) · [MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-SyndiRelay is a **standalone, cross-platform Markdown content syndication and publishing application**, extracted from BlogCTL. It preserves the complete 11-platform compilation, publication, draft, image pipeline, local browser Bridge/Extension, and MCP source code while removing the dependency on the Inkerio/Astro site engine.
+**SyndiRelay is an independent Markdown compilation and cross-platform syndication toolkit.** It started as BlogCTL, but no longer requires an Inkerio/Astro engine or a ThinkerQAQ website checkout. It supports standalone Markdown input, optional repository-aware publishing, a local browser Bridge and Extension, STDIO MCP tools, and optional publication-impact handoff to Reverfolio.
 
-**Status: private migration and compatibility audit, not yet a public release.** Native code and most platform-specific behavior have been imported; external platform publishing must still pass authorization, safety, runtime packaging and environment migration reviews before a public binary or extension is published.
+**Availability:** This repository is **private during the public-source audit**. There is no approved SyndiRelay binary/extension Release yet. The old `ThinkerQAQ.github.io` BlogCTL Releases have now been **retired**; their binaries were historical builds, not SyndiRelay installers. Open-sourcing the source and distributing precompiled binaries are separate decisions; see [public-source and binary release gates](docs/compliance/PUBLICATION_READINESS.md).
 
-## Independent Markdown compilation (preview; no network publishing)
+## What it does
 
-Requires Go 1.24+ and Node.js 22+. There is **no Inkerio installation requirement**.
+| Capability | Requirements | Safety boundary |
+| --- | --- | --- |
+| Compile Markdown for 11 platform formats | Go and Node.js; local file | Local preview, **no remote writes** |
+| Preview publishing from a content repository | Explicit content root, site identity and copyright policy | `--dry-run` must not mutate remote or local publishing state |
+| Create/update/publish external articles | Per-platform account authorization, supported operation, local Bridge/Extension where required | Explicit target and user action; support and policy vary by platform |
+| Local Console and browser Extension | Matching native executable and authorized browser session | Local bridge on `127.0.0.1:32146`; keep credentials and cookies local |
+| STDIO MCP | Local executable and Bridge | Named tools; no public unrestricted Bridge endpoint |
+| Optional impact tracking | Separate Reverfolio configuration | Off by default; separate data and lifecycle |
+| Search/AI Search integration | Optional site-owned CI and provider credentials | Private server-side credentials, not a publishing dependency |
 
-```bash
+The 11 **compiler formats** are `51cto`, `cnblogs`, `csdn`, `devto`, `hashnode`, `juejin`, `medium`, `oschina`, `segmentfault`, `toutiao` and `zhihu`. **A compiler format is not a guarantee of official API access or live publishing capability.** In particular, browser-authenticated or undocumented platform endpoints must not be used without appropriate authorization.
+
+## Compile a standalone article
+
+Prerequisites: Go **1.24+**, Node.js **22+**, npm and Git. Authorized source access is currently required.
+
+```sh
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
 npm ci
 go build -o syndirelay ./cmd
+printf '# Example article\n\nMy original content.\n' > example.md
 ./syndirelay compile --file ./example.md --platform devto
-./syndirelay compile --file ./example.md --platform medium --asset-base-url https://your-cdn.example/
 ```
 
-The Markdown file may have YAML frontmatter or just `# Title` and body text. Optional `--canonical-url https://your-domain.example/your-article/` is never inferred from ThinkerQAQ. Metadata-free documents generate titles/descriptions locally. Media that requires rendering (Mermaid, PlantUML, Medium table images) requires your explicit `--asset-base-url`; a preview does not upload assets or publish.
+The example compiles locally. It does not sign into a publishing service, upload media or create a draft. For rendered diagrams or external media, supply your own explicit `--asset-base-url https://your-cdn.example/`; for repository-aware syndication, configure your own canonical site origin and copyright policy. No developer site identity is inserted by default.
 
-For installation bundles, ship the Go binary alongside `renderers/`, `scripts/plantuml/`, `package.json` and `package-lock.json`; run `npm ci` in that directory and set `SYNDIRELAY_HOME` to its absolute path. The browser Extension uses an existing authorized browser session only when a platform operation is explicitly requested; this is separate from `compile`.
+For Windows PowerShell, build with `go build -o syndirelay.exe ./cmd`, write a local `.md` file and run `./syndirelay.exe compile --file ./example.md --platform devto`.
 
-## Legacy-compatible compilation
+## Architecture and distribution
 
-The original `blog-content` adapter and platform compilers remain preserved. Migration validation compiled one fixture on **all 11 original platforms** and compared the complete JSON result **byte for byte** against the original BlogCTL commit. All 11 matched, including Medium's specialized payload, HTML, content hash and attribution rules. Existing user content and publishing database are not copied.
+- `compiler/`, `publisher/`, `publishing/`, `platform/`, `renderers/`: content compilation, operation validation and platform-specific adapters.
+- `bridge/`, `extension/`, `ui/`, `cmd/`: local authenticated workflows, browser integration and MCP. Never expose the whole Bridge to the Internet.
+- `search/`, `aisearch/`, legacy `site` commands: backward-compatible optional CI integrations. The **Inkerio engine** builds websites; a site-specific deployment wrapper orchestrates optional search tasks.
+- `Data/` and `SYNDIRELAY_DATA_DIR`: private local state. Never commit or package cookies, credentials, databases or historical publication bindings.
+- Optional [Reverfolio](docs/how-to/reverfolio.md): independently operated impact tracking; no default transfer of article bodies or tokens.
 
-## Optional impact tracking
+[Inkerio](https://github.com/ThinkerQAQ/inkerio) owns the reusable static blog engine; [inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) provides public example content; the [ThinkerQAQ website wrapper](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) manages one site's public identity and deployment. None is a runtime prerequisite for standalone SyndiRelay compilation.
 
-[Connect Reverfolio](docs/how-to/reverfolio.md) to register confirmed public publications through a local durable outbox. It is disabled by default, uses your own site/catalog settings and transfers no article body or credentials. Publishing and impact tracking remain independently deployable.
+## Develop and validate
 
-## Architecture
+```sh
+npm ci
+go test ./...
+npm run test:renderers
+npm run test:extension
+```
 
-- Source readers: standalone Markdown file, original `blog-content` layout. Other adapters can be added without changing the platform compilers.
-- Publishing core: `compiler/`, `platform/`, `publishing/`, `publisher/`, `assets/` and `renderers/`.
-- Local automation: `bridge/`, `extension/`, `ui/`, MCP entry in `cmd/`.
-- Search/AI Search and old site build compatibility: temporarily retained until the old production deployment wrapper no longer imports them; not part of the long-term distribution core.
+CI runs on **Windows, macOS and Linux**, including native builds and tests. Build success is not a guarantee that a real browser, account publishing, packaging license notices or every operating-system installation was validated. Binary/extension Releases remain gated by third-party license evidence, external platform authorization and installation acceptance tests. Review [compliance](docs/compliance/PUBLICATION_READINESS.md) before publishing anything.
 
-## Security and copyright
-
-Code migration does not authorize use of unofficial platform APIs, third-party photos or other people's text. Session/Cookie flows require an explicit action and platform-specific permissions. Old `tls-client`/`fhttp` dependencies are absent in the current Go module; old already-published binaries are unaffected. This private repo is intentionally **not** public until a detailed per-platform authorization review, third-party license collection and cross-platform install/release verification are complete.
-
-Never commit users' content, cookies, tokens, local publication databases or release secrets.
+**License:** Original SyndiRelay source is MIT; this does not relicense the runtime dependencies, upstream assets, users' writing/photos or platform services. SyndiRelay is not affiliated with or endorsed by third-party publishing platforms. Use it only with rights to the content and account operations involved.

@@ -1,4 +1,4 @@
-# BlogCTL Concepts
+# SyndiRelay Concepts
 
 - [Content, compilation and publication](content-and-publishing.md)
 - [Browser Bridge, sessions and runtime state](bridge-and-state.md)

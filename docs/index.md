@@ -1,19 +1,20 @@
-# BlogCTL documentation
+# SyndiRelay documentation
 
-[简体中文](zh-CN/index.md) · [Inkerio](../../../docs/index.md)
+[简体中文](zh-CN/index.md) · [Project README](../README.md) · [Inkerio engine](https://github.com/ThinkerQAQ/inkerio)
 
-BlogCTL is Inkerio's companion application for site assembly, browser-assisted publishing and search indexing. Use the engine documentation for Astro routes, content collection schemas and website deployment.
+**SyndiRelay is the standalone Markdown syndication and publishing product formerly called BlogCTL.** Inkerio now builds the website; SyndiRelay optionally compiles and distributes articles. A standalone Markdown file does not need the site engine or the author's content repository.
 
-| What you're doing | Read |
+| Goal | Guide |
 | --- | --- |
-| Installing the CLI and Extension | [Quick Start](quick-start.md) |
-| Connecting ChatGPT to the existing BlogCTL Bridge | [MCP integration](MCP.md) |
-| Set up a new machine with interface examples | [New-machine tutorial](tutorial/first-run-on-new-machine.md) |
-| Publishing your first article | [Tutorial](tutorial/first-publish.md) |
-| Understanding the Bridge and publishing model | [Concepts](concepts/index.md) |
-| Configuring or troubleshooting a feature | [How-to](how-to/index.md) |
-| Checking flags, TOML or interfaces | [Reference](reference/index.md) |
-| Working from an example | [Examples](examples/index.md) |
-| Reviewing architectural boundaries | [Architecture](architecture/index.md) |
+| Build and locally compile an article | [Quick start](quick-start.md) |
+| Set up the CLI and Extension on a machine | [New-machine setup](tutorial/first-run-on-new-machine.md) |
+| Connect the STDIO MCP without a public Bridge | [MCP](MCP.md) |
+| Configure a content directory and personal publishing identity | [Workspace](how-to/configure-workspace.md) and [copyright](reference/copyright-and-identity.md) |
+| Understand per-platform draft and publication operations | [Publishing workflow](guide/workflows.md) |
+| Inspect supported commands and optional legacy CI tasks | [CLI reference](reference/cli.md) |
+| Understand system components and local data | [Architecture](architecture/index.md) |
+| Track verified publications in Reverfolio | [Optional impact tracking](how-to/reverfolio.md) |
+| Review readiness to publicize or distribute binaries | [Publication review](compliance/PUBLICATION_READINESS.md) |
+| Understand history of the original BlogCTL extraction | [Migration archive](migration/README.md) |
 
-For development, read the [root rules](../../../AGENTS.md) and [BlogCTL rules](../AGENTS.md).
+The repository is currently private; links to it require authorization. All remote publishing requires an explicitly authorized user/account action and platform-specific support. A successful local compilation does not imply remote publishing permission. Read [third-party notices](../THIRD_PARTY_NOTICES.md) before distributing artifacts.

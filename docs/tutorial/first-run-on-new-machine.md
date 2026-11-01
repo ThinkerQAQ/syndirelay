@@ -1,79 +1,52 @@
-# Set up a BlogCTL workspace from source
+# Install SyndiRelay from source on a new machine
 
-This walkthrough starts with an engine checkout, runs the sample site, then connects BlogCTL to a browser. You can complete installation without a publishing account. For prebuilt executables, use [installation](../quick-start.md).
+SyndiRelay is independent of Inkerio. **This guide requires authorized access to the current private source repository.** Public installer bundles are not yet approved. Begin with a read-only local compile; connect a browser only if you intend to use an authorized publishing workflow.
 
-## 1. Get the source and check tools
+## 1. Prerequisites and source
 
-Install Git, Node.js 22.12+, npm and Go 1.27.1 or a compatible newer toolchain.
+Install Git, Go 1.24+, Node.js 22+ and npm. On the operating system that will run the app:
 
-```bash
-git clone https://github.com/ThinkerQAQ/ThinkerQAQ.github.io.git
-cd ThinkerQAQ.github.io
-git --version
-go version
-node --version
-npm --version
-go run ./tools/blogctl/cmd doctor
+```sh
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
 npm ci
-npm run dev:quick
+go test ./...
+go build -o syndirelay ./cmd
+printf '# My original article\n\nHello from SyndiRelay.\n' > example.md
+./syndirelay compile --file ./example.md --platform devto
 ```
 
-Open [localhost:4321](http://localhost:4321). The sample content is fetched from `inkerio-content-template` beside the engine. In a second terminal, run `npm run check` from the engine root. Stop the development server with **Ctrl+C**.
+On Windows PowerShell, build `go build -o syndirelay.exe ./cmd`, create `example.md` with an editor and invoke `.\syndirelay.exe compile --file .\example.md --platform devto`. Source compilation is local and never posts to a platform.
 
-## 2. Build and register BlogCTL
+`go test ./...` tests Go code and is not an installation or publishing acceptance test. For frontend tests run `npm run test:renderers && npm run test:extension`.
 
-Bash on Linux/macOS:
+## 2. Optional local browser integration
 
-```bash
-go run ./tools/blogctl/cmd/maint build
-.build/out/blogctl install
-```
+Use a persistent installation directory, **separate from any older BlogCTL installation**, with your binary, `extension/`, `renderers/`, `package.json`, `package-lock.json`, `node_modules/` and private `Data/`. Set `SYNDIRELAY_HOME` to the installation root and, if needed, absolute `SYNDIRELAY_DATA_DIR` to your private data root. Never copy historical user `Data/` into Git.
 
-Windows PowerShell, from a Windows checkout with Go installed:
+Run `./syndirelay install` (or `.\syndirelay.exe install`) from the operating system that owns Edge/Chrome, then load **this repo's `extension/`** as an unpacked extension. The Native Messaging Host is `com.thinkerqaq.syndirelay`; it is a stable product identifier, **not a user website domain**. The local Bridge is `127.0.0.1:32146`.
 
-```powershell
-go build -o blogctl-windows-amd64.exe ./tools/blogctl/cmd
-& .\blogctl-windows-amd64.exe install
-```
+Do **not** use the old `tools/blogctl/extension/`, previous binary names, port `32145`, or the retired website repository installation instructions. Separate extension identities prevent writing to the old BlogCTL user profile.
 
-Use the executable for the OS running the browser. A Linux build in WSL is not a Windows Native Messaging executable. For Edge on Windows, build/download a Windows executable and use Windows-accessible engine/content paths. The [installation guide](../quick-start.md) covers stable install locations and upgrades.
+## 3. Optional content and remote publishing
 
-## 3. Load the matching browser Extension
+For repository-aware content, select the folder containing `src/content/articles/` and explicitly set your own `[publishing.site]` canonical origin/copyright and the intended distribution paths. See [configuration](../how-to/configure-workspace.md). The generic single-file `compile` command needs neither a content repository nor an Inkerio checkout.
 
-Open the browser's extensions page, enable developer mode and load `tools/blogctl/extension/` from this checkout. Open BlogCTL, confirm the Bridge is connected, then choose **Open workspace**.
+Only after signing into a supported platform **and verifying authorization** should you use its remote draft/update/publish workflow. Check actual supported operations, remote IDs and task history before retrying a write. Different platforms support different workflows. See [first draft](first-publish.md).
 
-Visit `http://127.0.0.1:32145/v1/health` or query it with `curl`/PowerShell. Confirm the response and the Extension indicator; HTTP alone does not verify the browser session relay.
+## 4. Optional MCP
 
-## 4. Select content and language
+Run `./syndirelay mcp-stdio` locally and connect the limited STDIO tool interface. Never tunnel the entire Bridge. Keep the browser process/Extension on the same OS as the Bridge. See [MCP details](../MCP.md).
 
-In **Settings**, fill in Engine Root and Content Root using paths accessible to the executable. For a writing workspace, clone your own content repository as described in the [Inkerio tutorial](../../../../docs/tutorial/first-site.md). A demo checkout can be selected directly for practice.
-
-Choose **Interface & language → Follow browser / Simplified Chinese / English**. This sets `ui_locale`; each publishing platform has its own article-language setting. Save, reopen Settings and confirm both paths and language.
-
-## 5. Inspect and create an article
-
-In **Detect**, choose a signed-in platform and inspect drafts/published articles. On **Create**, select a local article and platforms. Click **Detect** when you want association results; creation does not launch it automatically, and detection is not a prerequisite for the create button.
-
-For an existing article use **Update**, inspect its link and select its remote ID. For a new article, choose **Create draft** only when you intend to write to that account. Inspect **Tasks** and the returned editor link. Follow [first draft](first-publish.md) for a local compile check and the complete write/readback sequence.
-
-## Interface examples
-
-These screenshots were captured on 2026-10-10 and illustrate navigation. Current button labels and manual detection behavior are described above; the screenshots predate later publishing changes.
-
-![Detect page](../assets/01-detect-en.webp)
-
-![Create page](../assets/02-create-en.webp)
-
-![Tasks page](../assets/03-tasks-en.webp)
-
-## If the setup fails
+## Troubleshooting
 
 | Symptom | Check |
 | --- | --- |
-| Browser cannot find the native host | Correct OS binary, permanent path, and `install` registration |
-| Console opens but actions fail | Extension enabled and connected in that browser profile |
-| No local articles | Content Root and article status/language |
-| WSL command and Windows Console show different drafts | Both processes must use the same accessible `BLOGCTL_DATA_DIR` |
-| Task timed out after allocating a draft | Open its saved ID before a new create attempt |
+| Clone denied | Repository still private; source access is required |
+| Compile fails to render a diagram | Install renderer dependencies; provide explicit asset URL when needed |
+| Native Host missing | Correct OS binary, install path and `syndirelay install` |
+| Extension fails to connect | Same native host/extension version, local port 32146, browser allowed |
+| No articles in Console | Explicit content root and suitable article status/language |
+| Task timed out after a remote create | Inspect local task and remote ID before any retry |
 
-See [Bridge troubleshooting](../how-to/debug-bridge.md) and [configuration paths](../reference/configuration.md).
+Do not send Cookies, API keys or local `Data/` as troubleshooting attachments.

@@ -1,10 +1,10 @@
 # Content and publishing
 
-**Definition:** BlogCTL compiles canonical Markdown into platform-specific payloads while preserving the original content repository as the sole source of truth.
+**Definition:** SyndiRelay compiles canonical Markdown into platform-specific payloads while preserving the original content repository as the sole source of truth.
 
 ## Problem and model
 
-Different article platforms accept different HTML/Markdown, asset uploads, draft IDs and canonical URLs. BlogCTL separates:
+Different article platforms accept different HTML/Markdown, asset uploads, draft IDs and canonical URLs. SyndiRelay separates:
 
 ```text
 blog-content Markdown

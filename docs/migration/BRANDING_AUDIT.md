@@ -26,7 +26,7 @@ SyndiRelay is a reusable publishing tool, not an implicit claim over a user’s 
 2. A different author and site at `https://independent.example.org` compiled successfully for all 11 platforms with alternate localized names, copyright and paths; no original author branding appeared in the output.
 3. A missing content copyright file produces **no legal notice**, rather than using an obsolete restrictive statement. Invalid existing policies fail closed.
 4. The user’s real `what-kind-of-life-do-i-want` article compiled into all 11 platform previews with the *current* CC BY-NC-SA 4.0 content policy, without the old “full republication/adaptation requires prior permission” line. The private article output is stored **only on the authorized Windows device under `Data/reports/`**, not in Git.
-5. Automated Go/Node/extension tests pass. Hosted Actions in the private repository are still blocked before Runner allocation by the account billing/spending limit; these are local tests, not GitHub-hosted verification.
+5. Automated Go/Node/extension tests pass. GitHub Actions now has successful Windows, macOS and Linux validation runs; historical runner-billing failures are resolved. CI build success does not establish third-party API authorization, full package redistribution rights or real-browser acceptance. See [publication review](../compliance/PUBLICATION_READINESS.md).
 
 ## Safety when updating an existing installation
 

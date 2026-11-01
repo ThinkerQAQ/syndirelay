@@ -1,6 +1,6 @@
 # Medium editor integration
 
-This is the current implementation contract for BlogCTL's Medium adapter. Browser observations from October 2026 explain the editor choices below; they are not a guarantee that Medium will keep its private interfaces unchanged.
+This is the current implementation contract for SyndiRelay's Medium adapter. Browser observations from October 2026 explain the editor choices below; they are not a guarantee that Medium will keep its private interfaces unchanged.
 
 For everyday operation, use [publishing workflows](guide/workflows.md). No captured article IDs, credentials or HAR payloads belong in this document.
 

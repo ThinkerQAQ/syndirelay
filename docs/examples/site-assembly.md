@@ -1,14 +1,16 @@
-# Example — assemble a separate content repository
+# Example — build an Inkerio site (separate project)
 
-**Goal:** build a working blog site from the public content template.
+SyndiRelay **does not own** the static-site build. If you want a working Astro website, check out the public Inkerio engine and public example content separately:
 
-**Inputs:** sibling `ThinkerQAQ.github.io/` and `blog-content/`, cloned as in [engine tutorial](../../../../docs/tutorial/first-site.md).
-
-From the **engine** directory:
-
-```bash
-go run ./tools/blogctl/cmd site assemble --content-root ../blog-content
-npm run dev:site
+```sh
+git clone https://github.com/ThinkerQAQ/inkerio.git
+git clone https://github.com/ThinkerQAQ/inkerio-content-template.git
+cd inkerio
+npm ci
+node scripts/assemble-content.mjs --content-root ../inkerio-content-template
+npm run build
 ```
 
-**What this uses:** Go BlogCTL Site Assembly, canonical Markdown and Astro collections. The key code is [cmd/site.go](../../cmd/site.go). The engine can now render content without storing the authoritative sources in its repository.
+Deploy the generated `dist/` folder using your own site config and static host. See the [Inkerio first-site guide](https://github.com/ThinkerQAQ/inkerio/blob/main/docs/tutorial/first-site.md) and [site behavior configuration](https://github.com/ThinkerQAQ/inkerio/blob/main/docs/reference/site-features.md).
+
+To publish a compiled article to an external platform, use SyndiRelay separately, with your own canonical URL, explicit account permission and platform-specific publishing operation. There is no `tools/blogctl` directory in Inkerio.

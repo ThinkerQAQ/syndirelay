@@ -1,79 +1,52 @@
-# 从源码建立 BlogCTL 工作区
+# 在新机器从源码安装 SyndiRelay
 
-这篇教程从引擎源码开始，先运行示例站点，再把 BlogCTL 接入浏览器。不需要发布平台账号即可完成安装；使用预编译程序时可直接看[安装指南](../quick-start.md)。
+SyndiRelay 不依赖 Inkerio。**当前仓库仍为 Private，需要已经授权的 GitHub 账号才能克隆。** 公开安装包尚未完成许可证和安全验收。建议先只做本地 Markdown 编译，再按需配置浏览器与授权发布流程。
 
-## 1. 获取源码并检查工具
+## 1. 环境与源码
 
-安装 Git、Node.js 22.12+、npm、Go 1.27.1 或兼容的更新工具链。
+安装 Git、Go 1.24+、Node.js 22+ 和 npm，在目标操作系统中执行：
 
-```bash
-git clone https://github.com/ThinkerQAQ/ThinkerQAQ.github.io.git
-cd ThinkerQAQ.github.io
-git --version
-go version
-node --version
-npm --version
-go run ./tools/blogctl/cmd doctor
+```sh
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
 npm ci
-npm run dev:quick
+go test ./...
+go build -o syndirelay ./cmd
+printf '# 我自己的文章\n\nSyndiRelay 示例。\n' > example.md
+./syndirelay compile --file ./example.md --platform devto
 ```
 
-打开 [localhost:4321](http://localhost:4321)，示例来源是引擎旁的 `inkerio-content-template`。在第二个终端进入引擎根目录执行 `npm run check`，完成后按 **Ctrl+C** 停止开发服务。
+Windows PowerShell 中用 `go build -o syndirelay.exe ./cmd` 编译，通过编辑器创建 `example.md`，再执行 `.\syndirelay.exe compile --file .\example.md --platform devto`。上述命令不会连接账号、创建草稿或发布文章。
 
-## 2. 构建并注册 BlogCTL
+渲染器和扩展测试执行 `npm run test:renderers && npm run test:extension`。
 
-Linux/macOS Bash：
+## 2. 可选的浏览器集成
 
-```bash
-go run ./tools/blogctl/cmd/maint build
-.build/out/blogctl install
-```
+选择**不同于原 BlogCTL** 的长期目录，放入当前系统的程序、`extension/`、`renderers/`、Node 运行依赖及自己的 `Data/`。通过 `SYNDIRELAY_HOME` 配置程序根目录；`SYNDIRELAY_DATA_DIR` 必须是本机私有绝对路径。不要将 Cookies、数据库或旧账号绑定上传 GitHub。
 
-Windows PowerShell，在已安装 Go 的 Windows 源码目录中：
+执行 `./syndirelay install`（Windows 使用 `.\syndirelay.exe install`），然后在 Edge/Chrome 扩展管理器中加载本仓库的 `extension/`。Native Messaging Host 为 `com.thinkerqaq.syndirelay`，本机 Bridge 监听 `127.0.0.1:32146`。这与旧 BlogCTL 的扩展、端口 `32145` 和安装目录不同。
 
-```powershell
-go build -o blogctl-windows-amd64.exe ./tools/blogctl/cmd
-& .\blogctl-windows-amd64.exe install
-```
+不要再使用 `ThinkerQAQ.github.io/tools/blogctl/` 或旧 Release 的安装路径。Windows 浏览器需要 Windows Native Host，WSL 中编译的 Linux 程序不能直接获取 Windows 浏览器登录态。
 
-程序需要匹配浏览器所在的操作系统。WSL 编译出的 Linux 程序不能直接作为 Windows Native Messaging 程序。Windows Edge 应使用 Windows 二进制，以及 Windows 可访问的引擎、内容路径。长期安装目录和升级方法见[安装指南](../quick-start.md)。
+## 3. 可选的内容仓库与远端发布
 
-## 3. 加载匹配扩展
+需要从内容仓库选择文章时，设置包含 `src/content/articles/` 的内容根目录，并显式填写自己的 `[publishing.site]` Canonical、站点名称和版权策略。详见[工作区配置](../how-to/configure-workspace.md)。单文件编译不需要内容仓库或博客引擎。
 
-在浏览器扩展页开启开发者模式，加载该源码目录的 `tools/blogctl/extension/`。打开 BlogCTL，确认 Bridge 已连接，再点击「打开工作台」。
+任何远端创建、更新、发布都需确认自己的平台账号拥有相应权限，选择对应草稿或文章 ID，操作超时时先检查任务和远端记录，防止重复发布。详细流程见[首篇草稿](first-publish.md)。
 
-打开 `http://127.0.0.1:32145/v1/health`，或用 `curl`、PowerShell 查询。既要看健康响应，也要检查扩展连接状态；HTTP 正常不能单独证明浏览器转发正常。
+## 4. 可选的 MCP
 
-## 4. 选择内容与语言
+运行 `./syndirelay mcp-stdio`，仅向 MCP 客户端连接受限的 STDIO 接口；不要将整个 Bridge HTTP 服务暴露到公网。浏览器扩展与 Bridge 应运行在同一个操作系统，详见 [MCP 文档](../../MCP.md)。
 
-在「设置」填写程序可以访问的 Engine Root 和 Content Root。正式写作时，按 [Inkerio 教程](../../../../../docs/zh-CN/tutorial/first-site.md)克隆自己的内容仓库；首次体验也可直接选择示例仓库。
+## 排查
 
-在「界面与语言」选择跟随浏览器、简体中文或 English，对应 `ui_locale`。各平台还有独立的文章语言配置。保存并重新打开设置，确认路径和语言已保存。
-
-## 5. 检查并创建文章
-
-在「检测」选择已登录平台，查看草稿和已发布内容。到「创建」选择本地文章与平台，需要关联结果时手动点击「检测」；创建页不会自动运行检测，也不以检测成功作为创建按钮的前提。
-
-已有文章到「更新」打开候选链接并选择准确 ID。需要新增时才执行「创建草稿」，然后检查「任务」和编辑链接。本地编译与远端结果检查见[首个草稿教程](first-publish.md)。
-
-## 界面示例
-
-以下截图拍摄于 2026-10-10，用于说明导航布局，早于后续发布功能改动。当前按钮和手动检测行为以上文为准。
-
-![检测页](../../assets/01-detect-en.webp)
-
-![创建页](../../assets/02-create-en.webp)
-
-![任务页](../../assets/03-tasks-en.webp)
-
-## 安装不成功时
-
-| 现象 | 优先检查 |
+| 情况 | 检查 |
 | --- | --- |
-| 浏览器找不到 Native Host | 程序系统是否匹配、路径是否固定、是否执行 `install` |
-| 工作台可打开但不能操作 | 当前浏览器配置中的扩展是否启用并连接 |
-| 没有本地文章 | Content Root、文章状态和语言 |
-| WSL CLI 与 Windows 工作台的草稿不同 | 是否使用同一份且可访问的 `BLOGCTL_DATA_DIR` |
-| 分配草稿后任务超时 | 先打开已保存 ID，不要直接重新创建 |
+| 无法克隆 | 仓库仍为 Private，需要 GitHub 访问权限 |
+| 编译图表失败 | Node 渲染依赖是否安装、素材 URL 是否明确配置 |
+| 找不到 Native Host | 程序系统、安装路径、`install` 是否匹配 |
+| 扩展无法连接 | 当前版本扩展/Host、端口 32146、浏览器授权 |
+| 没有文章 | 内容根目录、状态和语言 |
+| 远端任务超时 | 优先核对已保存的任务和文章 ID，不直接重复创建 |
 
-更多说明见 [Bridge 排查](../how-to/debug-bridge.md)和[数据路径配置](../reference/configuration.md)。
+不要将 Cookie、API Key 或 `Data/` 作为排查附件公开。

@@ -10,7 +10,7 @@
 
 ## Compatibility boundary
 
-The source still contains legacy site/search/AI Search commands and Browser Bridge endpoint names while the original production wrapper runs them. Do not delete the code before replacing the production caller with independently supported APIs and testing both GitHub Pages and EdgeOne. The normal new CLI help exposes the distribution commands.
+The ThinkerQAQ production wrapper now pins the standalone Inkerio engine for static builds and separately pins SyndiRelay for optional search/AI Search CLI. The SyndiRelay `site` and compatibility commands are **not** part of the recommended standalone authoring flow; retire unused handlers only after explicit caller/dependency auditing. The site has been verified on GitHub Pages and EdgeOne. The normal new CLI help exposes the distribution commands.
 
 ## Public release blockers
 
@@ -19,4 +19,4 @@ The source still contains legacy site/search/AI Search commands and Browser Brid
 3. Per-platform policy/authorization audit, particularly nonpublic APIs and browser-session workflows. No protocol spoofing or unauthorised automation.
 4. Chrome Extension identity, Native Host version and existing local Data directory migration: no overwriting the old BlogCTL installation or user data.
 5. Remove site-only legacy commands after the production wrapper has been decoupled; validate remote publishing in dry-run mode with explicit user permissions.
-6. Keep repository **Private** until the audit passes. GitHub branch-protection for private repos is unavailable under the current repository plan (403); follow PR+squash+CI discipline voluntarily in the meantime.
+6. Keep repository **Private** until the separate [source-publication review](../compliance/PUBLICATION_READINESS.md) passes. The private repository currently has PR, squash-merge and 3-OS CI; branch protection is limited under the current plan (403).

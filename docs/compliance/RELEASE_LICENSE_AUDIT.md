@@ -1,4 +1,4 @@
-# SyndiRelay private-release license audit (2026-10-31)
+# SyndiRelay binary-release license audit (reviewed 2026-11-01)
 
 **Do not make this repository public or upload binary Releases solely because the core code is MIT.** License compatibility, bundled notices, platform API authorization and clean-machine operation are separate release conditions.
 
@@ -7,7 +7,7 @@
 - The six `CGO_ENABLED=0` target graphs (`windows`, `darwin`, `linux` x `amd64`, `arm64`) currently compile against **seven distinct non-stdlib Go modules**. The pinned `go.mod` has **nine direct/indirect requirements**, all of which must have reviewed license notices before a release (including noncompiled requirements, conservatively).
 - The pinned npm `package-lock.json` has **61 third-party package entries**, including optional architecture-specific packages. On the inspected Linux machine, 35 were present, 26 optional/platform-dependent packages were not installed, and the installed `@img/sharp-libvips-linux-x64` declared `LGPL-3.0-or-later` but had no separate complete license-text file available in the package root. Do **not** infer the absent optional packages' licenses merely from Linux results. Official upstream licensing evidence and proper LGPL attribution/redistribution obligations require review.
 - Sharp itself declares Apache-2.0; the precompiled libvips package has a separate LGPL licensing situation. The app currently distributes npm lock/runtime manifests rather than bundling `node_modules`; users install runtime packages with `npm ci`. This does not eliminate notice obligations or third-party license review.
-- The old `tls-client`/`fhttp` fingerprinting transport is absent from the current Go module. The independently operating legacy BlogCTL binary still uses it; previous releases are not retroactively remediated.
+- The old `tls-client`/`fhttp` fingerprinting transport is absent from the current Go module. The independently operating legacy BlogCTL binary still uses it; previous releases are not retroactively remediated. The former website Releases and downloadable binaries were retired on 2026-11-01 after recording historical download counts; copies already downloaded are unchanged.
 
 ## Release packaging enforcement
 
@@ -38,6 +38,6 @@ This is only a format example: **a release manifest must list *all* actual pinne
 
 1. Collect and review current upstream license texts for all nine Go requirements and 61 npm lock entries, including optional macOS/Windows/Linux Sharp+libvips binaries. Resolve the missing libvips license-text evidence and any LGPL obligations.
 2. Produce the pinned manifest and independently verify every SHA-256 checksum against original license files; do not invent or substitute license text.
-3. Validate complete installation and rendering on actual macOS/Windows/Linux environments. GitHub Actions is currently blocked before runner startup by private-repo account billing/spending limit.
+3. Validate complete installation and rendering on actual macOS/Windows/Linux environments. GitHub Actions currently has green 3-OS build/test runs; those do **not** verify real installation/Extension/remote publishing or complete license redistribution.
 4. Conduct platform-by-platform authorization review for authenticated publishing, especially 51CTO and Medium; read-only API checks do not prove remote writes.
 5. Once all conditions pass, create Release packages, verify their contents and checksums and preserve existing user Data/ and extension identities.
