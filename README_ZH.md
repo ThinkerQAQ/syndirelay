@@ -191,7 +191,7 @@ Windows PowerShell：
 .\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
 ```
 
-用 `--status` 确认 SyndiRelay 运行实例正在运行且健康，然后打开 [ChatGPT 连接设置](https://chatgpt.com/#settings/Connectors)，选择 **Connection: Tunnel**，选中或粘贴上述同一个 Tunnel ID。连接后调用 `list_platforms`，确认收到实际工具响应；仅 Tunnel 运行正常不代表 ChatGPT 已连通。如看不到 Tunnel，请核对所属工作区与 Tunnels Read + Use 权限。Bridge 保持本地监听。
+使用上方对应系统的状态检查命令，确认 SyndiRelay 运行实例正在运行且健康，然后打开 [ChatGPT 连接设置](https://chatgpt.com/#settings/Connectors)，选择 **Connection: Tunnel**，选中或粘贴上述同一个 Tunnel ID。连接后调用 `list_platforms`，确认收到实际工具响应；仅 Tunnel 运行正常不代表 ChatGPT 已连通。如看不到 Tunnel，请核对所属工作区与 Tunnels Read + Use 权限。Bridge 保持本地监听。
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) 影响力统计为独立的可选集成，默认关闭。
 
