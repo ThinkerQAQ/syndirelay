@@ -1,98 +1,190 @@
 # SyndiRelay
 
-[English](README.md) · [MIT 许可证](LICENSE) · [第三方许可声明](THIRD_PARTY_NOTICES.md)
+[English](README.md)
 
-**SyndiRelay 是独立的 Markdown 编译与多平台内容分发工具。** 它由 BlogCTL 拆分而来，不再要求安装 Inkerio/Astro 引擎，也不依赖 ThinkerQAQ 的个人网站。主要提供单文件 Markdown 编译、可选的内容仓库分发、本地浏览器 Bridge/Extension、STDIO MCP，以及可选的 Reverfolio 影响力统计对接。
+## 项目简介
 
-**公开状态：SyndiRelay 源码以 MIT 许可证公开。** 二进制与浏览器扩展 Release 尚未完成验收；历史 BlogCTL Release 已退役。源码公开和安装包发布是两项独立的决策，公开安装包仍需完成第三方依赖许可证、真实平台授权及原生安装验收。
+SyndiRelay 将 Markdown 转换为不同平台的文章格式，帮助作者从本地工作区分发内容。它提供 CLI、带本地 Bridge 的浏览器扩展，以及用于读取文章、预览结果和管理发布任务的 MCP 服务。
 
-## 功能与边界
+编译器支持 11 种平台格式：`51cto`、`cnblogs`、`csdn`、`devto`、`hashnode`、`juejin`、`medium`、`oschina`、`segmentfault`、`toutiao`、`zhihu`。远程操作取决于对应适配器与账号状态；支持格式转换不代表支持该平台的所有发布操作。
 
-| 能力 | 必要条件 | 边界 |
-| --- | --- | --- |
-| 将 Markdown 编译为 11 种平台格式 | 本地文件、Go、Node.js | 仅本地生成预览，不发送网络写入 |
-| 预览内容仓库分发 | 指定内容目录、个人站点及版权策略 | `--dry-run` 不修改远程文章或本地发布状态 |
-| 创建、更新、发布远程文章 | 平台授权、操作支持、必要时连接本地浏览器 | 用户明确选择操作及目标，不能假定所有平台都支持 |
-| Bridge、Web Console、浏览器扩展 | 与浏览器系统匹配的本机可执行文件 | Bridge 仅监听 `127.0.0.1:32146`，Cookie 和密钥保留本机 |
-| STDIO MCP | 本地可执行文件及 Bridge | 只暴露命名工具，不开放整个 Bridge 到公网 |
-| 作品传播统计 | 另行连接 Reverfolio | 默认关闭，独立保存数据 |
-| 搜索通知与 AI Search | 可选的站点 CI 与服务商凭据 | 服务端执行，不要求安装网站引擎 |
+SyndiRelay 可以直接处理普通 Markdown 文件。使用 [Inkerio](https://github.com/ThinkerQAQ/inkerio) 的作者，也可以复用已有内容仓库；博客引擎不是必需依赖。
 
-11 种**文章编译格式**：`51cto`、`cnblogs`、`csdn`、`devto`、`hashnode`、`juejin`、`medium`、`oschina`、`segmentfault`、`toutiao`、`zhihu`。**支持编译某个平台，不代表获得其官方 API 授权或已验证远程发布。** 对非公开接口和浏览器登录态自动化必须另行核对平台规则与使用权限。
+## 快速开始
 
-## 本地编译快速开始
+将一篇 Markdown 编译为适用于 DEV 的内容，无需账号、浏览器扩展或配置文件。
 
-准备 Go **1.24+**、Node.js **22+**、npm 和 Git。
+### 环境要求
+
+- Windows、macOS 或 Linux。
+- Git、Go **1.24.1+**（模块指定工具链 1.24.5）、Node.js **22+** 和 npm。
+- 能够下载源码与依赖的网络环境。
+
+### 安装
+
+目前没有已发布的安装包，请从源码构建。
 
 ```sh
 git clone https://github.com/ThinkerQAQ/syndirelay.git
 cd syndirelay
 npm ci
+```
+
+Linux / macOS：
+
+```sh
 go build -o syndirelay ./cmd
-printf '# 示例文章\n\n这是我自己的原创内容。\n' > example.md
+printf '# Hello SyndiRelay\n\nMy first article.\n' > example.md
 ./syndirelay compile --file ./example.md --platform devto
 ```
 
-此流程不会登录、上传图片、创建草稿或发布。带图表的分发可额外指定自己的 `--asset-base-url https://your-cdn.example/`。从内容仓库分发时，还要显式配置自己的站点 Canonical 域名和版权政策；默认不使用软件作者的站点或作品署名。
-
-Windows PowerShell 使用 `go build -o syndirelay.exe ./cmd`，自行创建 `.md` 文件，再执行 `./syndirelay.exe compile --file ./example.md --platform devto`。
-
-## 仓库边界
-
-- `compiler/`、`publisher/`、`publishing/`、`platform/`、`renderers/`：编译、平台适配与发布前校验。
-- `bridge/`、`extension/`、`ui/`、`cmd/`：本地 Bridge、浏览器扩展、Web UI 和 MCP。
-- `search/`、`aisearch/` 与旧 `site` 命令：仅为旧部署和站点 CI 保留的兼容功能；正式静态网站由 **Inkerio** 构建。
-- `Data/`、`SYNDIRELAY_DATA_DIR`：本机私有数据库、授权状态和发布绑定，禁止写入 Git 或安装包。
-- Reverfolio：可选独立作品影响力统计，不默认上传文章正文或凭据。
-
-[Inkerio](https://github.com/ThinkerQAQ/inkerio) 负责通用静态博客引擎，[inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) 负责公开样例，[ThinkerQAQ.github.io](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) 只负责个人网站配置与部署。SyndiRelay 的单文件编译不依赖上述仓库。
-
-ChatGPT 的 **Windows 原生 PowerShell / Linux / macOS Secure MCP Tunnel 安装步骤**（见下方）现已区分 **Windows 原生 PowerShell**、Linux 和 macOS 三套流程。**Windows 不要求 WSL/Ubuntu**；已获授权的 Tunnel 运行凭据可以复用，不需要为 SyndiRelay 新申请一次性密钥。MCP、Tunnel 和 ChatGPT 插件连通性须分别验收，禁止将凭据写入 Git。
-
-## 可选的 Bridge、浏览器扩展与 ChatGPT MCP
-
-SyndiRelay 的 Bridge 应当运行在**正在登录浏览器的同一个操作系统**上。Windows 使用 PowerShell 编译 `go build -o syndirelay.exe ./cmd`，**不要求 WSL/Ubuntu**。运行 `./syndirelay install`（Windows：`.\syndirelay.exe install`）注册 Native Messaging，在 Edge/Chrome 扩展管理页面加载仓库内的 `extension/` 文件夹。Bridge 默认监听 `127.0.0.1:32146`，不是旧 BlogCTL 的 32145。Cookie、凭据及 `Data/` 保存在本机，不向公网开放 Bridge。
-
-本地 MCP 使用 STDIO 启动：
-
-```sh
-./syndirelay mcp-stdio
-# Windows：.\syndirelay.exe mcp-stdio
-```
-
-要连接 ChatGPT，下载与当前系统匹配的 [tunnel-client 官方版本](https://github.com/openai/tunnel-client/releases/latest)，复用已有的、受授权的私有 Tunnel 运行凭据，**不必为每个应用创建 One-Time API Key**。Tunnel ID 只是标识符，不是密钥。
+Windows PowerShell：
 
 ```powershell
-# Windows PowerShell
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
+go build -o syndirelay.exe ./cmd
+Set-Content -Path example.md -Encoding utf8 -Value "# Hello SyndiRelay`n`nMy first article."
+.\syndirelay.exe compile --file .\example.md --platform devto
 ```
 
+请在仓库目录执行以上命令，便于编译器找到 Node 渲染脚本及已安装的依赖。
+
+### 验收
+
+命令应正常退出，并输出包含以下内容的 JSON：
+
+- `"platform": "devto"`
+- `"title": "Hello SyndiRelay"`
+- `markdown` 中包含 `My first article.`
+- `contentHash` 非空。
+
+至此已完成一次本地转换。该命令不会创建远程草稿或发布文章。JSON 中的 `published` 表示源内容状态，不代表已在远程平台发布成功。
+
+### 常见问题
+
+- **找不到 Node 模块或渲染脚本：** 执行 `npm ci` 后，在仓库目录重试。在其他目录运行时，将 `SYNDIRELAY_HOME` 设为源码仓库的绝对路径。
+- **不支持的平台：** 使用简介中列出的平台 ID。
+- **输入无效：** 使用非空、UTF-8 编码且不超过 5 MiB 的 Markdown 文件；如有 YAML frontmatter，须保证格式有效。
+- **图表需要资源地址：** 添加 `--asset-base-url https://your-cdn.example/`，为生成资源指定地址；编译本身不会上传资源。
+- **缺少依赖：** 执行 `./syndirelay doctor`（PowerShell：`.\syndirelay.exe doctor`），检查 Node.js、npm 和 Git。
+
+## 配置说明
+
+单文件 `compile` 仅需 `--file` 和 `--platform`。可选参数包括 `--language en|zh-CN`、`--canonical-url`、`--asset-base-url`，两个 URL 参数均要求 HTTPS。执行 `./syndirelay compile --help` 查看完整参数。
+
+Bridge 使用 `blogctl.toml` 保存设置：
+
+- Windows：可执行文件旁的 `Data\blogctl.toml`。
+- Linux：`$XDG_CONFIG_HOME/SyndiRelay/blogctl.toml`，默认是 `~/.config/SyndiRelay/blogctl.toml`。
+- macOS：`~/Library/Application Support/SyndiRelay/blogctl.toml`。
+- 如需覆盖数据目录，将 `SYNDIRELAY_DATA_DIR` 设为**绝对目录路径**。
+
+使用内容仓库时，配置自己的路径与站点信息：
+
+```toml
+content_root = "/absolute/path/to/your-content"
+engine_root = "/absolute/path/to/syndirelay"
+ui_locale = "auto"
+
+[publishing.site]
+origin = "https://your-site.example"
+```
+
+Windows 路径可使用 TOML 字面量字符串，例如 `content_root = 'C:\sites\my-content'`。`ui_locale` 默认是 `auto`，也支持 `en`、`zh-CN`；`BLOGCTL_LANG` 可覆盖 CLI 界面语言。
+
+CLI 选择仓库时，请按下文显式设置 `SYNDIRELAY_CONTENT_ROOT` 和 `SYNDIRELAY_HOME`。版权自动模式下，SyndiRelay 中显式配置的版权策略优先于内容仓库的 `src/content/site/copyright.json`。平台凭据、图片存储等可选设置可通过扩展设置页管理；更多字段见[配置类型](bridge/config.go)和[发布配置](publishing/config.go)。
+
+## 可选功能
+
+### 浏览器扩展与远程草稿
+
+在浏览器所在的操作系统运行原生 SyndiRelay。Windows 不需要 WSL。
+
+1. 执行 `./syndirelay install`（PowerShell：`.\syndirelay.exe install`）注册 Native Messaging Host。
+2. 打开 `edge://extensions` 或 `chrome://extensions`，启用开发者模式，加载仓库内的 `extension/` 目录。
+3. 打开扩展，确认 Bridge 已连接。默认地址为 `127.0.0.1:32146`；如需手动启动，执行 `./syndirelay --bridge`。
+4. 配置内容工作区，在该浏览器登录目标平台。先预览选定文章，再选择可用的草稿或发布操作。
+5. 查看任务结果，打开返回的平台链接，确认实际草稿或文章内容。
+
+注册后请保持可执行文件路径不变；移动后重新执行 `install`。如扩展无法连接，检查是否使用同一操作系统的安装，并在注册后重新加载扩展。远程写入要求平台已登录，且适配器支持所选操作。
+
+### 复用 Inkerio 内容仓库
+
+通过 [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) 创建的仓库，可以同时用于建站和 SyndiRelay 分发，无需再建第二个内容仓库。CLI 同步要求存在 `src/content/articles/` 和 `src/data/content-manifest.json`。
+
+配置好 `publishing.site.origin` 后，指定源码与内容仓库路径，预览一篇已有文章。将示例路径及 `your-article-slug` 替换为自己的值。
+
 ```sh
-# Linux/macOS：在本机启动对应原生客户端
+export SYNDIRELAY_HOME="$PWD"
+export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
+./syndirelay sync --article your-article-slug --platforms devto --dry-run
+```
+
+```powershell
+$env:SYNDIRELAY_HOME = (Get-Location).Path
+$env:SYNDIRELAY_CONTENT_ROOT = 'C:\sites\my-content'
+.\syndirelay.exe sync --article your-article-slug --platforms devto --dry-run
+```
+
+Dry Run 编译预览且不修改发布状态。检查输出后，再执行远程创建或更新。
+
+### MCP 客户端与 ChatGPT
+
+对于支持 STDIO MCP 的客户端，使用可执行文件的绝对路径添加服务：
+
+```json
+{
+  "mcpServers": {
+    "syndirelay": {
+      "command": "/absolute/path/to/syndirelay",
+      "args": ["mcp-stdio"]
+    }
+  }
+}
+```
+
+Windows 客户端使用原生程序，例如 `"command": "C:\\tools\\syndirelay\\syndirelay.exe"`。调用 `list_platforms`，参数为 `{}`，确认收到真实工具响应。文章工具还需要配置内容工作区；依赖浏览器的发布操作需要安装扩展。
+
+连接 ChatGPT 时，额外安装对应系统的官方 [tunnel-client](https://github.com/openai/tunnel-client/releases/latest)，通过 `CONTROL_PLANE_API_KEY` 或 `SYNDIRELAY_RUNTIME_KEY_REF`（`env:NAME` 或 `file:ABSOLUTE_PATH`）配置已授权的 Tunnel 运行凭据。Linux/macOS 的凭据文件权限须为 `0600`。已有授权凭据可以复用。
+
+Linux / macOS，在仓库目录执行：
+
+```sh
+export SYNDIRELAY_MCP_COMMAND="$PWD/syndirelay mcp-stdio"
 ./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID
 ./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID --status
 ```
 
-之后在 ChatGPT 里添加自定义 MCP Tunnel，先调用只读工具。**本机 MCP 启动、Tunnel 健康、ChatGPT 插件调用成功是三次独立验收**，不可直接把整个 Bridge HTTP 服务暴露到公网，也不可公开 Cookie、令牌或授权头。
+Windows PowerShell：
 
-复用博客内容仓库时，在本地私有 `Data/blogctl.toml` 配置 `content_root` 与 `[publishing.site].origin`。在版权自动模式下，SyndiRelay TOML 中显式配置的版权内容优先于仓库内的 `src/content/site/copyright.json`。远程创建、更新或发布之前，应先预览 / Dry Run，并确认平台授权和目标账号。
+```powershell
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
+```
 
-## 可选：复用 Inkerio 的内容仓库
+在 ChatGPT 添加该 Tunnel，并调用 `list_platforms`。仅 Tunnel 状态正常，还不能证明 ChatGPT 已连通。Bridge 保持本地监听。
 
-如果通过 [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) 创建了博客，**这就是现成的内容仓库**。只需将 SyndiRelay 的本地工作区 `content_root` 指向这个仓库，并在 `[publishing.site].origin` 配置自己的站点地址；无需再创建第二个 `blog-content`，也不需要让 SyndiRelay 依赖 Inkerio 引擎。
+[Reverfolio](https://github.com/ThinkerQAQ/reverfolio) 影响力统计为独立的可选集成，默认关闭。
 
-例如，同一个 `alice.github.io` 仓库既可以由 Inkerio 构建为 GitHub Pages 网站，也可以在用户明确授权后由 SyndiRelay 读取并分发。域名与版权始终由用户管理：`mode = "auto"` 时优先使用 SyndiRelay 本地显式配置的版权声明，未配置时才读取内容仓库的 `src/content/site/copyright.json`。建站流程统一见 [Inkerio README](https://github.com/ThinkerQAQ/inkerio)。
+## 开发与验证
 
-## 开发与测试
+准备上述开发依赖，在仓库目录执行：
 
 ```sh
 npm ci
 go test ./...
 npm run test:renderers
 npm run test:extension
+go build -o .build/syndirelay ./cmd
 ```
 
-GitHub CI 已覆盖 **Windows、macOS、Linux** 的测试和原生编译；这不等于真实平台账号发布、浏览器安装、三系统整包运行或依赖许可证验收全部通过。公开二进制及扩展之前仍需完成第三方依赖许可证、平台授权、浏览器安装与三系统实机验收；CI 编译通过不等于发行验收通过。
+Linux/macOS Tunnel 脚本检查：`bash scripts/connect-chatgpt-mcp.test.sh`。Windows PowerShell：`.\scripts\connect-chatgpt-mcp.windows.test.ps1`。
 
-**版权边界：** SyndiRelay 原创源码采用 MIT，不改变第三方依赖许可证，也不授权他人转载用户文章、图片或访问第三方服务。项目与所支持的内容平台没有官方从属或背书关系。
+[GitHub Actions](.github/workflows/ci.yml) 在 Linux、macOS 和 Windows 执行 Go 测试、渲染器与扩展测试、原生构建及 Tunnel 脚本检查。脚本检查使用替身，不连接真实 Tunnel。CI 不验证浏览器安装或真实平台账号发布，这些需要在对应系统手动验收。
+
+## 许可证与合规
+
+原创源码采用 [MIT](LICENSE)。第三方组件保留各自许可证，详见[第三方声明](THIRD_PARTY_NOTICES.md)与[扩展声明](extension/THIRD_PARTY_NOTICES.md)。公开安装包仍待完成依赖许可证与原生安装验收。
+
+源码许可不包含用户文章、示例媒体或第三方素材的使用权。请只发布有权使用的内容，并遵守目标平台的条款与授权要求；部分适配器使用未公开接口。
+
+账号凭据、Cookie、本地配置及发布状态不得提交到 Git 或打入发行包。远程发布会将选定内容发送至目标平台。

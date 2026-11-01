@@ -52,6 +52,24 @@ jobs:
           mkdir -p .build
           case "${{ runner.os }}" in Windows) suffix=.exe;; *) suffix=;; esac
           go build -trimpath -o ".build/syndirelay${suffix}" ./cmd
+      - name: Verify README Quick Start on Linux and macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          printf '# Hello SyndiRelay\n\nMy first article.\n' > .build/example.md
+          ./.build/syndirelay compile --file .build/example.md --platform devto > .build/compiled.json
+          node -e 'const x=JSON.parse(require("fs").readFileSync(".build/compiled.json","utf8")); if(x.platform!=="devto" || x.title!=="Hello SyndiRelay" || !x.markdown.includes("My first article.") || !x.contentHash) process.exit(1)'
+      - name: Verify README Quick Start on Windows PowerShell
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Content -Path .build/example.md -Encoding utf8 -Value "# Hello SyndiRelay`n`nMy first article."
+          .\.build\syndirelay.exe compile --file .build/example.md --platform devto > .build/compiled.json
+          if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
+          $compiled = Get-Content -Raw .build/compiled.json | ConvertFrom-Json
+          if ($compiled.platform -ne 'devto' -or $compiled.title -ne 'Hello SyndiRelay' -or -not $compiled.markdown.Contains('My first article.') -or -not $compiled.contentHash) {
+            throw 'Quick Start output does not match the README'
+          }
       - name: Check no old risky transport dependencies
         shell: bash
         run: |
