@@ -1010,6 +1010,9 @@ async function read51CTOInventoryFromBrowser() {
 async function handleMessage(message) {
   switch (message.type) {
     case "blogctl.status": return { ok: true, status: await getStatus() };
+    case "blogctl.impact.get": return fetchJSON("/v1/impact");
+    case "blogctl.impact.save": return fetchJSON("/v1/impact",jsonOptions("PUT",message.config));
+    case "blogctl.impact.retry": return fetchJSON("/v1/impact/retry",jsonOptions("POST",{}));
     case "blogctl.social.channels":
       return fetchJSON("/v1/social/channels");
     case "blogctl.social.list":

@@ -148,6 +148,9 @@ func (s *Server) runExplicitSync(ctx context.Context, config bridgeConfig,
 					report("running", "target-failed", result.URL, writeErr.Error(), failedID)
 					continue
 				}
+				if result.Kind == "published" || result.Kind == "published-updated" {
+					s.queueImpact(config, articles[0], result.URL)
+				}
 				execution.results = append(execution.results, fmt.Sprintf("%s → %s", result.ID, result.Kind))
 				report("running", result.Kind, result.URL, fmt.Sprintf("Remote ID %s: %s", result.ID, result.Kind), result.ID)
 			}

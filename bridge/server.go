@@ -178,15 +178,19 @@ func filterVerifiedSessionCookies(platform string, cookies []browserCookie) []br
 }
 
 type Server struct {
-	token           string
-	now             func() time.Time
-	httpClient      *http.Client
-	config          bridgeConfig
-	restart         func()
-	syncRunner      syncRunner
-	mediumUploads   *mediumBrowserUploadHub
-	toutiaoRequests *toutiaoBrowserHub
-	searchMu        sync.Mutex
+	impactDeliveryMu sync.Mutex
+	impactMu         sync.Mutex
+	impactCancel     context.CancelFunc
+	impactProblem    string
+	token            string
+	now              func() time.Time
+	httpClient       *http.Client
+	config           bridgeConfig
+	restart          func()
+	syncRunner       syncRunner
+	mediumUploads    *mediumBrowserUploadHub
+	toutiaoRequests  *toutiaoBrowserHub
+	searchMu         sync.Mutex
 
 	mu             sync.Mutex
 	distributionMu sync.Mutex
@@ -238,6 +242,9 @@ func New(token string) (*Server, error) {
 	_ = server.persistDurableTasksLocked()
 	server.mu.Unlock()
 	recoverSearchTasksAfterRestart(server)
+	if config.Impact.Enabled {
+		server.startImpactWorker()
+	}
 	return server, nil
 }
 
@@ -252,6 +259,13 @@ func (s *Server) Listen(address string) (net.Listener, *http.Server, error) {
 		return nil, nil, err
 	}
 	server := &http.Server{Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second}
+	server.RegisterOnShutdown(func() {
+		s.impactMu.Lock()
+		defer s.impactMu.Unlock()
+		if s.impactCancel != nil {
+			s.impactCancel()
+		}
+	})
 	go func() { _ = server.Serve(listener) }()
 	return listener, server, nil
 }
@@ -503,6 +517,11 @@ func (s *Server) serveHTTP(response http.ResponseWriter, request *http.Request) 
 
 	if path == "v1/config/edit" && request.Method == http.MethodPost {
 		s.handleConfigEdit(response, request)
+		return
+	}
+
+	if path == "v1/impact" || path == "v1/impact/retry" {
+		s.handleImpact(response, request)
 		return
 	}
 

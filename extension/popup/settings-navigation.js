@@ -9,6 +9,7 @@
     { id: "content", title: "内容与路径", summary: "TOML 配置文件和内容目录", selectors: [".environment-config-file"] },
     { id: "runtime", title: "运行环境", summary: "Bridge、Extension 与本地依赖", selectors: ["#environmentRuntimeTools", "#environmentDependencyTools"] },
     { id: "platforms", title: "分发平台", summary: "平台策略、Footer、Canonical 和 Tracking", selectors: ["#platformConfigEnvironmentCard"] },
+    { id: "impact", title: "影响力统计", summary: "Reverfolio、发布后自动登记与重试队列", selectors: ["#impactConfigEnvironmentCard"] },
     { id: "social", title: "社交平台", summary: "Buffer、账号连接和发布渠道", selectors: ["#socialConfigEnvironmentCard"] },
     { id: "assets", title: "素材与渲染", summary: "Mermaid、共享素材和 R2", selectors: ["#assetConfigEnvironmentCard"] },
     { id: "index", title: "搜索引擎", summary: "站点域名、索引 URL 与搜索引擎", selectors: ["#searchEngineEnvironmentCard"] },
