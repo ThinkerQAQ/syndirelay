@@ -1,4 +1,5 @@
 import { performToutiaoBrowserRequest } from "./toutiao-request.js";
+import { activeBrowserJobPumps } from "./browser-job-pumps.js";
 import { read51CTOInventoryInPage } from "./cto51-inventory.js";
 import { prepareMediumReplacement, verifyMediumDocument } from "./medium-document.js";
 import { configureMediumCanonical } from "./medium-settings.js";
@@ -1605,11 +1606,7 @@ async function handleMessage(message) {
     case "blogctl.jobs": {
       const result = await fetchJSON("/v1/jobs");
       const jobs = result?.jobs ?? [];
-      if (jobs.some(job => ["running", "queued", "waiting"].includes(job.state) && (job.platforms ?? []).includes("toutiao"))) beginToutiaoRequestPump();
-      // CLI/Bridge can enqueue authorized jobs too. The task list must wake
-      // the browser driver, just as opening an individual active job does.
-      if (jobs.some(job => ["running", "queued", "waiting"].includes(job.state) &&
-          (job.platforms ?? []).includes("medium"))) beginMediumUploadPump();
+      wakeBrowserPumpsForJobs(jobs);
       return { ok: true, jobs };
     }
     case "blogctl.job.start": {
@@ -1792,19 +1789,37 @@ function beginMediumUploadPump() {
 // alarms wake the background worker to refresh its ordinary browser session.
 const MCP_SESSION_ALARM = "blogctl-mcp-session-refresh";
 let mcpRefreshRunning = false;
+
+function wakeBrowserPumpsForJobs(jobs) {
+  const active = activeBrowserJobPumps(jobs);
+  if (active.toutiao) beginToutiaoRequestPump();
+  if (active.medium) beginMediumUploadPump();
+}
 async function pollMCPSessionRefresh() {
   if (mcpRefreshRunning) return;
   mcpRefreshRunning = true;
   try {
-    const response = await fetchJSON("/v1/mcp/session-refresh");
-    for (const platform of response?.pending ?? []) {
-      if (!PLATFORM_SESSIONS[platform]) continue;
-      try { await syncPlatformSession(platform); }
-      catch (error) { console.warn("BlogCTL MCP session refresh:", platform, errorMessage(error)); }
+    try {
+      const response = await fetchJSON("/v1/mcp/session-refresh");
+      for (const platform of response?.pending ?? []) {
+        if (!PLATFORM_SESSIONS[platform]) continue;
+        try { await syncPlatformSession(platform); }
+        catch (error) { console.warn("SyndiRelay MCP session refresh:", platform, errorMessage(error)); }
+      }
+    } catch (error) {
+      // A session-refresh failure must not prevent a known running CLI job
+      // from waking the authenticated browser-request handler.
+      console.debug("SyndiRelay MCP refresh poll:", errorMessage(error));
     }
-  } catch (error) {
-    // Bridge is optional when no MCP operation is pending.
-    console.debug("BlogCTL MCP refresh poll:", errorMessage(error));
+    try {
+      // CLI/MCP/Bridge writes do not send a chrome.runtime message. An MV3
+      // alarm wakes this worker even if no extension UI is open. Job metadata
+      // is read-only; execution remains owned by the original Bridge job.
+      const response = await fetchJSON("/v1/jobs");
+      wakeBrowserPumpsForJobs(response?.jobs ?? []);
+    } catch (error) {
+      console.debug("SyndiRelay browser pump wake poll:", errorMessage(error));
+    }
   } finally {
     mcpRefreshRunning = false;
   }
