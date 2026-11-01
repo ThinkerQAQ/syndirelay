@@ -15,8 +15,12 @@ test("read-only job metadata wakes only active browser transports", () => {
 test("MCP alarm actually checks the Bridge job list and wakes pumps without requiring opening tasks UI", async () => {
   const source = await readFile(new URL("../background.js", import.meta.url), "utf8");
   assert.match(source, /if \(alarm\.name === MCP_SESSION_ALARM\) void pollMCPSessionRefresh\(\)/u);
-  const poll=source.match(/async function pollMCPSessionRefresh\(\) \{([\s\S]*?)\n\}\nchrome\.alarms\?/u)?.[1] ?? "";
+  const poll=source.match(/async function pollMCPSessionRefresh\(\) \{([\s\S]*?)\r?\n\}\r?\nchrome\.alarms\?/u)?.[1] ?? "";
   assert.match(poll, /fetchJSON\("\/v1\/jobs"\)/u);
+  // Git on windows-latest checks out CRLF; test the same source there too.
+  const crlf = source.replace(/\r?\n/g, "\r\n");
+  const windowsPoll=crlf.match(/async function pollMCPSessionRefresh\(\) \{([\s\S]*?)\r?\n\}\r?\nchrome\.alarms\?/u)?.[1] ?? "";
+  assert.match(windowsPoll, /fetchJSON\("\/v1\/jobs"\)/u);
   assert.match(poll, /wakeBrowserPumpsForJobs\(response\?\.jobs \?\? \[\]\)/u);
   assert.doesNotMatch(poll, /chrome\.tabs\.(create|update)|active:\s*true|window\.focus/u);
   const wake=source.match(/function wakeBrowserPumpsForJobs\(jobs\) \{([\s\S]*?)\n\}/u)?.[1] ?? "";
