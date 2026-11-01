@@ -6,16 +6,16 @@ Status checked: **2026-11-01**. Source publication and the separately gated bina
 
 | Area | Evidence | Status |
 | --- | --- | --- |
-| Repository ownership | Original source uses project MIT license; private Git history has 13 commits | Confirmed |
-| History secrets | 568 Git blobs examined for common high-confidence API-key/secret patterns; one credentials-in-URL-looking string in a synthetic compiler test | Preliminary; manual review and platform secret scanning still needed |
+| Repository ownership | Original source uses MIT; public history was scanned before visibility change | Confirmed |
+| History secrets | 36 reachable commits / 633 Git blobs and 35 Actions log archives scanned; synthetic credentials-in-URL test was the only pattern match | No detected live secrets; future security monitoring still needed |
 | Dependencies | Current Go module removes historical `tls-client` / `fhttp` | Confirmed for **new source**, not legacy downloadable binaries |
 | Go/Node/extension CI | Current 3-OS CI workflows have successful runs; native build/test coverage exists | Confirmed; clean-machine installer + browser acceptance incomplete |
 | Authenticated platform adapters | 11 formatter targets; external posting uses platform-dependent API/session/Bridge paths | Authorization and explicit target behavior need per-platform assessment |
-| Third-party bundled scripts | Extension bundles `log-editor-vendor.js` and `i18next-vendor.js` | Complete provenance and embedded-license notices not yet verified |
+| Third-party bundled scripts | Extension bundles `log-editor-vendor.js` and `i18next-vendor.js` | Pinned CodeMirror/i18next runtime MIT notices documented; binary redistribution audit separate |
 | npm dependencies | `package-lock.json` includes Sharp and optional platform libvips packages | Full licenses/redistribution conditions not yet documented |
-| Historical BlogCTL Releases | At the review snapshot the former website had 23 BlogCTL Releases and 1 Inkerio Release | Historical download packages included unresolved `fhttp` licensing evidence; the website Release attachments have now been removed after archiving the original GitHub metrics (Git tags retained) |
+| Historical BlogCTL Releases | Old website application releases and tags have been retired | Historical download packages included unresolved `fhttp` licensing evidence; the website Release attachments have now been removed after archiving the original GitHub metrics (all website software tags subsequently removed) |
 
-## Before making this *existing* private repository public
+## Public source audit and remaining responsibilities
 
 1. Inspect **all Git history**, current source, archived migration fixtures, committed extension vendor bundles, GitHub Actions runs and downloadable artifacts for personal secrets/private content. Automated pattern search alone does not prove the absence of secrets.
 2. Document authorship and complete license notices for bundled third-party JavaScript and any embedded binary assets. Review third-party source reuse and `NOTICE`/attribution requirements. An MIT root license cannot relicense bundled upstream work.
@@ -23,7 +23,7 @@ Status checked: **2026-11-01**. Source publication and the separately gated bina
 4. Review extension permissions (`cookies`, `webRequest`, host permissions), Native Host pairing, authenticated loopback transport and installed-user state. Verify the published code cannot expose other users' sessions by default.
 5. Update documentation links, repo descriptions and branch protection; GitHub makes **Git history and Actions logs publicly visible** when visibility changes. Decide whether a fresh sanitized public repository is necessary if the history cannot be responsibly published.
 
-**Current source decision (2026-11-01):** Publish source including experimental adapters after credential-history and bundled-license audit. This does not verify third-party API permission or authorize binary/Extension redistribution; keep those gates open. Switching a repository back to private cannot retract source already cloned.
+**Source visibility completed (2026-11-01):** Public source includes experimental adapters after credential-history and bundled-license review. This does not verify third-party API permission or authorize binary/Extension redistribution; keep those gates open. Switching a repository back to private cannot retract source already cloned.
 
 ## Before a binary or Extension Release
 
@@ -41,7 +41,7 @@ Status checked: **2026-11-01**. Source publication and the separately gated bina
 - SyndiRelay: distribution compilers, adapters, Bridge, local UI, MCP, optional search/AI Search CLI used in the site workflow. Its optional CI integration **does not need a binary release**.
 - Actual authors' content repositories and local `Data/`: owned separately; never redistribute with software.
 
-A change in repository visibility should be treated as a separate, security-relevant release and requires a documented review outcome. Do not change visibility merely to enable GitHub branch-protection features.
+The visibility change is complete. Branch protection and CI are active; future vulnerability reports require prompt credential rotation or remediation, and the binary/Extension gate remains open.
 
 
 ## 2026-11-01 source visibility audit evidence

@@ -14,7 +14,7 @@
 | Inspect supported commands and optional legacy CI tasks | [CLI reference](reference/cli.md) |
 | Understand system components and local data | [Architecture](architecture/index.md) |
 | Track verified publications in Reverfolio | [Optional impact tracking](how-to/reverfolio.md) |
-| Review readiness to publicize or distribute binaries | [Publication review](compliance/PUBLICATION_READINESS.md) |
+| Review source audit and remaining binary-release requirements | [Publication review](compliance/PUBLICATION_READINESS.md) |
 | Understand history of the original BlogCTL extraction | [Migration archive](migration/README.md) |
 
-The repository is currently private; links to it require authorization. All remote publishing requires an explicitly authorized user/account action and platform-specific support. A successful local compilation does not imply remote publishing permission. Read [third-party notices](../THIRD_PARTY_NOTICES.md) before distributing artifacts.
+The repository source is **public and MIT-licensed**; third-party platform operations and binary/Extension Releases have separate verification requirements. All remote publishing requires an explicitly authorized user/account action and platform-specific support. A successful local compilation does not imply remote publishing permission. Read [third-party notices](../THIRD_PARTY_NOTICES.md) before distributing artifacts.

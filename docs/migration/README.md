@@ -5,3 +5,5 @@
 For current SyndiRelay setup start at [Quick Start](../quick-start.md), [MCP](../MCP.md), and [Windows side-by-side](../how-to/windows-side-by-side.md). For the static website see [Inkerio](https://github.com/ThinkerQAQ/inkerio).
 
 Provenance: [original source commit](SOURCE_COMMIT.txt), [checksums](SOURCE_SHA256.txt), [compatibility](COMPATIBILITY.md), [branding](BRANDING_AUDIT.md). Historical artifacts must not be republished until third-party license and platform-authorization checks are complete.
+
+The archived [BlogCTL release notes](legacy/RELEASE_NOTES.md) are historical records, not current SyndiRelay version or download instructions. Current source has no GitHub Release; do not rely on old tags or release asset URLs.
