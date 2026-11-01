@@ -129,3 +129,60 @@ func TestImpactInvalidAcknowledgementStaysPending(t *testing.T) {
 		t.Fatal("invalid acknowledgement accepted", problem)
 	}
 }
+
+func TestImpactSlowReceiverDoesNotBlockPublicationEnqueue(t *testing.T) {
+	c, a := impactFixture(t)
+	entered := make(chan struct{}, 2)
+	release := make(chan struct{})
+	receiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		entered <- struct{}{}
+		<-release
+		w.Write([]byte(`{"dry_run":false,"rows":[{"work_id":42}]}`))
+	}))
+	defer receiver.Close()
+	c.Impact.Endpoint = receiver.URL
+	now := time.Now()
+	event, err := makeImpactEvent(c, a, "https://medium.com/@fixture/first", now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir, _ := impactDir()
+	if err = writeImpactEvent(dir, event); err != nil {
+		t.Fatal(err)
+	}
+	s := &Server{config: c, now: func() time.Time { return now }}
+	done := make(chan struct{})
+	go func() { s.deliverImpact(false); close(done) }()
+	select {
+	case <-entered:
+	case <-time.After(3 * time.Second):
+		close(release)
+		t.Fatal("delivery did not start")
+	}
+	enqueued := make(chan struct{})
+	go func() { s.queueImpact(c, a, "https://medium.com/@fixture/second"); close(enqueued) }()
+	select {
+	case <-enqueued:
+	case <-time.After(time.Second):
+		close(release)
+		t.Fatal("publication waited for receiver network")
+	}
+	close(release)
+	<-done
+	select {
+	case <-entered:
+	case <-time.After(3 * time.Second):
+		t.Fatal("second queued publication was lost")
+	}
+	s.impactDeliveryMu.Lock()
+	s.impactDeliveryMu.Unlock()
+	rows, err := readImpactEvents(dir)
+	if err != nil || len(rows) != 2 {
+		t.Fatal("publications not durable", rows, err)
+	}
+	for _, row := range rows {
+		if row.DeliveredAt == nil {
+			t.Fatal("queued publication not delivered")
+		}
+	}
+}
