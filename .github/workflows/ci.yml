@@ -57,4 +57,4 @@ jobs:
         run: |
           ! grep -E '(fhttp|tls-client)' go.mod go.sum
           test -s package-lock.json
-          test -s docs/migration/SOURCE_SHA256.txt
+          test -s .github/migration/SOURCE_SHA256.txt

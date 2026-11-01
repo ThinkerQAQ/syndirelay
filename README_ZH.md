@@ -1,10 +1,10 @@
 # SyndiRelay
 
-[English](README.md) · [中文文档](docs/zh-CN/index.md) · [快速开始](docs/zh-CN/quick-start.md) · [MIT 许可证](LICENSE) · [第三方许可声明](THIRD_PARTY_NOTICES.md)
+[English](README.md) · [MIT 许可证](LICENSE) · [第三方许可声明](THIRD_PARTY_NOTICES.md)
 
 **SyndiRelay 是独立的 Markdown 编译与多平台内容分发工具。** 它由 BlogCTL 拆分而来，不再要求安装 Inkerio/Astro 引擎，也不依赖 ThinkerQAQ 的个人网站。主要提供单文件 Markdown 编译、可选的内容仓库分发、本地浏览器 Bridge/Extension、STDIO MCP，以及可选的 Reverfolio 影响力统计对接。
 
-**公开状态：SyndiRelay 源码以 MIT 许可证公开。** 二进制与浏览器扩展 Release 尚未完成验收；历史 BlogCTL Release 已退役。源码公开和安装包发布是两项独立的决策，详见开源及发布审核文档。
+**公开状态：SyndiRelay 源码以 MIT 许可证公开。** 二进制与浏览器扩展 Release 尚未完成验收；历史 BlogCTL Release 已退役。源码公开和安装包发布是两项独立的决策，公开安装包仍需完成第三方依赖许可证、真实平台授权及原生安装验收。
 
 ## 功能与边界
 
@@ -43,11 +43,40 @@ Windows PowerShell 使用 `go build -o syndirelay.exe ./cmd`，自行创建 `.md
 - `bridge/`、`extension/`、`ui/`、`cmd/`：本地 Bridge、浏览器扩展、Web UI 和 MCP。
 - `search/`、`aisearch/` 与旧 `site` 命令：仅为旧部署和站点 CI 保留的兼容功能；正式静态网站由 **Inkerio** 构建。
 - `Data/`、`SYNDIRELAY_DATA_DIR`：本机私有数据库、授权状态和发布绑定，禁止写入 Git 或安装包。
-- [Reverfolio](docs/zh-CN/reverfolio.md)：可选独立作品影响力统计，不默认上传文章正文或凭据。
+- Reverfolio：可选独立作品影响力统计，不默认上传文章正文或凭据。
 
 [Inkerio](https://github.com/ThinkerQAQ/inkerio) 负责通用静态博客引擎，[inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) 负责公开样例，[ThinkerQAQ.github.io](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) 只负责个人网站配置与部署。SyndiRelay 的单文件编译不依赖上述仓库。
 
-ChatGPT 的[专用 Tunnel 安装说明](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel)现已区分 **Windows 原生 PowerShell**、Linux 和 macOS 三套流程。**Windows 不要求 WSL/Ubuntu**；已获授权的 Tunnel 运行凭据可以复用，不需要为 SyndiRelay 新申请一次性密钥。MCP、Tunnel 和 ChatGPT 插件连通性须分别验收，禁止将凭据写入 Git。
+ChatGPT 的 **Windows 原生 PowerShell / Linux / macOS Secure MCP Tunnel 安装步骤**（见下方）现已区分 **Windows 原生 PowerShell**、Linux 和 macOS 三套流程。**Windows 不要求 WSL/Ubuntu**；已获授权的 Tunnel 运行凭据可以复用，不需要为 SyndiRelay 新申请一次性密钥。MCP、Tunnel 和 ChatGPT 插件连通性须分别验收，禁止将凭据写入 Git。
+
+## 可选的 Bridge、浏览器扩展与 ChatGPT MCP
+
+SyndiRelay 的 Bridge 应当运行在**正在登录浏览器的同一个操作系统**上。Windows 使用 PowerShell 编译 `go build -o syndirelay.exe ./cmd`，**不要求 WSL/Ubuntu**。运行 `./syndirelay install`（Windows：`.\syndirelay.exe install`）注册 Native Messaging，在 Edge/Chrome 扩展管理页面加载仓库内的 `extension/` 文件夹。Bridge 默认监听 `127.0.0.1:32146`，不是旧 BlogCTL 的 32145。Cookie、凭据及 `Data/` 保存在本机，不向公网开放 Bridge。
+
+本地 MCP 使用 STDIO 启动：
+
+```sh
+./syndirelay mcp-stdio
+# Windows：.\syndirelay.exe mcp-stdio
+```
+
+要连接 ChatGPT，下载与当前系统匹配的 [tunnel-client 官方版本](https://github.com/openai/tunnel-client/releases/latest)，复用已有的、受授权的私有 Tunnel 运行凭据，**不必为每个应用创建 One-Time API Key**。Tunnel ID 只是标识符，不是密钥。
+
+```powershell
+# Windows PowerShell
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
+.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
+```
+
+```sh
+# Linux/macOS：在本机启动对应原生客户端
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID --status
+```
+
+之后在 ChatGPT 里添加自定义 MCP Tunnel，先调用只读工具。**本机 MCP 启动、Tunnel 健康、ChatGPT 插件调用成功是三次独立验收**，不可直接把整个 Bridge HTTP 服务暴露到公网，也不可公开 Cookie、令牌或授权头。
+
+复用博客内容仓库时，在本地私有 `Data/blogctl.toml` 配置 `content_root` 与 `[publishing.site].origin`。在版权自动模式下，SyndiRelay TOML 中显式配置的版权内容优先于仓库内的 `src/content/site/copyright.json`。远程创建、更新或发布之前，应先预览 / Dry Run，并确认平台授权和目标账号。
 
 ## 可选：复用 Inkerio 的内容仓库
 
@@ -64,6 +93,6 @@ npm run test:renderers
 npm run test:extension
 ```
 
-GitHub CI 已覆盖 **Windows、macOS、Linux** 的测试和原生编译；这不等于真实平台账号发布、浏览器安装、三系统整包运行或依赖许可证验收全部通过。公开二进制/扩展仍需完成[发布许可、平台授权和安装验收](docs/compliance/PUBLICATION_READINESS.md)。
+GitHub CI 已覆盖 **Windows、macOS、Linux** 的测试和原生编译；这不等于真实平台账号发布、浏览器安装、三系统整包运行或依赖许可证验收全部通过。公开二进制及扩展之前仍需完成第三方依赖许可证、平台授权、浏览器安装与三系统实机验收；CI 编译通过不等于发行验收通过。
 
 **版权边界：** SyndiRelay 原创源码采用 MIT，不改变第三方依赖许可证，也不授权他人转载用户文章、图片或访问第三方服务。项目与所支持的内容平台没有官方从属或背书关系。
