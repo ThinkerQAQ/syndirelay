@@ -36,6 +36,10 @@ jobs:
         run: npm ci
       - name: Test all original Go platform compilers and publisher modules
         run: go test ./...
+      - name: Test dedicated POSIX/WSL Tunnel setup without contacting the network
+        if: runner.os != 'Windows'
+        shell: bash
+        run: bash scripts/connect-chatgpt-mcp.test.sh
       - name: Test copied image renderer and browser extension
         run: npm run test:renderers && npm run test:extension
       - name: Build independent SyndiRelay executable

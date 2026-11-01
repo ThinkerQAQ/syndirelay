@@ -47,6 +47,8 @@ For Windows PowerShell, build with `go build -o syndirelay.exe ./cmd`, write a l
 
 [Inkerio](https://github.com/ThinkerQAQ/inkerio) owns the reusable static blog engine; [inkerio-content-template](https://github.com/ThinkerQAQ/inkerio-content-template) provides public example content; the [ThinkerQAQ website wrapper](https://github.com/ThinkerQAQ/ThinkerQAQ.github.io) manages one site's public identity and deployment. None is a runtime prerequisite for standalone SyndiRelay compilation.
 
+For ChatGPT, SyndiRelay includes a [dedicated secure Tunnel setup](docs/MCP.md#connect-to-chatgpt-through-a-dedicated-secure-mcp-tunnel). The local STDIO MCP and an actual connected ChatGPT plugin are separate steps. Never reuse an existing BlogCTL tunnel or store a runtime key in Git.
+
 ## Develop and validate
 
 ```sh

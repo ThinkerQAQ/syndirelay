@@ -27,6 +27,26 @@ To pair with Edge or Chrome, first register `./syndirelay install` (Windows: `.\
 
 When connecting to a ChatGPT or other MCP client, attach a *dedicated local STDIO transport*. If a remote tunnel is used, tunnel **only the limited MCP STDIO interface** with authentication, never the Bridge's entire HTTP service, console or browser session state. Never include tunnel IDs, local tokens or browser cookies in documentation or code.
 
+## Connect to ChatGPT through a dedicated Secure MCP Tunnel
+
+The local `mcp-stdio` server is ready to serve **14 named MCP tools** when started from the Windows native executable (v0.1.193 or later), but a separate outgoing Tunnel and ChatGPT connector must be configured. **Do not reuse the BlogCTL Tunnel.** Keep the old connection for rollback while bringing SyndiRelay online.
+
+A private runtime API key with **Tunnels Read/Use** permissions and the separately created Tunnel ID are required. Never paste a runtime key into ChatGPT, a GitHub issue, a shell command line, or a repository. The Tunnel ID is *not* the runtime API key.
+
+On Linux/WSL (where `tunnel-client` is installed), save your own authorized runtime key into the private file `~/.config/tunnel-client/syndirelay-runtime-key` using a local secure editor. Restrict access with `chmod 600 ~/.config/tunnel-client/syndirelay-runtime-key`; the parent directory must be private. Do not copy another app's API key/profile. Then run:
+
+```sh
+# Replace with your dedicated SyndiRelay Tunnel ID.
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_SYNDIRELAY_TUNNEL_ID
+./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_SYNDIRELAY_TUNNEL_ID --status
+```
+
+The script uses `tunnel-client runtimes connect` with the existing native Windows binary at `C:\software\Coding\SyndiRelay\syndirelay-windows-amd64.exe` through WSL when present. On macOS or native Linux it uses `syndirelay` on `PATH`. Override `TUNNEL_CLIENT_BIN`, `SYNDIRELAY_MCP_COMMAND`, `SYNDIRELAY_TUNNEL_PROFILE_DIR` and `SYNDIRELAY_RUNTIME_KEY_FILE` for other installations. The script fails closed on absent credentials, unsafe file permissions, invalid Tunnel ID, or a legacy BlogCTL executable; it never starts a second publishing Bridge or overwrites a BlogCTL profile.
+
+Once `runtimes status syndirelay` reports a running and ready tunnel, go to **ChatGPT Settings → Plugins → Add custom MCP server**, choose **Tunnel**, paste the SyndiRelay-specific Tunnel ID, select the supported authentication for that tunnel, then verify its named tools. Do not register the old BlogCTL tunnel ID by mistake. Check `list_platforms` and `list_articles` first; no publishing write is needed for an end-to-end connection smoke test. If the ChatGPT UI still shows BlogCTL only, connector registration/discovery is **not complete** even when local MCP STDIO works.
+
+These are three distinct states: **(1) native MCP works locally, (2) dedicated outgoing tunnel is healthy, (3) ChatGPT connector is installed and actually invokes SyndiRelay**. Do not report all three as complete when only (1) is verified.
+
 ## Available operations and authorization
 
 MCP tools include local article lookup, available-platform inspection, publication record lookup, compilation preview, selected draft creation/update/publication, task history and optional local image preparation/upload when explicitly configured. Exact tools depend on the installed build: inspect the MCP tool schema before invoking actions.
