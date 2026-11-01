@@ -437,11 +437,11 @@ func TestBridgeNativePublisherUploadsMediumBodyImage(t *testing.T) {
 			var requestBody struct {
 				Deltas []struct {
 					Paragraph struct {
-						Type     int            `:"type"`
-						Layout   int            `:"layout"`
-						Metadata map[string]any `:"metadata"`
-					} `:"paragraph"`
-				} `:"deltas"`
+						Type     int            `json:"type"`
+						Layout   int            `json:"layout"`
+						Metadata map[string]any `json:"metadata"`
+					} `json:"paragraph"`
+				} `json:"deltas"`
 			}
 			if err := json.NewDecoder(request.Body).Decode(&requestBody); err != nil {
 				t.Fatal(err)

@@ -2,6 +2,22 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "影响力统计 · Reverfolio": "Impact tracking · Reverfolio",
+  "公开发布成功后，把文章标题、原文网址和已发布网址登记到本地 Reverfolio。失败留在本地队列重试，不改变发布结果；不交接正文、草稿或凭据。": "After successful public publication, register the title, canonical URL and published URL in local Reverfolio. Failed deliveries stay in the local retry queue without changing the publishing result. Content, drafts and credentials are not transferred.",
+  "启用自动登记": "Enable automatic registration",
+  "Reverfolio 本地地址": "Local Reverfolio address",
+  "本地 API token 文件路径（只填路径）": "Local API token file (path only)",
+  "稳定来源标识": "Stable source ID",
+  "主作品原文语言": "Primary canonical language",
+  "请选择": "Choose an option",
+  "新登记作品启用统计（保留已有作品选择）": "Monitor new works (preserve existing preferences)",
+  "保存配置": "Save configuration",
+  "刷新交接状态": "Refresh delivery status",
+  "立即重试待交接记录": "Retry pending deliveries now",
+  "最近交接记录": "Recent deliveries",
+  "影响力统计": "Impact tracking",
+  "Reverfolio、发布后自动登记与重试队列": "Reverfolio, automatic publication registration and retry queue",
+  "已启动重试，稍后刷新查看结果。": "Retry started. Refresh shortly to see results.",
   "内容来源与版权（全平台共享）": "Source site and copyright (shared by all platforms)",
   "显式配置优先，其次读取 Content Repository 中的版权配置；均不存在时不添加版权声明。修改只影响以后编译，不会更新已创建的草稿。": "Explicit override takes precedence, followed by content repository policy; no policy adds no license footer. Changes apply to future compilation, not existing drafts.",
   "站点 Origin": "Site origin",

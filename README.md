@@ -25,6 +25,10 @@ For installation bundles, ship the Go binary alongside `renderers/`, `scripts/pl
 
 The original `blog-content` adapter and platform compilers remain preserved. Migration validation compiled one fixture on **all 11 original platforms** and compared the complete JSON result **byte for byte** against the original BlogCTL commit. All 11 matched, including Medium's specialized payload, HTML, content hash and attribution rules. Existing user content and publishing database are not copied.
 
+## Optional impact tracking
+
+[Connect Reverfolio](docs/how-to/reverfolio.md) to register confirmed public publications through a local durable outbox. It is disabled by default, uses your own site/catalog settings and transfers no article body or credentials. Publishing and impact tracking remain independently deployable.
+
 ## Architecture
 
 - Source readers: standalone Markdown file, original `blog-content` layout. Other adapters can be added without changing the platform compilers.

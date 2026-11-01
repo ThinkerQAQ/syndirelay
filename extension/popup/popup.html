@@ -509,6 +509,26 @@
           </div>
         </details>
 
+        <details id="impactConfigEnvironmentCard" class="tool-card environment-large-card">
+          <summary class="status-row"><strong>影响力统计 · Reverfolio</strong><span class="tool-requirement optional">可选</span></summary>
+          <div class="tool-card-body environment-embedded-tool">
+            <p class="card-hint">公开发布成功后，把文章标题、原文网址和已发布网址登记到本地 Reverfolio。失败留在本地队列重试，不改变发布结果；不交接正文、草稿或凭据。</p>
+            <form id="impactConfigForm">
+              <label class="switch-row"><span>启用自动登记</span><input name="enabled" type="checkbox"></label>
+              <label class="field"><span>Reverfolio 本地地址</span><input name="endpoint" type="url" placeholder="http://127.0.0.1:19452"></label>
+              <label class="field"><span>本地 API token 文件路径（只填路径）</span><input name="tokenFile" type="text" placeholder="C:\path\to\Reverfolio\Data\api-token"></label>
+              <label class="field"><span>稳定来源标识</span><input name="sourceId" type="text" placeholder="syndirelay"></label>
+              <label class="field"><span>主作品原文语言</span><select name="primaryLanguage"><option value="">请选择</option><option value="zh-CN">中文</option><option value="en">English</option></select></label>
+              <label class="switch-row"><span>新登记作品启用统计（保留已有作品选择）</span><input name="monitorNew" type="checkbox"></label>
+              <button class="primary inline-primary" type="submit">保存配置</button>
+            </form>
+            <p id="impactConfigStatus" class="message" role="status"></p>
+            <button id="impactRefresh" class="secondary" type="button">刷新交接状态</button>
+            <button id="impactRetry" class="secondary" type="button">立即重试待交接记录</button>
+            <details><summary>最近交接记录</summary><div id="impactEvents"></div></details>
+          </div>
+        </details>
+
         <details id="socialConfigEnvironmentCard" class="tool-card environment-large-card">
           <summary class="status-row">
             <span class="tool-identity">
@@ -574,6 +594,7 @@
   <script src="assets.js"></script>
   <script src="social.js"></script>
   <script src="publishing.js"></script>
+  <script src="impact.js"></script>
   <script src="environment.js"></script>
   <script src="settings-navigation.js"></script>
   <script src="popup.js"></script>

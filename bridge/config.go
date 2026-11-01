@@ -49,6 +49,7 @@ func ResolvedSocialConfig() SocialConfig {
 }
 
 type bridgeConfig struct {
+	Impact       ImpactConfig           `json:"impact" toml:"impact"`
 	Search       *blogsearch.SiteConfig `json:"search" toml:"search"`
 	ProxyEnabled bool                   `json:"proxyEnabled" toml:"proxy_enabled"`
 	ProxyHost    string                 `json:"proxyHost" toml:"proxy_host"`
@@ -260,6 +261,9 @@ func mergeConfigDefaults(config bridgeConfig) bridgeConfig {
 
 func normalizeBridgeConfig(config bridgeConfig) (bridgeConfig, error) {
 	config = mergeConfigDefaults(config)
+	if err := config.Impact.validate(); err != nil {
+		return config, err
+	}
 	site, err := blogsearch.NormalizeSiteConfig(*config.Search)
 	if err != nil {
 		return config, err

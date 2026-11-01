@@ -1343,6 +1343,7 @@ func (p bridgeNativePublisher) PublishDraft(ctx context.Context, request blogapp
 		); err != nil {
 			return blogapp.NativePublishResult{}, err
 		}
+		p.server.queueCurrentImpact(request.Compiled, publishedURL)
 		return blogapp.NativePublishResult{Result: "published", URL: publishedURL}, nil
 	}
 	service := publisher.Service{HTTPClient: httpClient, PublicationPath: p.server.publicationBindingsPath()}
@@ -1350,6 +1351,7 @@ func (p bridgeNativePublisher) PublishDraft(ctx context.Context, request blogapp
 	if err != nil {
 		return blogapp.NativePublishResult{}, err
 	}
+	p.server.queueCurrentImpact(request.Compiled, result.URL)
 	return blogapp.NativePublishResult{Result: "published", URL: result.URL}, nil
 }
 
@@ -1420,6 +1422,9 @@ func (s *Server) runSyncApplication(ctx context.Context, config bridgeConfig, re
 		}
 		if skipped {
 			resultName = "skipped"
+		}
+		if resultName == "published-updated" {
+			s.queueImpact(config, compiledArticles[0], result.URL)
 		}
 		onEvent(blogapp.SyncEvent{Platform: platform, State: "completed", Result: resultName, URL: result.URL})
 		slog.Info("published update completed", "operation", "update-published", "platform", platform, "slug", request.Article, "result", resultName, "durationMs", time.Since(started).Milliseconds())

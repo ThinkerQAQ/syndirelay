@@ -450,6 +450,7 @@
     message = document.getElementById("environmentMessage");
 
     configEditButton.addEventListener("click", editConfigFile);
+    BlogCTLImpact.init();
     BlogCTLAssets.init();
     BlogCTLPublishing.init();
     trackExpansion(assetConfigCard, "shared-assets");
@@ -459,6 +460,7 @@
   }
   function activate() {
     state.active = true;
+    BlogCTLImpact.refresh();
     BlogCTLAssets.activate();
     BlogCTLPublishing.activate();
     refresh();
