@@ -65,8 +65,14 @@ func TestImageSourceBoundaryRejectsSymlinksAndOutside(t *testing.T) {
 	if err := os.WriteFile(inside, smallPNG(t), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if got, err := allowedLocalImage(inside, []string{allowed}); err != nil || got != inside {
-		t.Fatalf("valid image rejected %s %v", got, err)
+	// EvalSymlinks resolves macOS /var to /private/var. Compare canonical
+	// paths rather than string-equaling the input's platform-specific alias.
+	canonical, err := filepath.EvalSymlinks(inside)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := allowedLocalImage(inside, []string{allowed}); err != nil || got != canonical {
+		t.Fatalf("valid image rejected: got %s want %s error %v", got, canonical, err)
 	}
 }
 func TestImageInputValidationFailClosed(t *testing.T) {
