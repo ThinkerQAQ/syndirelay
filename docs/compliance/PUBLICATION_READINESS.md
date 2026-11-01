@@ -1,6 +1,6 @@
 # SyndiRelay publication readiness and repository split
 
-Status checked: **2026-11-01**. SyndiRelay remains **private**; this document defines evidence needed before changing visibility and separately before distributing executable files or an extension. This is an engineering/compliance checklist, not an official legal determination.
+Status checked: **2026-11-01**. Source publication and the separately gated binary/Extension releases are distinct decisions. The user has approved publishing platform adapter source while keeping remote operations explicitly authorized and unverified adapters documented as experimental.
 
 ## Current state
 
@@ -23,7 +23,7 @@ Status checked: **2026-11-01**. SyndiRelay remains **private**; this document de
 4. Review extension permissions (`cookies`, `webRequest`, host permissions), Native Host pairing, authenticated loopback transport and installed-user state. Verify the published code cannot expose other users' sessions by default.
 5. Update documentation links, repo descriptions and branch protection; GitHub makes **Git history and Actions logs publicly visible** when visibility changes. Decide whether a fresh sanitized public repository is necessary if the history cannot be responsibly published.
 
-**Current outcome:** not ready to flip visibility on this existing repository. Source publication may be considered independently of downloadable binaries, but it still requires the first five checks.
+**Current source decision (2026-11-01):** Publish source including experimental adapters after credential-history and bundled-license audit. This does not verify third-party API permission or authorize binary/Extension redistribution; keep those gates open. Switching a repository back to private cannot retract source already cloned.
 
 ## Before a binary or Extension Release
 
@@ -42,3 +42,12 @@ Status checked: **2026-11-01**. SyndiRelay remains **private**; this document de
 - Actual authors' content repositories and local `Data/`: owned separately; never redistribute with software.
 
 A change in repository visibility should be treated as a separate, security-relevant release and requires a documented review outcome. Do not change visibility merely to enable GitHub branch-protection features.
+
+
+## 2026-11-01 source visibility audit evidence
+
+- All currently reachable 36 Git commits and 633 Git blobs were checked for high-confidence credential patterns (GitHub/OpenAI/AWS keys, private key blocks, credential-bearing URLs). One matched URL was a clearly synthetic compiler test case, not a live credential.
+- All 35 available Actions run ZIP archives were obtained and scanned (3,829,606 decoded text bytes); none matched those credential patterns. GitHub reported zero retained Actions artifacts at review time. This is not a proof that every possible secret pattern is absent.
+- The log editor vendor bundle is generated from the checked-in CodeMirror source build, with seven runtime MIT notices copied from exact pinned npm packages under extension/licenses/log-editor; see extension/THIRD_PARTY_NOTICES.md. The checked-in i18next notice remains.
+- No local Data directory or private TOML, Cookie, token, or database file was staged for the public source commit. Authenticated adapters still require account permission, platform-specific review and explicit operator consent; not all compiler targets have verified write paths.
+- Binary/Extension Release, complete third-party distribution manifest, genuine clean-machine operating-system tests, and live publishing acceptance remain separate, unresolved gates.

@@ -105,3 +105,16 @@ MCP does not introduce a new `[mcp]` permission section or modify your publishin
 `upload_image_to_r2` only accepts images under `content_root` or local top-level `image_upload_roots = ['C:\Pictures']`. Do not permit broad system roots. These roots are not returned through the Bridge configuration API. Node.js, the Inkerio `engine_root` checkout and its `sharp` dependency must be installed. R2 uses the existing `[publishing.assets.r2]` settings; no credentials are added to MCP.
 
 See [site identity and copyright configuration](copyright-and-identity.md).
+
+### Copyright resolution and missing files
+
+With `publishing.copyright.mode = "auto"`, SyndiRelay uses an explicit
+per-language copyright notice from its own TOML **before** consulting
+`<content_root>/src/content/site/copyright.json`.
+A partially specified local policy (e.g. source text present but no
+`syndication`) fails rather than silently falling back to an unrelated
+policy. When neither source is configured, no author-specific copyright
+notice is appended. `mode = "content"` requires a valid content file;
+`mode = "config"` requires both local languages; `mode = "none"`
+disables notice injection. A malformed content file fails validation
+when read. Check the effective TOML on the actual running host.

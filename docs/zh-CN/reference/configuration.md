@@ -103,3 +103,17 @@ MCP 不新增 TOML 读写权限开关，也不改变发布配置。请在安装�
 `upload_image_to_r2` 仅允许读取 `content_root` 或本地 TOML 顶层配置的 `image_upload_roots = ['C:\Pictures']`，不要授权整块系统磁盘。白名单不会通过 Bridge 配置接口返回。需要已配置 `engine_root`、Node.js 和 Inkerio 的 Sharp 依赖；R2 继续复用 `[publishing.assets.r2]`，不在 MCP 暴露密钥。
 
 新的版权优先级与中英文配置详见 [站点身份与版权](copyright-and-identity.md)。
+
+### 版权声明优先级与缺失文件
+
+`publishing.copyright.mode = "auto"` 时，**优先使用 SyndiRelay 本机 TOML 中
+对应语言的明确版权声明**，未配置时才读取
+`<content_root>/src/content/site/copyright.json`。
+如果本地配置只填写了部分字段（例如有来源但 `syndication` 为空），
+会直接报错，不会悄悄回退到另一份版权策略。
+如果两处都未配置，不追加任何作者专属版权声明。
+`mode = "content"` 强制读取内容库并要求文件存在；
+`mode = "config"` 要求本地中英文版权声明齐全；
+`mode = "none"` 不追加版权声明。
+读取到格式错误的内容库版权文件始终报错。
+应核对 SyndiRelay 实际运行主机所使用的 TOML 配置。

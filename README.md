@@ -4,7 +4,7 @@
 
 **SyndiRelay is an independent Markdown compilation and cross-platform syndication toolkit.** It started as BlogCTL, but no longer requires an Inkerio/Astro engine or a ThinkerQAQ website checkout. It supports standalone Markdown input, optional repository-aware publishing, a local browser Bridge and Extension, STDIO MCP tools, and optional publication-impact handoff to Reverfolio.
 
-**Availability:** This repository is **private during the public-source audit**. There is no approved SyndiRelay binary/extension Release yet. The old `ThinkerQAQ.github.io` BlogCTL Releases have now been **retired**; their binaries were historical builds, not SyndiRelay installers. Open-sourcing the source and distributing precompiled binaries are separate decisions; see [public-source and binary release gates](docs/compliance/PUBLICATION_READINESS.md).
+**Availability:** The source is publicly available under MIT; no SyndiRelay binary or browser Extension Release has been approved. The historical BlogCTL website Releases are retired. Source publication and redistributable binaries have separate gates; see the public-source audit and binary-release checklist.
 
 ## What it does
 
@@ -22,7 +22,7 @@ The 11 **compiler formats** are `51cto`, `cnblogs`, `csdn`, `devto`, `hashnode`,
 
 ## Compile a standalone article
 
-Prerequisites: Go **1.24+**, Node.js **22+**, npm and Git. Authorized source access is currently required.
+Prerequisites: Go **1.24+**, Node.js **22+**, npm and Git.
 
 ```sh
 git clone https://github.com/ThinkerQAQ/syndirelay.git
