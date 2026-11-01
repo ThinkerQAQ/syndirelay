@@ -221,7 +221,7 @@ func (a *devtoAdapter) request(ctx context.Context, method, suffix string, body 
 	request.Header.Set("accept", devtoAccept)
 	request.Header.Set("api-key", a.apiKey)
 	request.Header.Set("content-type", "application/json")
-	request.Header.Set("user-agent", "ThinkerQAQ-BlogCTL/1.0")
+	request.Header.Set("user-agent", "SyndiRelay/1.0")
 	response, err := a.client.Do(request)
 	if err != nil {
 		return err

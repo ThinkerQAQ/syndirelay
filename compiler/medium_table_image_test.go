@@ -8,7 +8,7 @@ import (
 
 func TestMediumPreservesMarkdownTableAsImageWithoutFlattening(t *testing.T) {
 	markdown := "Before\n\n| Question | Meaning |\n| --- | --- |\n| **Atomicity** | `count++` needs `read → write` |\n| **Visibility** | Existing **bold** text |\n\nAfter\n"
-	portable, assets, err := CompileMediumPublishingMarkdown(markdown, DefaultAssetBaseURL)
+	portable, assets, err := CompileMediumPublishingMarkdown(markdown, "https://assets.example.org/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func TestMediumPreservesMarkdownTableAsImageWithoutFlattening(t *testing.T) {
 		t.Fatalf("wrong paragraph structure: blocks=%+v warnings=%v", blocks, warnings)
 	}
 	// Non-Medium platforms must keep the original Markdown table.
-	ordinary, other, err := CompilePublishingMarkdown(markdown, DefaultAssetBaseURL)
+	ordinary, other, err := CompilePublishingMarkdown(markdown, "https://assets.example.org/")
 	if err != nil || len(other) != 0 || !strings.Contains(ordinary, "| **Atomicity** |") {
 		t.Fatalf("non-Medium table damaged: %q %v", ordinary, err)
 	}
@@ -31,7 +31,7 @@ func TestMediumPreservesMarkdownTableAsImageWithoutFlattening(t *testing.T) {
 
 func TestMediumTableInsideFenceRemainsCode(t *testing.T) {
 	markdown := "```go\n| H | V |\n| --- | --- |\n| 1 | 2 |\n```\n"
-	rendered, assets, err := CompileMediumPublishingMarkdown(markdown, DefaultAssetBaseURL)
+	rendered, assets, err := CompileMediumPublishingMarkdown(markdown, "https://assets.example.org/")
 	if err != nil || len(assets) != 0 || !strings.Contains(rendered, "| --- |") {
 		t.Fatalf("fenced code must not turn into a table: %q %+v %v", rendered, assets, err)
 	}
@@ -61,7 +61,7 @@ func TestMediumSeriesZeroTableAndGoCodeStructure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	portable, assets, err := CompileMediumPublishingMarkdown(article.Body, DefaultAssetBaseURL)
+	portable, assets, err := CompileMediumPublishingMarkdown(article.Body, "https://assets.example.org/")
 	if err != nil {
 		t.Fatal(err)
 	}

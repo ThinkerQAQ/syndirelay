@@ -15,7 +15,7 @@ import (
 const (
 	IndexSchemaVersion = 3
 	MaxItemKeyLength   = 128
-	DefaultBlogOrigin  = "https://thinkerqaq.com"
+	DefaultBlogOrigin  = "https://example.invalid"
 )
 
 type Frontmatter struct {

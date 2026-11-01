@@ -211,7 +211,7 @@ func Evaluate(ctx context.Context, client *http.Client, config EvalConfig, cases
 		return errors.New("Cloudflare account ID and AI Search token are required")
 	}
 	if config.InstanceName == "" {
-		config.InstanceName = "thinkerqaq-blog"
+		config.InstanceName = "syndirelay"
 	}
 	if config.Timeout <= 0 {
 		config.Timeout = 3 * time.Minute

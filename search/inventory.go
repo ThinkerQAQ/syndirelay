@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	DefaultSiteOrigin          = "https://thinkerqaq.com"
+	DefaultSiteOrigin          = "https://example.invalid"
 	DefaultSitemapIndex        = "sitemap-index.xml"
 	DefaultTextSitemap         = "sitemap-all.txt"
 	DefaultFingerprintManifest = "sitemap-inventory.json"

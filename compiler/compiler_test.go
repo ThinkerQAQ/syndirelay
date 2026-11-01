@@ -59,17 +59,17 @@ func TestCompilePublishingMarkdownNormalizesLinksAndDiagrams(t *testing.T) {
 		"[inside](/articles/b/)",
 		"```",
 	}, "\n")
-	output, assets, err := CompilePublishingMarkdown(markdown, DefaultAssetBaseURL)
+	output, assets, err := CompilePublishingMarkdown(markdown, "https://assets.example.org/")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(assets) != 1 || assets[0].Kind != "mermaid" || len(assets[0].ID) != 24 || assets[0].Alt != "Lock path" {
 		t.Fatalf("assets = %#v", assets)
 	}
-	if !strings.Contains(output, "[outside](https://thinkerqaq.com/articles/a/)") {
+	if !strings.Contains(output, "[outside](/articles/a/)") {
 		t.Fatalf("root link not normalized: %s", output)
 	}
-	if !strings.Contains(output, "<img src='https://thinkerqaq.com/media/a.png'>") {
+	if !strings.Contains(output, "<img src='/media/a.png'>") {
 		t.Fatalf("HTML link quote was not preserved: %s", output)
 	}
 	if !strings.Contains(output, "[inside](/articles/b/)") {
@@ -90,7 +90,7 @@ func TestHashnodeEnglishSourceTrackingAndCanonical(t *testing.T) {
 	if !strings.Contains(footer, "utm_source=hashnode&utm_medium=referral&utm_campaign=article_syndication") {
 		t.Fatalf("Hashnode source tracking missing: %s", footer)
 	}
-	if !strings.Contains(footer, "ThinkerQAQ's personal blog") {
+	if !strings.Contains(footer, "thinkerqaq.com") {
 		t.Fatalf("Hashnode must generate English footer: %s", footer)
 	}
 	article, err := ParseArticle(strings.Replace(articleFixture, "status: published", "series: concurrency-programming\nstatus: published", 1), "fixture.md")
@@ -105,14 +105,14 @@ func TestCopyrightFooterWithLegacyCustomTemplate(t *testing.T) {
 		profile := defaultPlatformConfig("juejin")
 		profile.Language = language
 		profile.Footer.Template = "> {site} [{title}]({url})"
-		footer := renderFooter(profile, original, "Example")
+		footer := renderFooter(profile, original, "Example", blogpublishing.CopyrightText{Syndication: "© Fixture", Source: "Original article"})
 		if !strings.Contains(footer, "[Example]") || !strings.Contains(footer, "utm_source=juejin") {
 			t.Fatalf("legacy tracking footer changed: %s", footer)
 		}
-		if !strings.Contains(footer, "© ThinkerQAQ") || !strings.Contains(footer, original+")") {
+		if !strings.Contains(footer, "© Fixture") || !strings.Contains(footer, original+")") {
 			t.Fatalf("missing copyright or untracked original link: %s", footer)
 		}
-		if strings.Count(footer, "© ThinkerQAQ") != 1 {
+		if strings.Count(footer, "© Fixture") != 1 {
 			t.Fatalf("duplicate copyright: %s", footer)
 		}
 		profile.Footer.Enabled = false
@@ -125,7 +125,7 @@ func TestCopyrightFooterWithLegacyCustomTemplate(t *testing.T) {
 func TestContentCopyrightChangesSyndicationFooterWithoutChangingTemplate(t *testing.T) {
 	profile := defaultPlatformConfig("devto")
 	canonical := "https://thinkerqaq.com/en/articles/example/"
-	source := blogpublishing.Copyright("en")
+	source := blogpublishing.CopyrightText{Syndication: "© Fixture", Source: "Original article"}
 	original := renderFooter(profile, canonical, "Article")
 	source.Syndication = "CUSTOM CONTENT COPYRIGHT"
 	footer := renderFooter(profile, canonical, "Article", source)
@@ -160,7 +160,9 @@ func TestCompilePlatformReadsContentCopyrightForDevtoAndMedium(t *testing.T) {
 	}
 	engineRoot := filepath.Clean(filepath.Join(filepath.Dir(filename), "..", "..", ".."))
 	for _, platform := range []string{"devto", "medium"} {
-		options := CompileOptions{EngineRoot: engineRoot, ContentRoot: contentRoot, Publishing: blogpublishing.DefaultConfig(), Node: "node", Platform: platform, Articles: []string{"example"}, DryRun: true}
+		publishing := blogpublishing.DefaultConfig()
+		publishing.Site.Origin = "https://example.org"
+		options := CompileOptions{EngineRoot: engineRoot, ContentRoot: contentRoot, Publishing: publishing, Node: "node", Platform: platform, Articles: []string{"example"}, DryRun: true}
 		compiled, err := CompilePlatform(context.Background(), options)
 		if err != nil {
 			t.Fatalf("%s compile: %v", platform, err)

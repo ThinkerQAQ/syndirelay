@@ -12,22 +12,22 @@ import (
 func TestDiffInventoriesSkipsDeletedForBaidu(t *testing.T) {
 	previous := Inventory{
 		URLs: []string{
-			"https://thinkerqaq.com/a/",
-			"https://thinkerqaq.com/deleted/",
+			"https://example.invalid/a/",
+			"https://example.invalid/deleted/",
 		},
 		Fingerprints: map[string]string{
-			"https://thinkerqaq.com/a/":       "old",
-			"https://thinkerqaq.com/deleted/": "old",
+			"https://example.invalid/a/":       "old",
+			"https://example.invalid/deleted/": "old",
 		},
 	}
 	current := Inventory{
 		URLs: []string{
-			"https://thinkerqaq.com/a/",
-			"https://thinkerqaq.com/new/",
+			"https://example.invalid/a/",
+			"https://example.invalid/new/",
 		},
 		Fingerprints: map[string]string{
-			"https://thinkerqaq.com/a/":   "new",
-			"https://thinkerqaq.com/new/": "hash",
+			"https://example.invalid/a/":   "new",
+			"https://example.invalid/new/": "hash",
 		},
 	}
 	diff, err := DiffInventories(previous, current, "incremental", false)
@@ -64,8 +64,8 @@ func TestSubmitBaiduUsesTextBodyAndOnlyCompletesFullBatch(t *testing.T) {
 	defer server.Close()
 
 	config, err := ResolveBaiduConfig(
-		"https://thinkerqaq.com",
-		"https://thinkerqaq.com",
+		"https://example.invalid",
+		"https://example.invalid",
 		"secret-token",
 	)
 	if err != nil {
@@ -73,8 +73,8 @@ func TestSubmitBaiduUsesTextBodyAndOnlyCompletesFullBatch(t *testing.T) {
 	}
 	config.Endpoint = server.URL
 	result, err := SubmitBaidu(context.Background(), server.Client(), []string{
-		"https://thinkerqaq.com/a/",
-		"https://thinkerqaq.com/b/",
+		"https://example.invalid/a/",
+		"https://example.invalid/b/",
 	}, config)
 	if err == nil {
 		t.Fatal("partial Baidu acceptance must fail closed")
@@ -82,13 +82,13 @@ func TestSubmitBaiduUsesTextBodyAndOnlyCompletesFullBatch(t *testing.T) {
 	if result.Complete || result.SuccessCount != 1 || result.URLCount != 2 {
 		t.Fatalf("result = %#v", result)
 	}
-	if gotToken != "secret-token" || gotSite != "thinkerqaq.com" {
+	if gotToken != "secret-token" || gotSite != "example.invalid" {
 		t.Fatalf("query token=%q site=%q", gotToken, gotSite)
 	}
 	if gotContentType != "text/plain" {
 		t.Fatalf("content-type = %q", gotContentType)
 	}
-	if gotBody != "https://thinkerqaq.com/a/\nhttps://thinkerqaq.com/b/" {
+	if gotBody != "https://example.invalid/a/\nhttps://example.invalid/b/" {
 		t.Fatalf("body = %q", gotBody)
 	}
 }

@@ -35,32 +35,27 @@ type CompileOptions struct {
 	DryRun            bool
 }
 
+// CanonicalURL is retained for legacy test helpers; without a configured
+// site origin it returns only a relative path, never an owner's domain.
 func CanonicalURL(slug, language string) string {
+	return canonicalWithSite(blogpublishing.DefaultConfig().Site, slug, language)
+}
+func canonicalWithSite(site blogpublishing.SiteConfig, slug, language string) string {
 	parts := strings.Split(slug, "/")
 	for i, p := range parts {
 		parts[i] = url.PathEscape(p)
 	}
-	prefix := "/articles/"
-	if language == "en" {
-		prefix = "/en/articles/"
-	}
-	return SiteOrigin + prefix + strings.Join(parts, "/") + "/"
+	return strings.TrimRight(site.Origin, "/") + site.ArticlePath(language) + strings.Join(parts, "/") + "/"
 }
 func canonicalFor(o CompileOptions, slug, language string) string {
 	if o.Generic {
 		return o.CanonicalOverride
 	}
-	return CanonicalURL(slug, language)
-}
-func assetURLFor(o CompileOptions, value string) string {
-	if o.Generic {
-		return strings.TrimSpace(value)
-	}
-	return resolveArticleAssetURL(value)
+	return canonicalWithSite(o.Publishing.Site, slug, language)
 }
 func originFor(o CompileOptions) string {
 	if !o.Generic {
-		return SiteOrigin
+		return o.Publishing.Site.Origin
 	}
 	if o.CanonicalOverride == "" {
 		return ""
@@ -71,19 +66,28 @@ func originFor(o CompileOptions) string {
 	}
 	return u.Scheme + "://" + u.Host
 }
-
-func resolveArticleAssetURL(value string) string {
+func assetURLFor(o CompileOptions, value string) string {
 	value = strings.TrimSpace(value)
-	if value == "" {
-		return ""
+	if o.Generic || value == "" {
+		return value
 	}
-	base, _ := url.Parse(SiteOrigin)
 	ref, err := url.Parse(value)
 	if err != nil {
 		return value
 	}
+	if ref.IsAbs() {
+		return ref.String()
+	}
+	origin := originFor(o)
+	if origin == "" {
+		return value
+	}
+	base, _ := url.Parse(origin)
 	return base.ResolveReference(ref).String()
 }
+
+// resolveArticleAssetURL is a legacy helper. It must not invent a blog domain.
+func resolveArticleAssetURL(value string) string { return strings.TrimSpace(value) }
 func truncateRunes(value string, limit int) string {
 	if limit < 1 || utf8.RuneCountInString(value) <= limit {
 		return value
@@ -116,9 +120,12 @@ func renderFooter(config PlatformConfig, canonical, title string, policy ...blog
 	if !config.Footer.Enabled {
 		return ""
 	}
-	site := "ThinkerQAQ 的个人博客"
-	if config.Language == "en" {
-		site = "ThinkerQAQ's personal blog"
+	site := strings.TrimSpace(config.Footer.SiteName)
+	if site == "" {
+		u, err := url.Parse(canonical)
+		if err == nil {
+			site = u.Hostname()
+		}
 	}
 	v := config.Footer.Template
 	v = strings.ReplaceAll(v, "{url}", trackedURL(canonical, config))
@@ -130,7 +137,18 @@ func renderFooter(config PlatformConfig, canonical, title string, policy ...blog
 	if len(policy) > 0 {
 		copy = policy[0]
 	}
-	return strings.TrimSpace(v) + "\n\n> " + copy.Syndication + " [" + copy.Source + "](" + canonical + ")"
+	if strings.TrimSpace(copy.Syndication) == "" {
+		return strings.TrimSpace(v)
+	}
+	source := strings.TrimSpace(copy.Source)
+	if source == "" {
+		if config.Language == "en" {
+			source = "Original article"
+		} else {
+			source = "原文"
+		}
+	}
+	return strings.TrimSpace(v) + "\n\n> " + copy.Syndication + " [" + source + "](" + canonical + ")"
 }
 func normalizeDevtoTags(tags []string) []string {
 	var result []string
@@ -352,6 +370,10 @@ func CompilePlatform(ctx context.Context, o CompileOptions) ([]CompiledArticle, 
 	if err != nil {
 		return nil, err
 	}
+	o.Publishing = config
+	if config.Site.Origin == "" {
+		return nil, errors.New("publishing.site.origin is required to compile content repository articles; configure your own site origin")
+	}
 	profile, ok := config.Platforms[o.Platform]
 	if !ok {
 		profile = defaultPlatformConfig(o.Platform)
@@ -359,7 +381,8 @@ func CompilePlatform(ctx context.Context, o CompileOptions) ([]CompiledArticle, 
 	if profile.Language == "" {
 		profile.Language = blogplatform.DefaultLanguage(o.Platform)
 	}
-	policy, err := blogpublishing.LoadCopyright(o.ContentRoot, profile.Language)
+	profile.Footer.SiteName = config.Site.DisplayName(profile.Language)
+	policy, err := blogpublishing.ResolveCopyright(config.Copyright, o.ContentRoot, profile.Language)
 	if err != nil {
 		return nil, err
 	}

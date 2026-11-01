@@ -180,8 +180,8 @@ func TestMediumSectionReferencesUseOriginalArticleInsteadOfBrokenMediumFragments
 
 func TestMediumCopyrightFooterUsesOneNativeBlockquote(t *testing.T) {
 	profile := defaultPlatformConfig("medium")
-	footer := mediumFooter(Article{Title: "Example"}, "https://thinkerqaq.com/en/articles/example/", profile)
-	if footer == nil || !strings.Contains(footer.Text, "© ThinkerQAQ") || !strings.Contains(footer.Text, "Original article") {
+	footer := mediumFooter(Article{Title: "Example"}, "https://thinkerqaq.com/en/articles/example/", profile, blogpublishing.CopyrightText{Syndication: "© Fixture", Source: "Original article"})
+	if footer == nil || !strings.Contains(footer.Text, "© Fixture") || !strings.Contains(footer.Text, "Original article") {
 		t.Fatalf("missing copyright notice in Medium native footer: %+v", footer)
 	}
 	if strings.Contains(footer.Text, "> ") {
@@ -191,7 +191,7 @@ func TestMediumCopyrightFooterUsesOneNativeBlockquote(t *testing.T) {
 
 func TestMediumNativePayloadUsesContentCopyright(t *testing.T) {
 	profile := defaultPlatformConfig("medium")
-	source := blogpublishing.Copyright("en")
+	source := blogpublishing.CopyrightText{Syndication: "© Fixture", Source: "Original article"}
 	source.Syndication = "CUSTOM MEDIUM RIGHTS"
 	article := Article{Title: "Test"}
 	payload, _ := buildMediumPayload(article, "example", profile, "Test content", source)

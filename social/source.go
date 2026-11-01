@@ -42,8 +42,8 @@ func ResolveSource(contentRoot, origin string, source Source) (Source, error) {
 	if source.Kind != "article" && !strings.Contains(string(raw), "  en:") {
 		return Source{}, errors.New("source has no English translation")
 	}
-	if origin == "" {
-		origin = "https://thinkerqaq.com"
+	if strings.TrimSpace(origin) == "" {
+		return Source{}, errors.New("social source origin is required; configure a canonical site")
 	}
 	target, err := url.Parse(origin)
 	if err != nil || target.Scheme != "https" || target.Host == "" || target.User != nil {

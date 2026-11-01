@@ -17,6 +17,7 @@ import (
 
 	"github.com/ThinkerQAQ/syndirelay/internal/version"
 	"github.com/ThinkerQAQ/syndirelay/publisher"
+	blogpublishing "github.com/ThinkerQAQ/syndirelay/publishing"
 )
 
 const (
@@ -1091,9 +1092,11 @@ func (s *Server) handlePublishingPut(response http.ResponseWriter, request *http
 		return
 	}
 	var body struct {
-		Platforms []publishingPlatformView  `json:"platforms"`
-		Compiler  *publishingCompilerConfig `json:"compiler,omitempty"`
-		Assets    *publishingAssetsConfig   `json:"assets,omitempty"`
+		Platforms []publishingPlatformView        `json:"platforms"`
+		Compiler  *publishingCompilerConfig       `json:"compiler,omitempty"`
+		Assets    *publishingAssetsConfig         `json:"assets,omitempty"`
+		Site      *blogpublishing.SiteConfig      `json:"site,omitempty"`
+		Copyright *blogpublishing.CopyrightConfig `json:"copyright,omitempty"`
 	}
 	if err := readJSON(request, 512*1024, &body); err != nil {
 		writeError(response, err)
@@ -1106,6 +1109,12 @@ func (s *Server) handlePublishingPut(response http.ResponseWriter, request *http
 	if err != nil {
 		writeAPIError(response, http.StatusBadRequest, "invalid_request", err.Error(), nil)
 		return
+	}
+	if body.Site != nil {
+		normalized.Publishing.Site = *body.Site
+	}
+	if body.Copyright != nil {
+		normalized.Publishing.Copyright = *body.Copyright
 	}
 	normalized, err = applyPublishingRuntimeConfig(normalized, body.Compiler, body.Assets)
 	if err != nil {

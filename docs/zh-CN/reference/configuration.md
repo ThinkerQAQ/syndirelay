@@ -1,4 +1,4 @@
-# BlogCTL 配置
+# SyndiRelay 配置
 
 通过扩展或工作台「设置」编辑 `blogctl.toml`。手工修改前先停止 Bridge，避免与界面保存互相覆盖。
 
@@ -33,7 +33,7 @@ Windows 与 WSL 默认目录和路径语法不同。共享社交草稿时，两�
 部分配置示例，通过设置保存可保留初始化默认值：
 
 ```toml
-engine_root = "/home/user/blog/ThinkerQAQ.github.io"
+engine_root = "/home/user/syndirelay"
 content_root = "/home/user/blog/blog-content"
 ui_locale = "zh-CN"
 log_level = "info"
@@ -44,7 +44,7 @@ language = "en"
 changed_only = false
 ```
 
-Windows 路径可用 TOML 字面字符串避免反斜杠转义，如 `engine_root = 'C:\code\ThinkerQAQ.github.io'`。
+Windows 路径可用 TOML 字面字符串避免反斜杠转义，如 `engine_root = 'C:\code\SyndiRelay'`。
 
 ## 要索引的站点
 
@@ -101,3 +101,5 @@ MCP 不新增 TOML 读写权限开关，也不改变发布配置。请在安装�
 ### 本地图片上传目录
 
 `upload_image_to_r2` 仅允许读取 `content_root` 或本地 TOML 顶层配置的 `image_upload_roots = ['C:\Pictures']`，不要授权整块系统磁盘。白名单不会通过 Bridge 配置接口返回。需要已配置 `engine_root`、Node.js 和 Inkerio 的 Sharp 依赖；R2 继续复用 `[publishing.assets.r2]`，不在 MCP 暴露密钥。
+
+新的版权优先级与中英文配置详见 [站点身份与版权](copyright-and-identity.md)。

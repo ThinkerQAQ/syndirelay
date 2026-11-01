@@ -214,10 +214,10 @@ func TestBridgeConfigPublishingCompilerAndAssetsDefaults(t *testing.T) {
 		config.Publishing.Compiler.Mermaid.Scale != 2 {
 		t.Fatalf("mermaid compiler config = %#v", config.Publishing.Compiler.Mermaid)
 	}
-	if config.Publishing.Assets.Store != "r2" {
+	if config.Publishing.Assets.Store != "none" {
 		t.Fatalf("asset store = %q", config.Publishing.Assets.Store)
 	}
-	if config.Publishing.Assets.R2.PublicBaseURL != "https://pub-366a15b6733345039775c083a1fffb3e.r2.dev/" {
+	if config.Publishing.Assets.R2.PublicBaseURL != "" {
 		t.Fatalf("R2 public base URL = %q", config.Publishing.Assets.R2.PublicBaseURL)
 	}
 }
@@ -236,6 +236,7 @@ func TestBridgeConfigRejectsInvalidPublishingCompilerPolicy(t *testing.T) {
 	}
 
 	config = defaultBridgeConfig()
+	config.Publishing.Assets.Store = "r2"
 	config.Publishing.Assets.R2.PublicBaseURL = "http://assets.example.com/"
 	if _, err := normalizeBridgeConfig(config); err == nil || !strings.Contains(err.Error(), "publicBaseUrl must be an HTTPS URL") {
 		t.Fatalf("unexpected R2 URL validation error: %v", err)
