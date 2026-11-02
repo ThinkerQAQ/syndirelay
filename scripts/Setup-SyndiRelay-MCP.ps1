@@ -71,14 +71,11 @@ $shortcutPath = Join-Path $startup 'SyndiRelay MCP Tunnel.lnk'
 $shell = New-Object -ComObject WScript.Shell
 $link = $shell.CreateShortcut($shortcutPath)
 $link.TargetPath = (Get-Command powershell.exe).Source
-$link.Arguments = '-NoProfile -WindowStyle Hidden -File "' + $launcher + '"'
+$manager = Join-Path $PSScriptRoot 'Manage-SyndiRelay-MCP.ps1'
+$link.Arguments = '-NoProfile -WindowStyle Hidden -File "' + $manager + '" -Action start'
 $link.WorkingDirectory = $private
 $link.Save()
-$already = Get-CimInstance Win32_Process -Filter "name='tunnel-client.exe'" -ErrorAction SilentlyContinue |
-    Where-Object { $_.CommandLine -and $_.CommandLine.Contains($profile) }
-if (-not $already) {
-    Start-Process -FilePath (Get-Command powershell.exe).Source -ArgumentList @('-NoProfile','-WindowStyle','Hidden','-File',('"' + $launcher + '"')) -WindowStyle Hidden
-}
+& $manager -Action start
 Write-Host 'SyndiRelay Tunnel configured. In ChatGPT: Plugins -> Add custom MCP server -> Tunnel.'
 
 # Close a successful guided setup; -NoExit keeps failures visible.
