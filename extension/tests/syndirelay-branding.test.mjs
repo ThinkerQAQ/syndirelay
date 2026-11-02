@@ -48,3 +48,10 @@ test("UI rebrand retains module exports used by the existing popup runtime", () 
   assert.match(settings, /root\.BlogCTLMCPConnection\?\.refresh\(\)/u);
   assert.doesNotMatch(indexing, /root\.SyndiRelayIndexing =/u);
 });
+
+test("configuration category names only the TOML file, leaving runtime paths separate", () => {
+  const navigation = read("extension/popup/settings-navigation.js");
+  assert.match(navigation, /id: "content", title: "配置文件", summary: "TOML 配置文件", selectors: \["\.environment-config-file"\]/u);
+  assert.doesNotMatch(navigation, /内容与路径|TOML 配置文件和内容目录/u);
+  assert.match(navigation, /id: "runtime"[^\n]*#environmentRuntimeTools/u);
+});

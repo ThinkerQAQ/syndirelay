@@ -6,7 +6,7 @@
 (function (root) {
   const CATEGORY_META = [
     { id: "interface", title: "界面与语言", summary: "语言偏好与界面显示", selectors: ["#environmentInterfaceSettings"] },
-    { id: "content", title: "内容与路径", summary: "TOML 配置文件和内容目录", selectors: [".environment-config-file"] },
+    { id: "content", title: "配置文件", summary: "TOML 配置文件", selectors: [".environment-config-file"] },
     { id: "mcp", title: "MCP 连接", summary: "连接 ChatGPT 或本地 AI 客户端", selectors: ["#mcpConnectionSettings"] },
     { id: "runtime", title: "运行环境", summary: "Bridge、Extension 与本地依赖", selectors: ["#environmentRuntimeTools", "#environmentDependencyTools"] },
     { id: "platforms", title: "分发平台", summary: "平台策略、Footer、Canonical 和 Tracking", selectors: ["#platformConfigEnvironmentCard"] },
