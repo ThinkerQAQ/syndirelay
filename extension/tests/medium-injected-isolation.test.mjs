@@ -89,3 +89,17 @@ test("Medium MAIN-world saved-draft verification is self-contained",()=>{
   assert.equal(result.inserted,true,JSON.stringify(result));
   assert.equal(result.imageCount,1);
 });
+
+test("Medium MAIN-world image insertion reports a human challenge without a 120s timeout", async () => {
+  const challenge = mainWorld(insertMediumImageInPage,{
+    location:{origin:"https://medium.com",pathname:"/p/"+draft+"/edit"},
+    document:{
+      body:{innerText:"Verify you are human"},
+      querySelector(selector){return null;},
+      querySelectorAll(selector){return [];}
+    },
+    Date:{now:()=>0}
+  });
+  const result=await challenge("aGVsbG8=","image/png","test.png",draft,marker);
+  assert.match(result.error,/human verification/);
+});

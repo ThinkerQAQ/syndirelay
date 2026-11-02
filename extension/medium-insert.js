@@ -121,6 +121,12 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
     let ready = false;
     const readyStart = Date.now();
     while (Date.now() - readyStart < 70000) {
+      // A challenge can have the final /p/id/edit URL but no editor. Detect
+      // it immediately rather than waiting beyond the Bridge's task lease.
+      const currentBody = document.body?.innerText || "";
+      if (/验证您是真人|请验证您是真人|verify you are human|Checking your browser|正在进行安全验证/i.test(currentBody)) {
+        return fail("Medium requires human verification in this draft; complete it in the browser before resuming");
+      }
       // A prior attempt can finish saving after its browser task times out.
       // Re-check the same saved draft rather than inserting a duplicate.
       if (alreadySaved() && savedStatus()) {

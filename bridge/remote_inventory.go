@@ -153,6 +153,26 @@ func (s *Server) handleRemoteInventory(response http.ResponseWriter, request *ht
 			for _, item := range items {
 				appendPost(item.ID, item.Title, item.URL, item.Published)
 			}
+			if err != nil && strings.Contains(err.Error(), "invalid JSON response") {
+				// Not a live remote listing. The user explicitly selects a
+				// known draft ID before any update; no new ID is invented.
+				s.mu.Lock()
+				var history []*durableTaskJob
+				for _, id := range s.taskJobOrder {
+					if job := s.taskJobs[id]; job != nil {
+						clone := *job
+						history = append(history, &clone)
+					}
+				}
+				root := s.config.ContentRoot
+				s.mu.Unlock()
+				cached := cached51CTODraftPosts(history, root)
+				if len(cached) > 0 {
+					posts = append(posts, cached...)
+					partial = "51CTO 实时列表不可用；仅展示本机成功任务记录，远端状态尚未核验。请确认目标后再更新。"
+					err = nil
+				}
+			}
 		case "oschina":
 			var items []publisher.OSChinaPost
 			account, items, err = publisher.OSChinaListPosts(ctx, client, session)

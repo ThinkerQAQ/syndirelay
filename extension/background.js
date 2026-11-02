@@ -1218,9 +1218,9 @@ async function handleMessage(message) {
         const result = await fetchJSON(`/v1/51cto/articles/list?article=${article}`, { method: "POST" });
         const candidates = result.candidates ?? [];
         return { ok: true, match: {
-          text: candidates.length
+          text: result.partial || (candidates.length
             ? `从 51CTO 草稿列表和已发布文章列表本地匹配到 ${candidates.length} 条候选。`
-            : "已读取 51CTO 草稿列表和已发布文章列表，本地未匹配到同名文章。",
+            : "已读取 51CTO 草稿列表和已发布文章列表，本地未匹配到同名文章。"),
           items: candidates.map((post) => ({
             title: post.title,
             id: post.id,
