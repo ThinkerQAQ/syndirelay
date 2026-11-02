@@ -49,7 +49,8 @@ def build(stage, version, goos, goarch, qa_only=False):
     # Dependencies contain the platform-specific Sharp binary. Install only on the matching native host.
     if goos != OS_NAME.get(platform.system()) or goarch != ARCH_NAME.get(platform.machine()):
         raise ValueError("renderer dependencies must be installed on the matching native OS/architecture")
-    subprocess.run(["npm", "ci", "--omit=dev", "--no-audit", "--no-fund"],
+    npm = "npm.cmd" if os.name == "nt" else "npm"
+    subprocess.run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
                    cwd=stage, check=True)
     # npm's command shim symlinks must not be included in portable archives/installer.
     binlinks = stage / "node_modules" / ".bin"
