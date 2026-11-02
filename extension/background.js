@@ -36,11 +36,11 @@ const openControlTab = () => chrome.tabs.create({ url: chrome.runtime.getURL("po
 
 if (chrome.sidePanel?.setPanelBehavior) {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
-    console.error("BlogCTL side panel setup failed:", errorMessage(error));
+    console.error("SyndiRelay side panel setup failed:", errorMessage(error));
     chrome.action.onClicked.addListener(openControlTab);
   });
 } else {
-  console.warn("BlogCTL side panel API is unavailable in this browser");
+  console.warn("SyndiRelay side panel API is unavailable in this browser");
   chrome.action.onClicked.addListener(openControlTab);
 }
 
@@ -94,7 +94,7 @@ async function writeBridgeLog(level, message, fields = {}) {
       fields,
     }));
   } catch (error) {
-    console.warn("[BlogCTL][log] failed to write Bridge log", errorMessage(error));
+    console.warn("[SyndiRelay][log] failed to write Bridge log", errorMessage(error));
   }
 }
 
@@ -117,11 +117,11 @@ function requestNativeBridge() {
     chrome.runtime.sendNativeMessage(NATIVE_HOST, { command: "ensure_bridge" }, (response) => {
       const error = chrome.runtime.lastError;
       if (error) {
-        reject(new Error(`无法连接 BlogCTL Native Host：${error.message}`));
+        reject(new Error(`无法连接 SyndiRelay Native Host：${error.message}`));
         return;
       }
       if (!response?.ok || !response.baseUrl || !response.token) {
-        reject(new Error(response?.error || "BlogCTL Native Host 返回无效结果"));
+        reject(new Error(response?.error || "SyndiRelay Native Host 返回无效结果"));
         return;
       }
       resolve(response);
@@ -296,7 +296,7 @@ function runtimeVersionHealth(version, expectedVersion, healthySummary, detail =
   if (!normalized) {
     return {
       ok: false, status: "error", summary: "版本未知", version: "",
-      detail: ["当前组件未提供版本握手；需要更新本机 BlogCTL runtime。", detail].filter(Boolean).join(" · "),
+      detail: ["当前组件未提供版本握手；需要更新本机 SyndiRelay runtime。", detail].filter(Boolean).join(" · "),
       path,
     };
   }
@@ -318,9 +318,9 @@ async function environmentTools(serverTools = []) {
 
   const extensionTool = {
     name: "extension",
-    displayName: "BlogCTL Extension",
+    displayName: "SyndiRelay Extension",
     kind: "runtime",
-    description: "浏览器侧控制面。版本必须与 BlogCTL Bridge 一致。",
+    description: "浏览器侧控制面。版本必须与 SyndiRelay Bridge 一致。",
     required: true,
     health: !bridge.running
       ? {
@@ -381,7 +381,7 @@ async function environmentTools(serverTools = []) {
 }
 
 async function platformSessionStatus(platform, bridge) {
-  if (!bridge.running) return { known: false, synced: false, unavailable: true, expiresInSeconds: 0, error: bridge.error || "BlogCTL Bridge 未运行" };
+  if (!bridge.running) return { known: false, synced: false, unavailable: true, expiresInSeconds: 0, error: bridge.error || "SyndiRelay Bridge 未运行" };
   try {
     const session = await fetchJSON(`/v1/sessions/${encodeURIComponent(platform)}/status`);
     return { known: true, synced: Boolean(session?.authenticated), expiresInSeconds: Number(session?.expiresInSeconds || 0) };
@@ -398,7 +398,7 @@ async function getStatus() {
       const publishing = await fetchJSON("/v1/publishing");
       publishingPlatforms = publishing?.platforms ?? [];
     } catch (error) {
-      console.warn("BlogCTL platform capabilities unavailable:", errorMessage(error));
+      console.warn("SyndiRelay platform capabilities unavailable:", errorMessage(error));
     }
   }
   const publishingByID = new Map(publishingPlatforms.map((item) => [item.id, item]));
@@ -955,7 +955,7 @@ function kickGoogleIndexQueuePump() {
   if (googleIndexPumpPromise) return googleIndexPumpPromise;
   googleIndexPumpPromise = pumpGoogleIndexQueue()
     .catch(async (error) => {
-      console.warn("[BlogCTL][google-index] queue pump failed", errorMessage(error));
+      console.warn("[SyndiRelay][google-index] queue pump failed", errorMessage(error));
       await writeBridgeLog("error", "gsc queue pump failed", { error: errorMessage(error) });
       try {
         const paused = await fetchJSON("/v1/search/index/google/request-queue/pause", { method: "POST" });
@@ -1787,7 +1787,7 @@ async function pollMediumUploads() {
       }));
     }
   } catch (error) {
-    console.warn("BlogCTL Medium browser upload polling paused:", errorMessage(error));
+    console.warn("SyndiRelay Medium browser upload polling paused:", errorMessage(error));
     await writeBridgeLog("error", "medium browser upload pump failed", {
       error: errorMessage(error).slice(0, 220),
     });
@@ -1854,7 +1854,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const task = handleMessage(message);
   if (!task) return false;
   task.then(sendResponse).catch(async (error) => {
-    console.error("BlogCTL extension request failed:", message.type, errorMessage(error));
+    console.error("SyndiRelay extension request failed:", message.type, errorMessage(error));
     sendResponse({ ok: false, error: errorMessage(error), code: error?.code || "", status: error?.status || 0, details: error?.details || null });
   });
   return true;

@@ -314,7 +314,7 @@ button { border: 0; border-radius: 8px; font: inherit; cursor: pointer; } button
 
 .remote-inventory-card .job-platform-main { gap: 8px; align-items: center; }
 
-/* Shared BlogCTL design system. Both the extension host and Web Console
+/* Shared SyndiRelay design system. Both the extension host and Web Console
    import this file, so their controls and interactions remain identical. */
 :root {
   --ui-background: #f8fafc;

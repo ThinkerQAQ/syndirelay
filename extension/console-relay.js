@@ -1,6 +1,6 @@
 "use strict";
 
-// Content script only installed on BlogCTL's fixed local console endpoint.
+// Content script only installed on SyndiRelay's fixed local console endpoint.
 // This is the same authenticated Extension message transport as Side Panel.
 // The Go-served page never receives a Bridge token, cookie or platform session.
 const CONSOLE_ORIGIN = "http://127.0.0.1:32146";

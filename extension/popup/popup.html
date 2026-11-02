@@ -400,7 +400,7 @@
               <option value="en">English</option>
             </select>
           </label>
-          <p class="card-hint">修改后自动保存到 blogctl.toml，仅影响界面，不改变文章语言。</p>
+          <p class="card-hint">修改后自动保存到 syndirelay.toml，仅影响界面，不改变文章语言。</p>
           <p id="uiLocaleMessage" class="message" role="status" aria-live="polite"></p>
         </div>
 
@@ -410,9 +410,9 @@
               <strong>Config</strong>
               <span class="tool-requirement required">必选</span>
             </span>
-            <code class="config-file-name">blogctl.toml</code>
+            <code class="config-file-name">syndirelay.toml</code>
           </div>
-          <code id="environmentConfigPath" class="path-value">正在读取 blogctl.toml…</code>
+          <code id="environmentConfigPath" class="path-value">正在读取 syndirelay.toml…</code>
           <div class="tool-edit-controls">
             <button id="editConfigFile" class="secondary tool-edit-button" type="button">✎ 编辑</button>
           </div>
@@ -470,7 +470,7 @@
             <label class="field"><span>Secret Access Key</span><input id="r2SecretAccessKey" type="password" autocomplete="new-password" placeholder="未配置"></label>
             <label class="field"><span>Account ID</span><input id="r2AccountId" type="text" autocomplete="off"></label>
             <label class="field"><span>Endpoint（可选）</span><input id="r2Endpoint" type="url" placeholder="留空时由 Account ID 自动生成"></label>
-            <p class="card-hint">R2 配置统一保存在本机 <code>blogctl.toml</code>；Secret Access Key 不会回显到插件。</p>
+            <p class="card-hint">R2 配置统一保存在本机 <code>syndirelay.toml</code>；Secret Access Key 不会回显到插件。</p>
             <div class="tool-edit-controls">
               <button id="editAssets" class="secondary tool-edit-button" type="button">✎ 编辑</button>
               <div id="assetEditActions" class="tool-edit-actions" hidden>

@@ -1,5 +1,5 @@
 // Runs only in the actual Medium editor's MAIN world. No Cookie or XSRF
-// value is ever returned to BlogCTL; only native fileId and dimensions.
+// value is ever returned to SyndiRelay; only native fileId and dimensions.
 export async function uploadMediumInPage(base64, mimeType, filename, expectedDraftID) {
   const expectedPath = "/p/" + expectedDraftID + "/edit";
   if (location.origin !== "https://medium.com" || location.pathname !== expectedPath ||
@@ -54,7 +54,7 @@ export async function findMediumEditorTab(draftId, tabs = chrome.tabs, sleep = (
   const found = await tabs.query({ url: "https://medium.com/p/*/edit" });
   const matches = found.filter(tab => tab.url === editorUrl);
   if (matches.length > 1) {
-    throw new Error("Multiple Medium editor tabs exist for the same draft; close duplicates before using BlogCTL");
+    throw new Error("Multiple Medium editor tabs exist for the same draft; close duplicates before using SyndiRelay");
   }
   const existing = matches[0];
   const tab = existing ?? await tabs.create({ url: editorUrl, active: false });

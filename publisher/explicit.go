@@ -28,7 +28,7 @@ func (s Service) RunExplicitDraft(ctx context.Context, platform string, session 
 	input DraftInput, operation string, target ExplicitTarget, publish bool,
 ) (ExplicitResult, error) {
 	if platform == "hashnode" {
-		return ExplicitResult{}, errors.New("Hashnode drafts require the persisted BlogCTL creation workflow")
+		return ExplicitResult{}, errors.New("Hashnode drafts require the persisted SyndiRelay creation workflow")
 	}
 	if platform == "medium" {
 		return ExplicitResult{}, errors.New("Medium explicit operations must use the existing browser bridge transport")

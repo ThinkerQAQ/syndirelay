@@ -187,7 +187,6 @@ func findPublishingRenderer(workspace string) (string, error) {
 	candidates := []string{}
 	if workspace != "" {
 		candidates = append(candidates, filepath.Join(workspace, "renderers", "node", "markdown-html.mjs"))
-		candidates = append(candidates, filepath.Join(workspace, "tools", "blogctl", "renderers", "node", "markdown-html.mjs"))
 	}
 	if root := os.Getenv("SYNDIRELAY_HOME"); root != "" {
 		candidates = append(candidates, filepath.Join(root, "renderers", "node", "markdown-html.mjs"))

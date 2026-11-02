@@ -492,8 +492,7 @@ type scriptFailureEvent struct {
 
 func validateSyncWorkspaces(config SyncConfig) error {
 	if !filePresent(filepath.Join(config.EngineRoot, "package.json")) ||
-		(!filePresent(filepath.Join(config.EngineRoot, "renderers", "node", "markdown-html.mjs")) &&
-			!filePresent(filepath.Join(config.EngineRoot, "tools", "blogctl", "renderers", "node", "markdown-html.mjs"))) {
+		!filePresent(filepath.Join(config.EngineRoot, "renderers", "node", "markdown-html.mjs")) {
 		return errors.New("SyndiRelay workspace is not configured or invalid")
 	}
 	if !directoryPresent(filepath.Join(config.ContentRoot, "src", "content", "articles")) {

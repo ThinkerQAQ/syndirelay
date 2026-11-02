@@ -93,7 +93,7 @@ func readBridgeState() (bridgeState, error) {
 		return bridgeState{}, err
 	}
 	if state.BaseURL == "" || len(state.Token) < 32 || state.PID <= 0 {
-		return bridgeState{}, errors.New("invalid BlogCTL bridge state")
+		return bridgeState{}, errors.New("invalid SyndiRelay bridge state")
 	}
 	return state, nil
 }
@@ -155,9 +155,9 @@ func ensureBridgeProcess() (bridgeState, error) {
 		return state, nil
 	}
 	if lastErr != nil {
-		return bridgeState{}, fmt.Errorf("BlogCTL Bridge did not start: %w", lastErr)
+		return bridgeState{}, fmt.Errorf("SyndiRelay Bridge did not start: %w", lastErr)
 	}
-	return bridgeState{}, errors.New("BlogCTL Bridge did not start")
+	return bridgeState{}, errors.New("SyndiRelay Bridge did not start")
 }
 
 func runBridgeProcess() error {

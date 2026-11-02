@@ -290,7 +290,7 @@ func (a *devtoAdapter) upsertExisting(ctx context.Context, existing devtoArticle
 			return DraftResult{}, err
 		}
 	}
-	// "Save" is a draft operation in BlogCTL. Updating a public DEV.to article
+	// "Save" is a draft operation in SyndiRelay. Updating a public DEV.to article
 	// would make the new body live immediately, bypassing preview + explicit
 	// publish. Fail closed until a separate published-update workflow exists.
 	if !input.Published && devtoArticlePublished(full) {

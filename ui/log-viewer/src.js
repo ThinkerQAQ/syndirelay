@@ -72,7 +72,7 @@ export function create(parent) {
       drawSelection(),
       EditorState.readOnly.of(true),
       EditorView.editable.of(false),
-      EditorView.contentAttributes.of({ tabindex: "0", role: "log", "aria-label": "BlogCTL 运行日志" }),
+      EditorView.contentAttributes.of({ tabindex: "0", role: "log", "aria-label": "SyndiRelay 运行日志" }),
       EditorView.lineWrapping,
       keymap.of(searchKeymap),
       search({ top: true }),

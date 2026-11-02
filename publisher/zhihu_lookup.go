@@ -152,7 +152,7 @@ func ZhihuAccountURLToken(ctx context.Context, base *http.Client, session Sessio
 }
 
 // ZhihuListPosts reads the signed-in user's draft list and published article list.
-// Binding candidates are matched locally; BlogCTL does not depend on global search.
+// Binding candidates are matched locally; SyndiRelay does not depend on global search.
 func ZhihuListPosts(ctx context.Context, base *http.Client, session Session) (string, []ZhihuPost, error) {
 	adapterValue, err := NewZhihuAdapter(base, session)
 	if err != nil {

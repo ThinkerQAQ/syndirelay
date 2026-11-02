@@ -28,7 +28,7 @@ func smallPNG(t *testing.T) []byte {
 func fakeImageEngine(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
-	dir := filepath.Join(root, "tools", "blogctl", "renderers", "node")
+	dir := filepath.Join(root, "renderers", "node")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		t.Fatal(err)
 	}

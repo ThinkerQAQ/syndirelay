@@ -91,13 +91,13 @@ test("R2 credentials are stored through BlogCTL config instead of environment va
 });
 
 
-test("environment renders blogctl.toml as a dedicated config file surface", async () => {
+test("environment renders syndirelay.toml as a dedicated config file surface", async () => {
   const [environment, html] = await Promise.all([
     readFile(environmentPath, "utf8"),
     readFile(htmlPath, "utf8"),
   ]);
   assert.match(html, /id="environmentConfigPath"/u);
-  assert.match(html, />blogctl\.toml</u);
-  assert.match(environment, /bridgeTool\?\.health\?\.path \|\| "未找到 blogctl\.toml"/u);
+  assert.match(html, />syndirelay\.toml</u);
+  assert.match(environment, /bridgeTool\?\.health\?\.path \|\| "未找到 syndirelay\.toml"/u);
   assert.doesNotMatch(environment, /tool\.name === "bridge" \? `配置/u);
 });

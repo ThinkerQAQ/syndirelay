@@ -42,7 +42,7 @@ def prepare(stage, destination, version, target):
     for path in stage.rglob("*"):
         if path.is_symlink():
             raise ValueError("symlink in release stage")
-        if path.is_file() and (path.name.lower() in ("config.toml","api-token","extension-access.key","runtime.env","runtime-key.dpapi", "blogctl.toml", ".env")
+        if path.is_file() and (path.name.lower() in ("config.toml","api-token","extension-access.key","runtime.env","runtime-key.dpapi", "blogctl.toml", "syndirelay.toml", ".env")
                               or path.suffix.lower() in (".sqlite",".db",".log",".har")
                               or any(part.lower() in ("data","backups") for part in path.relative_to(stage).parts)):
             raise ValueError("private runtime file in release stage")

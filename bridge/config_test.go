@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -35,7 +36,7 @@ func TestBridgeConfigPersistsProxy(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("config = %#v, want %#v", got, want)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "blogctl.toml")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "syndirelay.toml")); err != nil {
 		t.Fatalf("config file not written: %v", err)
 	}
 }
@@ -253,7 +254,7 @@ func TestBridgeConfigStoresR2CredentialsInTOML(t *testing.T) {
 	if err := saveBridgeConfig(config); err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(dir, "blogctl.toml"))
+	data, err := os.ReadFile(filepath.Join(dir, "syndirelay.toml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -295,7 +296,7 @@ func TestBridgeToolShowsConfigPath(t *testing.T) {
 	dir := useIsolatedUserConfigDir(t)
 	for _, tool := range toolRegistry(defaultBridgeConfig()) {
 		if tool.Name == "bridge" {
-			if tool.Health.Path != filepath.Join(dir, "blogctl.toml") {
+			if tool.Health.Path != filepath.Join(dir, "syndirelay.toml") {
 				t.Fatalf("bridge config path = %q", tool.Health.Path)
 			}
 			return
@@ -354,7 +355,7 @@ func TestBufferAPIKeyPersistsAndNeverLeaks(t *testing.T) {
 	if loaded.Social.Buffer.APIKey != "private-test-token" {
 		t.Fatal("key was not loaded")
 	}
-	raw, err := os.ReadFile(func() string { d, _ := ConfigDir(); return filepath.Join(d, "blogctl.toml") }())
+	raw, err := os.ReadFile(func() string { d, _ := ConfigDir(); return filepath.Join(d, "syndirelay.toml") }())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -404,5 +405,59 @@ func TestInstallationRootPortableLayouts(t *testing.T) {
 	standalone := t.TempDir()
 	if got := InstallationRoot(filepath.Join(standalone, "bin", "syndirelay.exe")); got != filepath.Join(standalone, "bin") {
 		t.Fatalf("unbundled bin dir should not assume root: %q", got)
+	}
+}
+
+// Prior BlogCTL files retain all values (including secrets) without destructive moves.
+func TestLegacyConfigMigrationIsLosslessAndIdempotent(t *testing.T) {
+	dir := useIsolatedUserConfigDir(t)
+	legacy := filepath.Join(dir, "blogctl.toml")
+	current := filepath.Join(dir, "syndirelay.toml")
+	original := []byte("# old settings preserved\nui_locale = 'en'\ndevto_api_key = 'test-private-key'\n")
+	if err := os.WriteFile(legacy, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	path, err := ConfigPath()
+	if err != nil || path != current {
+		t.Fatalf("path %q err %v", path, err)
+	}
+	copied, err := os.ReadFile(current)
+	if err != nil || string(copied) != string(original) {
+		t.Fatalf("migration changed contents: %v", err)
+	}
+	info, err := os.Stat(current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runtime.GOOS != "windows" && info.Mode().Perm()&0o077 != 0 {
+		t.Fatal("migrated config is world readable")
+	}
+	config, err := loadBridgeConfigChecked()
+	if err != nil || config.UILocale != "en" || config.DevtoAPIKey != "test-private-key" {
+		t.Fatal("config values missing after migration", err)
+	}
+	if err := os.WriteFile(current, []byte("ui_locale = 'zh-CN'\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	path, err = ConfigPath()
+	if err != nil || path != current {
+		t.Fatal("config precedence lost", err)
+	}
+	after, _ := os.ReadFile(current)
+	if string(after) != "ui_locale = 'zh-CN'\n" {
+		t.Fatal("existing config overwritten by legacy")
+	}
+	prior, _ := os.ReadFile(legacy)
+	if string(prior) != string(original) {
+		t.Fatal("legacy config unexpectedly modified")
+	}
+}
+func TestLegacyConfigIsNotReplacedByDefaultOnInvalidContent(t *testing.T) {
+	dir := useIsolatedUserConfigDir(t)
+	if err := os.WriteFile(filepath.Join(dir, "blogctl.toml"), []byte("invalid = [\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadBridgeConfigChecked(); err == nil {
+		t.Fatal("invalid legacy config silently overwritten")
 	}
 }

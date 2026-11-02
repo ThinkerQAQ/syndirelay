@@ -45,7 +45,7 @@ func resolveSyncWorkspaceFrom(current string, getenv func(string) string) (strin
 		}
 	}
 	if contentRoot == "" {
-		return "", "", fmt.Errorf("content repository not found; run blogctl sync from blog-content or set %s", contentRootEnvironment)
+		return "", "", fmt.Errorf("content repository not found; run syndirelay sync from blog-content or set %s", contentRootEnvironment)
 	}
 
 	engineRoot, configured, err := configuredRoot(fallbackEnvironment(getenv, engineRootEnvironment, legacyEngineRootEnvironment), isEngineRoot)

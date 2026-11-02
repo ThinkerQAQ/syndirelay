@@ -18,7 +18,7 @@ import (
 
 func (a app) runSocial(args []string) error {
 	if len(args) == 0 {
-		return errors.New("usage: blogctl social <channels|source|create|list|show|stage|reconcile|publish>")
+		return errors.New("usage: syndirelay social <channels|source|create|list|show|stage|reconcile|publish>")
 	}
 	sub := args[0]
 	flags := flag.NewFlagSet("social "+sub, flag.ContinueOnError)

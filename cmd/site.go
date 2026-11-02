@@ -13,7 +13,7 @@ import (
 
 func (a app) runSite(args []string) error {
 	if len(args) == 0 || (args[0] != "build" && args[0] != "assemble") {
-		return errors.New("usage: blogctl site <build|assemble> --content-root <path>")
+		return errors.New("usage: syndirelay site <build|assemble> --content-root <path>")
 	}
 	operation := args[0]
 	contentRoot := ""

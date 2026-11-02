@@ -1,7 +1,7 @@
 "use strict";
 
 // A presentation-only category tree, modeled after IDFlow's SettingsFeature.
-// Existing BlogCTL environment controls and Bridge mutations are moved, not
+// Existing SyndiRelay environment controls and Bridge mutations are moved, not
 // cloned: the same DOM and handlers work in every UI host.
 (function (root) {
   const CATEGORY_META = [
@@ -109,7 +109,7 @@
       meta, elements: meta.selectors.map((selector) => panel.querySelector(selector)).filter(Boolean),
     }));
     if (inputs.some(({ elements }) => !elements.length)) {
-      throw new Error("BlogCTL settings navigation: missing environment sections");
+      throw new Error("SyndiRelay settings navigation: missing environment sections");
     }
     const intro = document.createElement("p");
     intro.className = "card-hint";
