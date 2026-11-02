@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SyndiRelayFirstRun</class>
+ <widget class="QWidget" name="SyndiRelayFirstRun">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item><widget class="QLabel" name="setupTitle">
+    <property name="text"><string>SyndiRelay is ready</string></property>
+    <property name="styleSheet"><string>font-weight: 600; font-size: 15px;</string></property>
+   </widget></item>
+   <item><widget class="QLabel" name="setupDescription">
+    <property name="text"><string>Register SyndiRelay and load its browser extension to start distributing articles. Your local configuration remains unchanged.</string></property>
+    <property name="wordWrap"><bool>true</bool></property>
+   </widget></item>
+   <item><widget class="QCheckBox" name="openAppCheckBox">
+    <property name="text"><string>Register SyndiRelay and open extension folder</string></property>
+    <property name="checked"><bool>true</bool></property>
+   </widget></item>
+   <item><widget class="QCheckBox" name="openExtensionCheckBox">
+    <property name="text"><string>Set up the Chrome / Edge extension</string></property>
+    <property name="checked"><bool>false</bool></property>
+   </widget></item>
+   <item><widget class="QLabel" name="extensionInstructions">
+    <property name="text"><string>The extension is optional. Setup opens its folder and your browser's extensions page. Enable Developer mode, choose Load unpacked, then select that folder.</string></property>
+    <property name="wordWrap"><bool>true</bool></property>
+   </widget></item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

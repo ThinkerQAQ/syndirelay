@@ -1010,6 +1010,20 @@ async function read51CTOInventoryFromBrowser() {
 async function handleMessage(message) {
   switch (message.type) {
     case "blogctl.status": return { ok: true, status: await getStatus() };
+    case "blogctl.mcp.connection.get": {
+      const connection = await fetchJSON("/v1/mcp-connection");
+      return { ok: true, connection };
+    }
+    case "blogctl.mcp.connection.action": {
+      const action = String(message.action || "");
+      if (!["install-client", "setup", "start", "stop", "restart"].includes(action)) {
+        throw new Error("Invalid MCP connection action");
+      }
+      return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {
+        action, tunnel_id: String(message.tunnelId || ""),
+      }))) };
+    }
+
     case "blogctl.impact.get": return fetchJSON("/v1/impact");
     case "blogctl.impact.save": return fetchJSON("/v1/impact",jsonOptions("PUT",message.config));
     case "blogctl.impact.retry": return fetchJSON("/v1/impact/retry",jsonOptions("POST",{}));

@@ -450,6 +450,7 @@
     message = document.getElementById("environmentMessage");
 
     configEditButton.addEventListener("click", editConfigFile);
+    root.BlogCTLMCPConnection?.init();
     BlogCTLImpact.init();
     BlogCTLAssets.init();
     BlogCTLPublishing.init();

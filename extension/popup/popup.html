@@ -418,6 +418,33 @@
           </div>
         </div>
 
+        <section id="mcpConnectionSettings" class="tool-card mcp-setup">
+          <div class="section-title">MCP 连接</div>
+          <p class="card-hint">使用 ChatGPT 自定义 MCP 连接的 Tunnel ID，关联本机 SyndiRelay。仅本机管理连接。</p>
+          <ol class="mcp-setup-steps">
+            <li><a href="https://chatgpt.com/settings/plugins-settings" target="_blank" rel="noopener noreferrer">在 ChatGPT 中创建自定义 MCP Tunnel</a></li>
+            <li>粘贴 Tunnel ID 并启动本机连接</li>
+            <li>回到 ChatGPT 启用 SyndiRelay</li>
+          </ol>
+          <p id="mcpConnectionStatus" class="card-hint" role="status" aria-live="polite">检查本机连接…</p>
+          <label class="field" id="mcpTunnelField"><span>Tunnel ID</span><input id="mcpTunnelID" type="text" spellcheck="false" autocomplete="off" placeholder="tunnel_…" maxlength="80"></label>
+          <div class="mcp-setup-actions">
+            <button id="mcpConnect" class="primary" type="button">连接 ChatGPT</button>
+            <button id="mcpRefresh" class="secondary" type="button">检查连接</button>
+          </div>
+          <p id="mcpConnectionMessage" class="message" role="alert"></p>
+          <details class="mcp-setup-advanced">
+            <summary>高级选项与本地客户端</summary>
+            <div class="mcp-setup-actions">
+              <button id="mcpRestart" class="secondary" type="button">重新连接</button>
+              <button id="mcpStop" class="secondary" type="button">断开连接</button>
+            </div>
+            <p class="card-hint">本地 AI 客户端可使用下面的 STDIO JSON 配置，无须 Tunnel。</p>
+            <pre id="mcpLocalConfig" class="mcp-local-config"></pre>
+            <button id="mcpCopyConfig" class="secondary" type="button">复制本地配置</button>
+          </details>
+        </section>
+
         <div id="environmentRuntimeTools" class="tool-list"><div class="platform-loading">正在检测本机环境…</div></div>
 
         <details id="assetConfigEnvironmentCard" class="tool-card environment-large-card">
@@ -595,6 +622,7 @@
   <script src="social.js"></script>
   <script src="publishing.js"></script>
   <script src="impact.js"></script>
+  <script src="mcp-connection.js"></script>
   <script src="environment.js"></script>
   <script src="settings-navigation.js"></script>
   <script src="popup.js"></script>

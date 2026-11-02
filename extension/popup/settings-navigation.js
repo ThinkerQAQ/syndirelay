@@ -7,6 +7,7 @@
   const CATEGORY_META = [
     { id: "interface", title: "界面与语言", summary: "语言偏好与界面显示", selectors: ["#environmentInterfaceSettings"] },
     { id: "content", title: "内容与路径", summary: "TOML 配置文件和内容目录", selectors: [".environment-config-file"] },
+    { id: "mcp", title: "MCP 连接", summary: "连接 ChatGPT 或本地 AI 客户端", selectors: ["#mcpConnectionSettings"] },
     { id: "runtime", title: "运行环境", summary: "Bridge、Extension 与本地依赖", selectors: ["#environmentRuntimeTools", "#environmentDependencyTools"] },
     { id: "platforms", title: "分发平台", summary: "平台策略、Footer、Canonical 和 Tracking", selectors: ["#platformConfigEnvironmentCard"] },
     { id: "impact", title: "影响力统计", summary: "Reverfolio、发布后自动登记与重试队列", selectors: ["#impactConfigEnvironmentCard"] },
@@ -23,7 +24,7 @@
   const nodes = new Map();
 
   function nodeMetaText(meta) {
-    const aliases = { interface: "ui locale language english 中文 english auto 语言 切换", content: "config file toml data 路径", runtime: "node go npm chrome bridge",
+    const aliases = { interface: "ui locale language english 中文 english auto 语言 切换", content: "config file toml data 路径", mcp: "MCP ChatGPT tunnel client 连接 本地 AI", runtime: "node go npm chrome bridge",
       platforms: "文章 分发 平台 publish footer canonical tracking", social: "社交 动态 buffer linkedin x twitter bluesky api key 渠道 账号",
       assets: "mermaid png r2 图片",
       index: "baidu bing google sitemap indexnow 索引", about: "about version extension bridge 扩展 版本" };
@@ -60,6 +61,7 @@
         selected = meta.id;
         search.value = "";
         render();
+        if (selected === "mcp") root.BlogCTLMCPConnection?.refresh();
       });
       list.append(row);
     }

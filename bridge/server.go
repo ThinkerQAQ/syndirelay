@@ -303,6 +303,14 @@ func (s *Server) serveHTTP(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
+	if request.URL.Path == "/v1/mcp-connection" {
+		if request.Header.Get("x-thinkerqaq-token") != s.token {
+			writeAPIError(response, http.StatusUnauthorized, "unauthorized", "invalid bridge token", nil)
+			return
+		}
+		s.handleMCPConnection(response, request)
+		return
+	}
 	if request.URL.Path == "/v1/mcp/images/upload" {
 		if request.Header.Get("x-thinkerqaq-token") != s.token {
 			writeAPIError(response, http.StatusUnauthorized, "unauthorized", "invalid bridge token", nil)
