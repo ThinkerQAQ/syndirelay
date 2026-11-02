@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -144,13 +145,60 @@ func renderFooter(config PlatformConfig, canonical, title string, policy ...blog
 	// second "Original article" link after the copyright is redundant.
 	// Keep the two paragraphs in one Markdown blockquote so DEV.to and
 	// other Markdown renderers do not split the footer into separate callouts.
-	licensed := strings.TrimSpace(copy.Syndication)
+	licensed := normalizeFooterPolicyLinks(strings.TrimSpace(copy.Syndication), config.Language)
 	first := strings.TrimSpace(v)
 	if strings.HasPrefix(first, "> ") {
 		return first + "\n>\n> " + strings.ReplaceAll(licensed, "\n", "\n> ")
 	}
 	return first + "\n\n" + licensed
 }
+
+// Normalize bare policy URLs before platform adaptation. Most platform
+// Markdown parsers will otherwise autolink the URL and sometimes swallow the
+// following Chinese text. This changes markup, never the policy itself.
+// A named CC license becomes the link label, not a redundant second link.
+var namedCCLicenseURL = regexp.MustCompile(`(?i)(CC[[:space:]]+BY[-A-Z0-9.]+[[:space:]]+[0-9]+(?:\.[0-9]+)?)[[:space:]]*[（(](https://[^\s）)]+)[）)]`)
+var parenthesizedPolicyURL = regexp.MustCompile(`([（(])(https://[^\s）)]+)([）)])`)
+
+func normalizeFooterPolicyLinks(policy, language string) string {
+	policy = namedCCLicenseURL.ReplaceAllString(policy, `[$1]($2)`)
+	label := "许可协议"
+	if language == "en" {
+		label = "License"
+	}
+	// Work against the entire string, not an isolated fragment, so the URL
+	// inside an existing [label](url) is never converted a second time.
+	matches := parenthesizedPolicyURL.FindAllStringSubmatchIndex(policy, -1)
+	for i := len(matches) - 1; i >= 0; i-- {
+		m := matches[i]
+		if m[0] > 0 && policy[m[0]-1] == ']' {
+			continue
+		}
+		url := policy[m[4]:m[5]]
+		replacement := policy[m[2]:m[3]] + "[" + label + "](" + url + ")" + policy[m[6]:m[7]]
+		policy = policy[:m[0]] + replacement + policy[m[1]:]
+	}
+	return policy
+}
+
+// CNBlogs and CSDN use compact callout styling for blockquotes. They still
+// receive the exact same Markdown attribution and license links; only the
+// outer blockquote layout is replaced with two ordinary paragraphs.
+func readableEditorFooter(footer string) string {
+	if strings.TrimSpace(footer) == "" {
+		return ""
+	}
+	var lines []string
+	for _, line := range strings.Split(strings.TrimSpace(footer), "\n") {
+		line = strings.TrimSpace(line)
+		if line == ">" {
+			continue
+		}
+		lines = append(lines, strings.TrimSpace(strings.TrimPrefix(line, "> ")))
+	}
+	return strings.Join(lines, "\n\n")
+}
+
 func normalizeDevtoTags(tags []string) []string {
 	var result []string
 	seen := map[string]struct{}{}
@@ -297,6 +345,9 @@ func compileOne(ctx context.Context, o CompileOptions, profile PlatformConfig, s
 	}
 	body = strings.TrimSpace(body)
 	footer := renderFooter(profile, canonical, article.Title, policy)
+	if o.Platform == "cnblogs" || o.Platform == "csdn" {
+		footer = readableEditorFooter(footer)
+	}
 	var compiled CompiledArticle
 	var hashSource string
 	if o.Platform == "devto" || o.Platform == "hashnode" {

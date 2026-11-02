@@ -6,7 +6,7 @@ import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
 import { collectBrowserSessionCookieBatches, cookieHeaderFromRequest, cookieQueryDiagnostic, selectBrowserSessionCookies } from "./session.js";
 import { toError } from "./errors.js";
-import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab } from "./medium-upload.js";
+import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab, retryMediumTabOperation } from "./medium-upload.js";
 import { insertMediumImageInPage, verifyMediumDraftInPage, validMediumEditorTask } from "./medium-insert.js";
 
 const NATIVE_HOST = "com.thinkerqaq.syndirelay";
@@ -1730,19 +1730,19 @@ async function processMediumUpload(task) {
       }
       throw new Error("Medium draft autosave verification failed: " + lastError);
     }
-    const rows = await chrome.scripting.executeScript({
+    const rows = await retryMediumTabOperation(() => chrome.scripting.executeScript({
       target: { tabId }, world: "MAIN", func: insertMediumImageInPage,
       args: [task.base64, task.mimeType, task.filename, task.draftId, task.marker],
-    });
+    }));
     return rows?.[0]?.result ?? { error: "Medium editor returned no image insertion result" };
   }
   if (!validMediumUploadTask(task)) throw new Error("Invalid Medium browser upload task");
   const tabId = await findMediumEditorTab(task.draftId);
-  const results = await chrome.scripting.executeScript({
+  const results = await retryMediumTabOperation(() => chrome.scripting.executeScript({
     target: { tabId }, world: "MAIN",
     func: uploadMediumInPage,
     args: [task.base64, task.mimeType, task.filename, task.draftId],
-  });
+  }));
   const response = results?.[0]?.result;
   if (!response || typeof response !== "object") {
     throw new Error("Medium page did not return an upload result");

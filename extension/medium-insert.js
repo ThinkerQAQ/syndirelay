@@ -37,8 +37,28 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
       !/^image\/(?:png|jpeg|gif|webp)$/.test(mimeType)) {
     return fail("Medium editor image task failed validation");
   }
+  // executeScript serializes ONLY this function, not imported module helpers.
+  // Keep every dependency used in MAIN world inside the injected function.
+  const nativeMediumImage = (img) => {
+    if (!img?.complete || !(img.naturalWidth > 0)) return false;
+    const url = img.currentSrc || img.src;
+    if (typeof url !== "string") return false;
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" &&
+        (/^cdn-images(?:-\d+)?\.medium\.com$/.test(parsed.hostname) ||
+         parsed.hostname === "miro.medium.com" || parsed.hostname === "images.medium.com");
+    } catch { return false; }
+  };
+  const imagesFrom = (element) => element
+    ? [...new Set([...element.querySelectorAll("figure img,article img,img")])] : [];
+  const hasNewImage = (previous, images) => {
+    const known = new Set(previous);
+    return images.length > previous.length &&
+      images.some(img => !known.has(img) && nativeMediumImage(img));
+  };
   const editor = () => document.querySelector('.postArticle-content[contenteditable="true"]');
-  const imagesInEditor = () => mediumEditorImages(editor());
+  const imagesInEditor = () => imagesFrom(editor());
   const imageCount = () => imagesInEditor().length;
   const matches = () => {
     const all = [...document.querySelectorAll("p,div,span,h1,h2,h3,h4")].filter((el) =>
@@ -89,7 +109,7 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
     const beforeNext = next
       ? pictures.filter(img => Boolean(img.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING))
       : pictures;
-    return beforeNext.length >= markerNumber && beforeNext.every(loadedNativeMediumImage);
+    return beforeNext.length >= markerNumber && beforeNext.every(nativeMediumImage);
   };
   try {
     if (conflictingEdit()) return fail("Medium rejected autosave due to concurrent edits; inspect the draft before retrying");
@@ -150,12 +170,12 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
         return fail("Medium rejected autosave due to concurrent edits");
       }
       const images = imagesInEditor();
-      uploaded = hasNewLoadedMediumImage(beforeImages, images);
+      uploaded = hasNewImage(beforeImages, images);
       if (uploaded && Date.now()-settledAt >= 1100) break;
     }
     if (!uploaded) {
       const images = imagesInEditor();
-      const native = images.filter(loadedNativeMediumImage).length;
+      const native = images.filter(nativeMediumImage).length;
       return fail("Medium did not confirm a loaded native CDN image at " + marker +
         " (editor images " + images.length + ", loaded Medium images " + native +
         ", marker preserved for retry " + (matches().length > 0) + ")");
@@ -185,6 +205,16 @@ export function verifyMediumDraftInPage(expectedDraftID, expectedImages) {
       location.pathname !== "/p/" + expectedDraftID + "/edit") {
     return { error: "Browser verification is not on the expected Medium draft" };
   }
+  // Chrome MAIN-world injection has no access to module-scope helpers.
+  const nativeMediumImage = img => {
+    if (!img?.complete || !(img.naturalWidth > 0)) return false;
+    try {
+      const parsed = new URL(img.currentSrc || img.src);
+      return parsed.protocol === "https:" &&
+        (/^cdn-images(?:-\d+)?\.medium\.com$/.test(parsed.hostname) ||
+         parsed.hostname === "miro.medium.com" || parsed.hostname === "images.medium.com");
+    } catch { return false; }
+  };
   const root = document.querySelector('.postArticle-content[contenteditable="true"]');
   if (!root) return { error: "Medium draft editor has not loaded" };
   if (/Saving failed because someone is also editing|Reload to see their changes/i
@@ -193,7 +223,7 @@ export function verifyMediumDraftInPage(expectedDraftID, expectedImages) {
   }
   const markers = [...root.querySelectorAll("p")].filter(el =>
     /^\[BLOGCTL_IMAGE_\d{3}\]$/.test(el.textContent?.trim() || ""));
-  const pictures = mediumEditorImages(root);
+  const pictures = [...new Set([...root.querySelectorAll("figure img,article img,img")])];
   if (markers.length) {
     return { error: markers.length + " image placeholders remain in Medium draft" };
   }
@@ -201,7 +231,7 @@ export function verifyMediumDraftInPage(expectedDraftID, expectedImages) {
     return { error: "Medium editor has " + pictures.length +
       " images; expected " + expectedImages };
   }
-  if (pictures.some(img => !loadedNativeMediumImage(img))) {
+  if (pictures.some(img => !nativeMediumImage(img))) {
     return { error: "Medium image uploads have not all resolved to native CDN images" };
   }
   const status = document.querySelector(".js-metabarMessage");

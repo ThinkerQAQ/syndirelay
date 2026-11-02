@@ -214,3 +214,69 @@ func TestCopyrightPlainParagraphForUnquotedTemplate(t *testing.T) {
 		t.Fatal(v)
 	}
 }
+
+func TestCnblogsAndCSDNFooterUsesReadableParagraphsAndBoundedLicenseLink(t *testing.T) {
+	for _, lang := range []string{"zh-CN", "en"} {
+		profile := defaultPlatformConfig("cnblogs")
+		profile.Language = lang
+		original := renderFooter(profile, "https://example.org/articles/test/", "Article",
+			blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：允许非商业转载与改编；商业使用需另行授权。"})
+		got := readableEditorFooter(original)
+		if strings.Contains(got, "\n>") || strings.HasPrefix(got, ">") {
+			t.Fatalf("unexpected blockquote: %s", got)
+		}
+		if !strings.Contains(got, "\n\n© Author.") {
+			t.Fatalf("copyright not separated: %s", got)
+		}
+		if !strings.Contains(got, "[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)") {
+			t.Fatalf("license not linked: %s", got)
+		}
+		if strings.Contains(got, "（https://creativecommons.org") {
+			t.Fatalf("bare URL remains: %s", got)
+		}
+		if !strings.Contains(got, "商业使用需另行授权") {
+			t.Fatalf("license text changed: %s", got)
+		}
+		if strings.Count(got, "https://example.org/articles/test/") != 1 {
+			t.Fatalf("duplicate canonical URL: %s", got)
+		}
+	}
+}
+
+func TestPolicyLicenseLinksAreMarkdownOnEveryPlatform(t *testing.T) {
+	for _, platform := range blogpublishing.PlatformIDs() {
+		for _, language := range []string{"zh-CN", "en"} {
+			profile := defaultPlatformConfig(platform)
+			profile.Language = language
+			policy := blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：允许非商业转载与改编；商业使用需另行授权。"}
+			rendered := renderFooter(profile, "https://example.org/articles/example/", "Example", policy)
+			if profile.Footer.Enabled && !strings.Contains(rendered, "[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)") {
+				t.Fatalf("%s/%s: license not formal Markdown link: %s", platform, language, rendered)
+			}
+			if strings.Contains(rendered, "（https://creativecommons.org") {
+				t.Fatalf("%s/%s: bare license URL: %s", platform, language, rendered)
+			}
+			if strings.Contains(rendered, "[原文](") || strings.Contains(rendered, "[Original article](") {
+				t.Fatalf("%s/%s: duplicate source link", platform, language)
+			}
+		}
+	}
+}
+
+func TestPolicyLicenseNormalizationIsIdempotentAndRespectsCustomContent(t *testing.T) {
+	cases := []struct{ policy, expected string }{
+		{"采用 CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：授权", "采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)：授权"},
+		{"See CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en).", "See [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)."},
+		{"自定义协议（https://example.org/license）：仅供查阅。", "自定义协议（[许可协议](https://example.org/license)）：仅供查阅。"},
+		{"Already [MIT](https://opensource.org/licenses/MIT) licensed.", "Already [MIT](https://opensource.org/licenses/MIT) licensed."},
+	}
+	for _, tc := range cases {
+		got := normalizeFooterPolicyLinks(tc.policy, "zh-CN")
+		if got != tc.expected {
+			t.Fatalf("want %q got %q", tc.expected, got)
+		}
+		if normalizeFooterPolicyLinks(got, "zh-CN") != got {
+			t.Fatalf("not idempotent: %s", got)
+		}
+	}
+}
