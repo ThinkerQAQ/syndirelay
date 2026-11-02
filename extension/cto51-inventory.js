@@ -1,62 +1,71 @@
-// Browser-owned 51CTO inventory reader. Executed in an existing authenticated
-// first-party tab, without copying cookies or emulating a browser TLS profile.
-// IMPORTANT: This function must be self-contained for chrome.scripting.executeScript.
+// Read the real signed-in 51CTO draft manager DOM. The legacy
+// /creative-center-ajax/list endpoint may return an HTML page instead of JSON.
+// This function must be self-contained for chrome.scripting.executeScript.
 export async function read51CTOInventoryInPage() {
-  if (location.origin !== "https://blog.51cto.com") {
-    throw new Error("51CTO inventory requires a signed-in blog.51cto.com tab");
+  if (location.origin !== "https://blog.51cto.com" ||
+      location.pathname !== "/creative-center/draft") {
+    throw new Error("51CTO inventory requires the authenticated draft manager");
   }
-  const url = "https://blog.51cto.com/creative-center-ajax/list";
-  const items = [];
-  const seen = new Set();
-  for (const [type, published] of [[4, false], [2, true]]) {
-    for (let page = 1; page <= 50; page++) {
-      const payload = { type, blog_type: 0, year: "", month: "", ccid: "", flag: false, level: "" };
-      if (page > 1) payload.page = page;
-      const body = new URLSearchParams({ data: JSON.stringify(payload) });
-      const response = await fetch(url, {
-        method: "POST",
-        credentials: "same-origin",
-        redirect: "follow",
-        headers: {
-          "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "accept": "*/*",
-          "x-requested-with": "XMLHttpRequest",
-        },
-        body,
-        signal: AbortSignal.timeout(15000),
+
+  const extract = () => {
+    const seen = new Set();
+    const items = [];
+    for (const link of document.querySelectorAll('a[href*="/blogger/draft/"]')) {
+      let parsed;
+      try {
+        parsed = new URL(link.getAttribute("href") || "", location.origin);
+      } catch {
+        continue;
+      }
+      if (parsed.origin !== location.origin || parsed.search || parsed.hash ||
+          parsed.username || parsed.password) continue;
+      const match = /^\/blogger\/draft\/([0-9]{1,20})$/.exec(parsed.pathname);
+      if (!match || seen.has(match[1])) continue;
+      const title = String(link.textContent || "").replace(/\s+/g, " ").trim();
+      if (!title || title === "编辑") continue;
+      seen.add(match[1]);
+      items.push({
+        id: match[1],
+        title,
+        published: false,
+        url: `https://blog.51cto.com/blogger/draft/${match[1]}`,
       });
-      if (!response.ok) throw new Error(`51CTO ${published ? "published" : "draft"} list HTTP ${response.status}`);
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.toLowerCase().includes("json")) {
-        throw new Error("51CTO returned an unexpected page instead of the article list");
-      }
-      const decoded = await response.json();
-      if (decoded?.status !== 1 || !Array.isArray(decoded?.data?.list)) {
-        throw new Error("51CTO article list schema is no longer supported");
-      }
-      let added = 0;
-      for (const item of decoded.data.list) {
-        const id = String(item.blog_id ?? "").trim();
-        const title = String(item.title || "").trim();
-        if (!/^\d{1,24}$/.test(id) || !title) continue;
-        const key = `${published ? "published" : "draft"}:${id}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        added++;
-        const candidate = published ? String(item.blog_url || "") : String(item.edit_url || "");
-        let targetURL = published ? "" : `https://blog.51cto.com/blogger/draft/${id}`;
-        if (candidate) {
-          try {
-            const parsed = new URL(candidate, location.origin);
-            if (parsed.protocol === "https:" && parsed.hostname === "blog.51cto.com" && !parsed.username && !parsed.password) {
-              targetURL = parsed.href;
-            }
-          } catch { /* Ignore invalid remote link; no arbitrary navigation. */ }
-        }
-        items.push({ id, title, published, url: targetURL });
-      }
-      if (decoded.data.list.length === 0 || added === 0 || !String(decoded.data.pagination || "").trim()) break;
     }
+    return items;
+  };
+
+  // The 51CTO page may hydrate after the browser reports tab.status=complete.
+  let items = [];
+  for (let attempt = 0; attempt < 30; attempt++) {
+    items = extract();
+    if (items.length) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  return { platform: "51cto", account: "", items, partial: "" };
+  const body = String(document.body?.innerText || "");
+  if (!body.includes("草稿箱") || !body.includes("草稿管理")) {
+    throw new Error("51CTO draft manager is not authenticated or its layout changed");
+  }
+  if (items.length === 0 && !/草稿箱\s*\(?\s*0\s*\)?/.test(body)) {
+    throw new Error("51CTO draft manager did not expose any draft links");
+  }
+  return {
+    platform: "51cto",
+    account: "",
+    items,
+    partial: "实时读取了 51CTO 草稿；已发布文章列表暂未核验。",
+  };
+}
+
+// Match a local article only to verified draft titles from the browser page.
+// Do not accept arbitrary remote IDs or fuzzy/substring matches.
+export function match51CTODraftTitles(items, localTitle) {
+  const normalized = (value) => String(value || "").trim().replace(/\s+/g, " ");
+  const title = normalized(localTitle);
+  if (!title) return [];
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    if (item?.published || !/^[0-9]{1,20}$/.test(String(item?.id || ""))) return false;
+    const remote = normalized(item?.title);
+    if (remote === title) return true;
+    return [" · ", " - ", " — "].some((separator) => remote.startsWith(title + separator));
+  });
 }

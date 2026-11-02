@@ -1,6 +1,6 @@
 import { performToutiaoBrowserRequest } from "./toutiao-request.js";
 import { activeBrowserJobPumps } from "./browser-job-pumps.js";
-import { read51CTOInventoryInPage } from "./cto51-inventory.js";
+import { read51CTOInventoryInPage, match51CTODraftTitles } from "./cto51-inventory.js";
 import { prepareMediumReplacement, verifyMediumDocument } from "./medium-document.js";
 import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
@@ -981,8 +981,8 @@ async function read51CTOInventoryFromBrowser() {
   let created = false;
   try {
     const tabs = await chrome.tabs.query({ url: "https://blog.51cto.com/*" });
-    tab = tabs.find((item) => item.status === "complete" && item.url?.startsWith("https://blog.51cto.com/creative-center/"))
-      || tabs.find((item) => item.status === "complete") || null;
+    tab = tabs.find((item) => item.status === "complete" &&
+      /^https:\/\/blog\.51cto\.com\/creative-center\/draft(?:[?#]|$)/.test(item.url || "")) || null;
     if (!tab) {
       tab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
       created = true;
@@ -1214,22 +1214,23 @@ async function handleMessage(message) {
         } };
       }
       if (platform === "51cto") {
-        await syncPlatformSession("51cto");
-        const result = await fetchJSON(`/v1/51cto/articles/list?article=${article}`, { method: "POST" });
-        const candidates = result.candidates ?? [];
+        // The legacy Bridge AJAX list now returns HTML. Read the actual
+        // authenticated draft-management DOM in the user's Edge profile.
+        const [result, local] = await Promise.all([
+          read51CTOInventoryFromBrowser(),
+          fetchJSON("/v1/articles"),
+        ]);
+        const localArticle = (local?.articles ?? []).find(
+          (item) => item.slug === String(message.article || ""),
+        );
+        if (!localArticle?.title) throw new Error("51CTO local article title is unavailable");
+        const candidates = match51CTODraftTitles(result.items, localArticle.title);
         return { ok: true, match: {
-          text: result.partial || (candidates.length
-            ? `从 51CTO 草稿列表和已发布文章列表本地匹配到 ${candidates.length} 条候选。`
-            : "已读取 51CTO 草稿列表和已发布文章列表，本地未匹配到同名文章。"),
-          items: candidates.map((post) => ({
-            title: post.title,
-            id: post.id,
-            published: post.published,
-            url: post.url || "",
-            bound: Boolean(post.bound),
-            bindingState: post.bindingState || "",
-          })),
-          bindings: result.bindings ?? [],
+          text: candidates.length
+            ? `已从 51CTO 登录页面实时匹配到 ${candidates.length} 篇草稿；已发布文章暂未核验。`
+            : "已检查 51CTO 登录页面的草稿，未找到同名文章；已发布文章暂未核验。",
+          items: candidates,
+          bindings: [],
         } };
       }
       if (platform === "medium") {

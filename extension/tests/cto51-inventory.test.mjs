@@ -1,58 +1,58 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { read51CTOInventoryInPage } from '../cto51-inventory.js';
+import test from "node:test";
+import assert from "node:assert/strict";
+import { read51CTOInventoryInPage, match51CTODraftTitles } from "../cto51-inventory.js";
 
-async function withinPage(fakeFetch, action, origin = 'https://blog.51cto.com') {
-  const originalFetch = globalThis.fetch;
-  const originalLocation = globalThis.location;
-  try {
-    globalThis.location = { origin };
-    globalThis.fetch = fakeFetch;
-    return await action();
-  } finally {
-    if (originalLocation === undefined) delete globalThis.location;
-    else globalThis.location = originalLocation;
-    globalThis.fetch = originalFetch;
-  }
-}
-
-test('read-only 51CTO inventory uses exactly the first-party endpoint for drafts and published', async () => {
-  const calls = [];
-  const fakeFetch = async (url, init) => {
-    calls.push({ url, method: init.method, credentials: init.credentials, data: JSON.parse(init.body.get('data')) });
-    const published = calls.length === 2;
-    return {
-      ok: true, headers: new Headers({ 'content-type': 'application/json;charset=utf-8' }),
-      json: async () => ({ status: 1, data: { list: [{ blog_id: published ? 20 : 10, title: published ? 'Published' : 'Draft', blog_url: '/u_1/20' }], pagination: '' } }),
-    };
+test("51CTO reads actual signed-in draft links and ignores unsafe or duplicate links", async (t) => {
+  const prevLocation = globalThis.location;
+  const prevDocument = globalThis.document;
+  t.after(() => {
+    globalThis.location = prevLocation;
+    globalThis.document = prevDocument;
+  });
+  globalThis.location = {
+    origin: "https://blog.51cto.com",
+    pathname: "/creative-center/draft",
   };
-  const result = await withinPage(fakeFetch, () => read51CTOInventoryInPage());
-  assert.deepEqual(result.items.map((x) => [x.id, x.published]), [['10', false], ['20', true]]);
-  assert.deepEqual(calls.map((x) => x.data.type), [4, 2]);
-  for (const call of calls) {
-    assert.equal(call.url, 'https://blog.51cto.com/creative-center-ajax/list');
-    assert.equal(call.method, 'POST');
-    assert.equal(call.credentials, 'same-origin');
-  }
-});
-
-test('rejects a wrong origin without issuing any request', async () => {
-  await assert.rejects(withinPage(() => { throw new Error('should not fetch'); }, read51CTOInventoryInPage, 'https://example.org'), /first-party|signed-in/);
-});
-
-test('fails safely on HTML response; never tries to interpret login or challenge HTML as JSON', async () => {
-  const mock = async () => ({ ok: true, headers: new Headers({ 'content-type': 'text/html' }) });
-  await assert.rejects(withinPage(mock, read51CTOInventoryInPage), /unexpected page/);
-});
-
-test('forbids off-platform edit URLs', async () => {
-  let call = 0;
-  const mock = async () => {
-    call++;
-    return { ok: true, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({
-      status: 1, data: { list: call === 1 ? [{ blog_id: 8, title: 'x', edit_url: 'https://evil.invalid/private' }] : [], pagination: '' },
-    }) };
+  const entries = [
+    ["/blogger/draft/2108123", "SyndiRelay 端到端草稿测试 2026-11-02（请勿发布）"],
+    ["https://blog.51cto.com/blogger/draft/2108123", "编辑"],
+    ["/blogger/draft/2108110", "杭州这一年"],
+    ["https://other.example/blogger/draft/40", "攻击者"],
+    ["/blogger/draft/111?delete=1", "不安全"],
+    ["/blogger/publish/99", "非草稿"],
+  ];
+  globalThis.document = {
+    body: { innerText: "草稿管理 草稿箱 (7)" },
+    querySelectorAll: () => entries.map(([href, text]) => ({
+      getAttribute: () => href,
+      textContent: text,
+    })),
   };
-  const result = await withinPage(mock, read51CTOInventoryInPage);
-  assert.equal(result.items[0].url, 'https://blog.51cto.com/blogger/draft/8');
+  const inventory = await read51CTOInventoryInPage();
+  assert.deepEqual(inventory.items.map((item) => item.id), ["2108123", "2108110"]);
+  assert.equal(inventory.items[0].published, false);
+  assert.equal(inventory.items[0].url, "https://blog.51cto.com/blogger/draft/2108123");
+  assert.equal(inventory.platform, "51cto");
+  assert.match(inventory.partial, /已发布文章列表/);
+});
+
+test("51CTO title association uses exact or known author-suffix matches only", () => {
+  const items = [
+    { id: "2108123", title: "SyndiRelay 端到端草稿测试 2026-11-02（请勿发布）", published: false },
+    { id: "2108124", title: "SyndiRelay 端到端草稿测试 2026-11-02（请勿发布） · ThinkerQAQ", published: false },
+    { id: "2108125", title: "SyndiRelay 端到端草稿测试 2026-11-01（请勿发布）", published: false },
+    { id: "2108126", title: "SyndiRelay 端到端草稿测试 2026-11-02（请勿发布）", published: true },
+    { id: "../666", title: "SyndiRelay 端到端草稿测试 2026-11-02（请勿发布）", published: false },
+  ];
+  const matches = match51CTODraftTitles(items, " SyndiRelay 端到端草稿测试 2026-11-02（请勿发布） ");
+  assert.deepEqual(matches.map((item) => item.id), ["2108123", "2108124"]);
+  assert.deepEqual(match51CTODraftTitles(items, "unrelated"), []);
+  assert.deepEqual(match51CTODraftTitles(items, ""), []);
+});
+
+test("51CTO DOM reader refuses unrelated pages", async (t) => {
+  const oldLocation = globalThis.location;
+  t.after(() => { globalThis.location = oldLocation; });
+  globalThis.location = { origin: "https://blog.51cto.com", pathname: "/blogger/publish" };
+  await assert.rejects(read51CTOInventoryInPage(), /authenticated draft manager/);
 });
