@@ -386,3 +386,23 @@ func TestBufferAPIKeyPersistsAndNeverLeaks(t *testing.T) {
 	}
 	t.Fatal("Buffer API tool not registered")
 }
+
+func TestInstallationRootPortableLayouts(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "bin"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "package.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got := InstallationRoot(filepath.Join(root, "bin", "syndirelay.exe")); got != root {
+		t.Fatalf("bundled executable root: %q", got)
+	}
+	if got := InstallationRoot(filepath.Join(root, "syndirelay.exe")); got != root {
+		t.Fatalf("portable single executable root: %q", got)
+	}
+	standalone := t.TempDir()
+	if got := InstallationRoot(filepath.Join(standalone, "bin", "syndirelay.exe")); got != filepath.Join(standalone, "bin") {
+		t.Fatalf("unbundled bin dir should not assume root: %q", got)
+	}
+}

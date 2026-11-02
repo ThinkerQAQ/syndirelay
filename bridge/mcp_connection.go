@@ -200,7 +200,7 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "installation unavailable", http.StatusInternalServerError)
 				return
 			}
-			root := filepath.Dir(filepath.Dir(exe))
+			root := InstallationRoot(exe)
 			cmd, err := mcpCommand(runtime.GOOS, root, in.Action, in.TunnelID)
 			if err != nil {
 				http.Error(w, "invalid action, missing setup script or local terminal", 400)

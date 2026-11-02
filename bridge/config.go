@@ -143,13 +143,26 @@ func ResolvedSearchRuntimeConfig() (SearchRuntimeConfig, error) {
 	}, nil
 }
 
+// InstallationRoot supports portable executables in either root/ or root/bin/.
+// Both layouts keep mutable data outside the bin directory.
+func InstallationRoot(executable string) string {
+	directory := filepath.Dir(executable)
+	if strings.EqualFold(filepath.Base(directory), "bin") {
+		root := filepath.Dir(directory)
+		if info, err := os.Stat(filepath.Join(root, "package.json")); err == nil && info.Mode().IsRegular() {
+			return root
+		}
+	}
+	return directory
+}
+
 func defaultConfigDir() (string, error) {
 	if runtime.GOOS == "windows" {
 		executable, err := os.Executable()
 		if err != nil {
 			return "", err
 		}
-		return filepath.Join(filepath.Dir(executable), "Data"), nil
+		return filepath.Join(InstallationRoot(executable), "Data"), nil
 	}
 	dir, err := os.UserConfigDir()
 	if err != nil {
