@@ -231,12 +231,16 @@ func (a app) runSearchSubmit(args []string) error {
 	if err != nil {
 		return err
 	}
-	publicRoot, err := searchOption(args, "--public", "public")
+	// --public remains an explicit local verification option for legacy site-build CI.
+	// Standalone submissions validate the published Key Location instead.
+	publicRoot, err := searchOption(args, "--public", "")
 	if err != nil {
 		return err
 	}
 	distRoot = filepath.Join(a.root, distRoot)
-	publicRoot = filepath.Join(a.root, publicRoot)
+	if publicRoot != "" {
+		publicRoot = filepath.Join(a.root, publicRoot)
+	}
 
 	needsURLs := containsString(providers, "indexnow") || containsString(providers, "baidu")
 	var urls []string
@@ -261,10 +265,15 @@ func (a app) runSearchSubmit(args []string) error {
 			strings.TrimSpace(localConfig.IndexNowEndpoint),
 			strings.TrimSpace(localConfig.IndexNowKey),
 			strings.TrimSpace(localConfig.IndexNowKeyLocation),
-			true,
+			publicRoot != "",
 		)
 		if err != nil {
 			return err
+		}
+		if publicRoot == "" {
+			if err := blogsearch.CheckIndexNowKey(ctx, client, config); err != nil {
+				return err
+			}
 		}
 		result, err := blogsearch.SubmitIndexNow(ctx, client, urls, config)
 		if err != nil {
@@ -513,7 +522,6 @@ func (a app) runSearchNotify(args []string) error {
 		"--urls-file", name,
 		"--site-url", siteURL,
 		"--optional-google",
-		"--public", "public",
 	}
 	serviceAccountFile, err := searchOption(args, "--google-service-account-file", "")
 	if err != nil {

@@ -366,15 +366,15 @@ func indexNowEndpoint(config bridgeConfig) string {
 }
 
 func indexNowKey(config bridgeConfig) string {
-	if configured := strings.TrimSpace(config.IndexNowKey); configured != "" {
-		return configured
-	}
-	return blogsearch.DefaultIndexNowKey
+	return strings.TrimSpace(config.IndexNowKey)
 }
 
 func indexNowKeyLocation(config bridgeConfig) string {
 	if configured := strings.TrimSpace(config.IndexNowKeyLocation); configured != "" {
 		return configured
+	}
+	if indexNowKey(config) == "" {
+		return ""
 	}
 	return config.Search.Origin + "/" + indexNowKey(config) + ".txt"
 }
@@ -500,13 +500,13 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Name: "content-workspace", DisplayName: "Content Repository", Kind: "runtime", Required: true,
 			Description: "Articles / Notes / Series / Projects 的 canonical source。",
 			Health:      workspaceHealth(config.ContentRoot, "content"),
-			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"contentRoot": config.ContentRoot}, Schema: []toolField{{Key: "contentRoot", Label: "Content Repository", Type: "directory", Description: "例如 C:\\Users\\zsk\\code\\blog\\blog-content"}}, DefaultExpanded: true},
+			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"contentRoot": config.ContentRoot}, Schema: []toolField{{Key: "contentRoot", Label: "Content Repository", Type: "directory", Description: "例如 C:\\Projects\\my-content"}}, DefaultExpanded: true},
 		},
 		{
 			Name: "engine-workspace", DisplayName: "SyndiRelay Runtime", Kind: "runtime", Required: true,
 			Description: "SyndiRelay 平台编译器和 Node 渲染器所在目录，不依赖 Astro。",
 			Health:      workspaceHealth(config.EngineRoot, "engine"),
-			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"engineRoot": config.EngineRoot}, Schema: []toolField{{Key: "engineRoot", Label: "SyndiRelay Runtime", Type: "directory", Description: "例如 C:\\software\\Coding\\SyndiRelay"}}, DefaultExpanded: true},
+			Config:      toolConfigView{Scope: "bridge", Values: map[string]any{"engineRoot": config.EngineRoot}, Schema: []toolField{{Key: "engineRoot", Label: "SyndiRelay Runtime", Type: "directory", Description: "例如 C:\\Apps\\SyndiRelay"}}, DefaultExpanded: true},
 		},
 		{
 			Name: "distribution-root", DisplayName: "Distribution", Kind: "runtime", Required: true,
@@ -515,7 +515,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Config: toolConfigView{
 				Scope:           "bridge",
 				Values:          map[string]any{"path": config.DistributionRoot},
-				Schema:          []toolField{{Key: "path", Label: "Distribution Directory", Type: "directory", Description: "默认位于 C:\\software\\Coding\\SyndiRelay\\Data\\distribution"}},
+				Schema:          []toolField{{Key: "path", Label: "Distribution Directory", Type: "directory", Description: "默认位于应用配置目录的 Data/distribution"}},
 				DefaultExpanded: true,
 			},
 		},
@@ -526,7 +526,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Config: toolConfigView{
 				Scope:           "bridge",
 				Values:          map[string]any{"path": config.PublicationBindingsPath},
-				Schema:          pathField("path", "Bindings File", "默认位于 BlogCTL 配置目录，例如 C:\\software\\Coding\\blogctl\\Data\\publications.json"),
+				Schema:          pathField("path", "Bindings File", "默认位于应用配置目录的 Data/publications.json"),
 				DefaultExpanded: true,
 			},
 		},
