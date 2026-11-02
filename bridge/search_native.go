@@ -2,10 +2,7 @@ package bridge
 
 import (
 	"context"
-	"errors"
 	"log/slog"
-	"path/filepath"
-	"strings"
 
 	blogsearch "github.com/ThinkerQAQ/syndirelay/search"
 )
@@ -112,22 +109,21 @@ func (s *Server) submitIndexNow(ctx context.Context, mode string, previous searc
 		Inventory: inventory,
 		Diff:      diffPayload(diff),
 	}
-	if len(diff.Selected) == 0 {
-		return payload, nil
-	}
-	engineRoot := strings.TrimSpace(s.config.EngineRoot)
-	if engineRoot == "" {
-		return indexNowSubmissionPayload{}, errors.New("Public Engine path is not configured")
-	}
 	config, err := blogsearch.ResolveIndexNowConfig(
 		inventory.Origin,
-		filepath.Join(engineRoot, "public"),
+		"", // IndexNow proves ownership through the public URL, not a local build directory.
 		indexNowEndpoint(s.config),
 		indexNowKey(s.config),
 		indexNowKeyLocation(s.config),
-		true,
+		false,
 	)
 	if err != nil {
+		return indexNowSubmissionPayload{}, err
+	}
+	if len(diff.Selected) == 0 {
+		return payload, nil
+	}
+	if err := blogsearch.CheckIndexNowKey(ctx, s.httpClient, config); err != nil {
 		return indexNowSubmissionPayload{}, err
 	}
 	result, err := blogsearch.SubmitIndexNow(ctx, s.httpClient, diff.Selected, config)
@@ -238,13 +234,9 @@ func coreInspectionResult(value blogsearch.GoogleInspectionResult) searchInspect
 }
 
 func (s *Server) checkIndexNowNative(ctx context.Context) (map[string]any, error) {
-	engineRoot := strings.TrimSpace(s.config.EngineRoot)
-	if engineRoot == "" {
-		return nil, errors.New("Public Engine path is not configured")
-	}
 	config, err := blogsearch.ResolveIndexNowConfig(
 		s.searchSite().Origin,
-		filepath.Join(engineRoot, "public"),
+		"",
 		indexNowEndpoint(s.config),
 		indexNowKey(s.config),
 		indexNowKeyLocation(s.config),

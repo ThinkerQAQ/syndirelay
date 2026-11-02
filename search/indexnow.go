@@ -19,7 +19,6 @@ import (
 
 const (
 	DefaultIndexNowEndpoint = "https://www.bing.com/indexnow"
-	DefaultIndexNowKey      = "fb26fca3ba9449c6816b6d79b0a41cec"
 	MaxIndexNowURLs         = 10_000
 )
 
@@ -51,7 +50,7 @@ func ResolveIndexNowConfig(origin, publicRoot, endpoint, key, keyLocation string
 	}
 	key = strings.TrimSpace(key)
 	if key == "" {
-		key = DefaultIndexNowKey
+		return IndexNowConfig{}, errors.New("IndexNow key is not configured")
 	}
 	if !indexNowKeyPattern.MatchString(key) {
 		return IndexNowConfig{}, errors.New("IndexNow key must be 8-128 URL-safe characters")
