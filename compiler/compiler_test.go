@@ -109,7 +109,7 @@ func TestCopyrightFooterWithLegacyCustomTemplate(t *testing.T) {
 		if !strings.Contains(footer, "[Example]") || !strings.Contains(footer, "utm_source=juejin") {
 			t.Fatalf("legacy tracking footer changed: %s", footer)
 		}
-		if !strings.Contains(footer, "© Fixture") || !strings.Contains(footer, original+")") {
+		if !strings.Contains(footer, "© Fixture") || !strings.Contains(footer, ">\n> © Fixture") {
 			t.Fatalf("missing copyright or untracked original link: %s", footer)
 		}
 		if strings.Count(footer, "© Fixture") != 1 {
@@ -132,7 +132,7 @@ func TestContentCopyrightChangesSyndicationFooterWithoutChangingTemplate(t *test
 	if !strings.Contains(footer, "CUSTOM CONTENT COPYRIGHT") || strings.Contains(original, "CUSTOM CONTENT COPYRIGHT") {
 		t.Fatalf("no override: %s", footer)
 	}
-	if !strings.Contains(footer, canonical+")") || !strings.Contains(footer, "utm_source=devto") {
+	if strings.Contains(footer, "[Original article](") || !strings.Contains(footer, "utm_source=devto") {
 		t.Fatalf("lost existing canonical attribution: %s", footer)
 	}
 }
@@ -179,5 +179,38 @@ func TestCompilePlatformReadsContentCopyrightForDevtoAndMedium(t *testing.T) {
 				t.Fatalf("%s did not load content policy", platform)
 			}
 		}
+	}
+}
+
+func TestFooterIsSingleBlockquoteWithoutRedundantOriginalLink(t *testing.T) {
+	for _, platform := range blogpublishing.PlatformIDs() {
+		for _, lang := range []string{"zh-CN", "en"} {
+			profile := defaultPlatformConfig(platform)
+			profile.Language = lang
+			origin := "https://example.org/articles/example/"
+			copyright := blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0", Source: "Original article"}
+			footer := renderFooter(profile, origin, "Example", copyright)
+			if strings.Count(footer, "https://example.org") != 1 {
+				t.Fatalf("%s/%s canonical must occur once: %q", platform, lang, footer)
+			}
+			if strings.Count(footer, "© Author") != 1 {
+				t.Fatalf("%s/%s copyright duplicated", platform, lang)
+			}
+			if !strings.Contains(footer, "\n>\n> © Author") {
+				t.Fatalf("%s/%s separated blockquotes: %q", platform, lang, footer)
+			}
+			if strings.Contains(footer, "[Original article]") || strings.Contains(footer, "[原文]") {
+				t.Fatalf("%s/%s redundant source label", platform, lang)
+			}
+		}
+	}
+}
+
+func TestCopyrightPlainParagraphForUnquotedTemplate(t *testing.T) {
+	p := defaultPlatformConfig("devto")
+	p.Footer.Template = "See [{site}]({url})."
+	v := renderFooter(p, "https://example.org/articles/a/", "Article", blogpublishing.CopyrightText{Syndication: "© Licensed"})
+	if !strings.Contains(v, ".\n\n© Licensed") || strings.Contains(v, "\n> ©") {
+		t.Fatal(v)
 	}
 }

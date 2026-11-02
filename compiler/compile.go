@@ -140,15 +140,16 @@ func renderFooter(config PlatformConfig, canonical, title string, policy ...blog
 	if strings.TrimSpace(copy.Syndication) == "" {
 		return strings.TrimSpace(v)
 	}
-	source := strings.TrimSpace(copy.Source)
-	if source == "" {
-		if config.Language == "en" {
-			source = "Original article"
-		} else {
-			source = "原文"
-		}
+	// The attribution template already links to the canonical article. A
+	// second "Original article" link after the copyright is redundant.
+	// Keep the two paragraphs in one Markdown blockquote so DEV.to and
+	// other Markdown renderers do not split the footer into separate callouts.
+	licensed := strings.TrimSpace(copy.Syndication)
+	first := strings.TrimSpace(v)
+	if strings.HasPrefix(first, "> ") {
+		return first + "\n>\n> " + strings.ReplaceAll(licensed, "\n", "\n> ")
 	}
-	return strings.TrimSpace(v) + "\n\n> " + copy.Syndication + " [" + source + "](" + canonical + ")"
+	return first + "\n\n" + licensed
 }
 func normalizeDevtoTags(tags []string) []string {
 	var result []string

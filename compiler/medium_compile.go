@@ -70,14 +70,14 @@ func mediumFooter(article Article, canonical string, profile PlatformConfig, pol
 	if markdown == "" {
 		return nil
 	}
-	if strings.HasPrefix(markdown, ">") {
-		markdown = strings.TrimPrefix(markdown, ">")
-		if strings.HasPrefix(markdown, " ") {
-			markdown = markdown[1:]
+	parts := make([]string, 0, 2)
+	for _, line := range strings.Split(markdown, "\n") {
+		line = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), ">"))
+		if line != "" {
+			parts = append(parts, line)
 		}
 	}
-	markdown = strings.ReplaceAll(markdown, "\n\n> ", " ")
-	inline := parseMediumInline(strings.TrimSpace(markdown), nil)
+	inline := parseMediumInline(strings.Join(parts, " "), nil)
 	return &inline
 }
 

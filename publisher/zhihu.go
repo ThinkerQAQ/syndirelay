@@ -382,9 +382,13 @@ func (z *zhihuAdapter) updateDraft(ctx context.Context, id string, input DraftIn
 	if err != nil {
 		return err
 	}
+	html, err = normalizeZhihuContents(html)
+	if err != nil {
+		return err
+	}
 	body, _ := json.Marshal(map[string]any{
 		"content":           html,
-		"table_of_contents": false,
+		"table_of_contents": zhihuContentHeading.MatchString(html),
 		"delta_time":        0,
 		"can_reward":        false,
 	})

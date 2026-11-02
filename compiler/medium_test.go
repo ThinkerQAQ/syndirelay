@@ -181,7 +181,7 @@ func TestMediumSectionReferencesUseOriginalArticleInsteadOfBrokenMediumFragments
 func TestMediumCopyrightFooterUsesOneNativeBlockquote(t *testing.T) {
 	profile := defaultPlatformConfig("medium")
 	footer := mediumFooter(Article{Title: "Example"}, "https://thinkerqaq.com/en/articles/example/", profile, blogpublishing.CopyrightText{Syndication: "© Fixture", Source: "Original article"})
-	if footer == nil || !strings.Contains(footer.Text, "© Fixture") || !strings.Contains(footer.Text, "Original article") {
+	if footer == nil || !strings.Contains(footer.Text, "© Fixture") || strings.Contains(footer.Text, "[Original article]") {
 		t.Fatalf("missing copyright notice in Medium native footer: %+v", footer)
 	}
 	if strings.Contains(footer.Text, "> ") {
