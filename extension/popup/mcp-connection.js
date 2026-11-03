@@ -21,7 +21,7 @@
  };
  function message(text,error=false) {
   $('mcpConnectionMessage').textContent=text||'';
-  $('mcpConnectionMessage').className=error?'message error':'message';
+  $('mcpConnectionMessage').className=error?'mcp-message error':'mcp-message';
  }
  function form() {
   const input=$('mcpTunnelID'), key=$('mcpRuntimeKey');
@@ -43,10 +43,27 @@
   else if(s.ready){label='Ready';kind='ok';}
   else if(run){label='正在启动 / 未就绪';kind='checking';}
   else if(s.configured){label='已停止';kind='disabled';}
-  $('mcpConnectionStatus').textContent=label;
-  $('mcpConnectionStatus').className='status '+kind;
+  $('mcpConnectionStatusText').textContent=label;
+  const statusChip=$('mcpConnectionStatus');
+  const chipKind=kind==='ok'?'ready':kind==='checking'?'pending':'idle';
+  if(statusChip.dataset) statusChip.dataset.kind=chipKind;
+  else if(statusChip.setAttribute) statusChip.setAttribute('data-kind',chipKind);
+  $('mcpPluginDescription').textContent=s.restart_required&&run
+    ? '已保存的修改等待重启生效。重启服务后再到 ChatGPT 中管理插件。'
+    : s.ready
+      ? '本地 Tunnel 已就绪。请在 ChatGPT 中创建或管理插件，授权结果以 ChatGPT 为准。'
+      : '先启动本地 Tunnel 并等待就绪，再到 ChatGPT 中创建或管理插件。';
   $('mcpTunnelHint').textContent=s.configured?'已保存；可修改后再次保存':'尚未保存';
-  $('mcpRuntimeHint').textContent=s.runtime_key_saved?'已保存；留空复用':'尚未保存';
+  $('mcpRuntimeHint').textContent=s.runtime_key_saved?'已保存；留空则复用':'尚未保存';
+  const reveal=$('mcpKeyReveal');
+  if(reveal) {
+   reveal.disabled=!$('mcpRuntimeKey').value;
+   if(reveal.disabled) {
+    $('mcpRuntimeKey').type='password';
+    reveal.setAttribute?.('aria-pressed','false');
+    reveal.setAttribute?.('aria-label','显示输入的密钥');
+   }
+  }
  }
  function intendedInput(el,value) {
   if(!el)return;
@@ -165,6 +182,15 @@
   $('mcpConnect').addEventListener('click',()=>action(running(state.status)?'stop':'start'));
   $('mcpRestart').addEventListener('click',()=>action('restart'));
   $('mcpAutoStart')?.addEventListener('change',autoChanged);
+  $('mcpKeyReveal')?.addEventListener('click',()=>{
+   const input=$('mcpRuntimeKey'),reveal=$('mcpKeyReveal');
+   if(!input.value || reveal.disabled)return;
+   const showing=input.type==='password';
+   input.type=showing?'text':'password';
+   reveal.setAttribute('aria-pressed',String(showing));
+   reveal.setAttribute('aria-label',showing?'隐藏输入的密钥':'显示输入的密钥');
+   reveal.title=showing?'隐藏输入的密钥':'显示输入的密钥';
+  });
   $('mcpCopyConfig').addEventListener('click',async()=>{
    try{await navigator.clipboard.writeText(JSON.stringify(state.status.local_config||{},null,2));message('本地配置已复制。');}
    catch(e){message(root.BlogCTLPopup.errorMessage(e),true);}
