@@ -998,13 +998,18 @@ async function read51CTOInventoryFromBrowser() {
     };
     const read = async (tab, func) => {
       await waitForTab(tab);
-      const result = await chrome.scripting.executeScript({
-        target: { tabId: tab.id }, world: "MAIN", func,
-      });
-      if (!Array.isArray(result) || result.length !== 1 || !result[0]?.result) {
-        throw new Error("51CTO browser inventory did not return a result");
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = await chrome.scripting.executeScript({
+          target: { tabId: tab.id }, world: "MAIN", func,
+        });
+        if (Array.isArray(result) && result.length === 1 && result[0]?.result) {
+          return result[0].result;
+        }
+        // A just-initialized background tab may transiently return no
+        // injection result. Re-check only this read, never mutate a draft.
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 300));
       }
-      return result[0].result;
+      throw new Error("51CTO browser inventory did not return a result");
     };
     const drafts = await read(draftTab, read51CTOInventoryInPage);
     // Always use a dedicated background tab for pagination. Never change
