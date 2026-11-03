@@ -27,6 +27,28 @@ type FileCompileOptions struct {
 	Node         string
 }
 
+// standaloneRendererRoot prefers the current checkout, then the portable
+// installation adjacent to the executable. Installed binaries live in bin/,
+// and the compiler must work from an arbitrary shell working directory.
+func standaloneRendererRoot(current, executable string) string {
+	candidates := []string{current}
+	if executable != "" {
+		bin := filepath.Dir(executable)
+		candidates = append(candidates, bin, filepath.Dir(bin))
+	}
+	for _, root := range candidates {
+		if root == "" {
+			continue
+		}
+		if info, err := os.Stat(filepath.Join(root, "renderers", "node", "markdown-html.mjs")); err == nil && info.Mode().IsRegular() {
+			if manifest, err := os.Stat(filepath.Join(root, "package.json")); err == nil && manifest.Mode().IsRegular() {
+				return root
+			}
+		}
+	}
+	return current
+}
+
 var headingPattern = regexp.MustCompile(`(?m)^#\s+(.+?)\s*$`)
 
 func parseGenericMarkdown(text, source string) (Article, error) {
@@ -138,15 +160,17 @@ func CompileFile(ctx context.Context, options FileCompileOptions) (CompiledArtic
 	if assetBase == "" {
 		assetBase = "https://invalid.example/"
 	}
-	root := options.RendererRoot
+	root := strings.TrimSpace(options.RendererRoot)
 	if root == "" {
-		root = os.Getenv("SYNDIRELAY_HOME")
+		root = strings.TrimSpace(os.Getenv("SYNDIRELAY_HOME"))
 	}
 	if root == "" {
-		root, err = os.Getwd()
-		if err != nil {
-			return CompiledArticle{}, err
+		current, cwdErr := os.Getwd()
+		if cwdErr != nil {
+			return CompiledArticle{}, cwdErr
 		}
+		executable, _ := os.Executable()
+		root = standaloneRendererRoot(current, executable)
 	}
 	slug := strings.TrimSuffix(filepath.Base(full), filepath.Ext(full))
 	settings := CompileOptions{EngineRoot: root, Generic: true, CanonicalOverride: options.CanonicalURL,
