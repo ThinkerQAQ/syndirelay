@@ -20,16 +20,25 @@ import (
 // The MCP server is an adapter to the already-running local SyndiRelay Bridge.
 // Credentials remain in the browser Extension and local Bridge, never in tool results.
 type mcpBridgeClient struct {
-	mu    sync.Mutex
-	state bridgeState
-	ready bool
-	http  *http.Client
+	mu            sync.Mutex
+	state         bridgeState
+	ready         bool
+	http          *http.Client
+	stateProvider func() (bridgeState, error) // injectable only for isolated Bridge recovery tests
 }
 
 func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body any) (json.RawMessage, error) {
+	return c.callWithRefresh(ctx, method, path, body, true)
+}
+
+func (c *mcpBridgeClient) callWithRefresh(ctx context.Context, method, path string, body any, retryRead bool) (json.RawMessage, error) {
 	c.mu.Lock()
 	if !c.ready {
-		state, err := ensureBridgeProcess()
+		provider := c.stateProvider
+		if provider == nil {
+			provider = ensureBridgeProcess
+		}
+		state, err := provider()
 		if err != nil {
 			c.mu.Unlock()
 			return nil, err
@@ -79,6 +88,19 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 	}
 	if len(raw) > 4<<20 {
 		return nil, errors.New("SyndiRelay response exceeds 4MiB")
+	}
+	if response.StatusCode == http.StatusUnauthorized {
+		c.mu.Lock()
+		// An older in-flight request must not discard a newer Bridge state.
+		if c.state.Token == state.Token && c.state.BaseURL == state.BaseURL {
+			c.ready = false
+		}
+		c.mu.Unlock()
+		if retryRead && method == http.MethodGet {
+			// The Bridge rejected this read before processing it. Refresh once,
+			// but never automatically replay a mutating operation.
+			return c.callWithRefresh(ctx, method, path, body, false)
+		}
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		var failure struct {
