@@ -95,3 +95,10 @@ func TestIsZeroSHA(t *testing.T) {
 		t.Fatal("non-zero SHA must not be treated as zero")
 	}
 }
+
+func TestDoctorDoesNotRequireSourceCheckout(t *testing.T) {
+	root, content, err := rootsForCommand([]string{"doctor"})
+	if err != nil || root != "" || content != "" {
+		t.Fatalf("doctor unexpectedly requires a source checkout: root=%q content=%q err=%v", root, content, err)
+	}
+}
