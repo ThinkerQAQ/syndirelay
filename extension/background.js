@@ -1038,7 +1038,7 @@ async function handleMessage(message) {
     }
     case "blogctl.mcp.connection.action": {
       const action = String(message.action || "");
-      if (!["install-client", "setup", "save", "start", "stop", "restart"].includes(action)) {
+      if (!["install-client", "save", "start", "stop", "restart", "auto-status", "auto-enable", "auto-disable"].includes(action)) {
         throw new Error("Invalid MCP connection action");
       }
       return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {

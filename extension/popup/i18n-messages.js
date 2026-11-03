@@ -2,6 +2,7 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "开机自启 Tunnel": "Start Tunnel at login",
   "1. 本地 Tunnel 服务": "1. Local Tunnel service",
   "启动服务": "Start Service",
   "重启服务": "Restart Service",

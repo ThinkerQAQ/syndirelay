@@ -178,11 +178,9 @@ Windows 客户端使用原生程序，例如 `"command": "C:\\tools\\syndirelay\
 4. 保存成功后点击「启动服务」。已启动时可停止或重启。顶部状态显示本机 Tunnel 是否就绪。
 5. 在 **2. ChatGPT 插件** 点击链接打开 [ChatGPT 插件设置](https://chatgpt.com/settings/plugins-settings)，创建或启用 SyndiRelay 连接，然后调用 `list_platforms` 验证。
 
-已经保存的 Tunnel ID 会显示在输入框中；Runtime API Key 以星号表示，输入框留空表示复用已保存的密钥。更换 Tunnel ID 或 Runtime API Key 后需再次保存，再重启服务使配置生效。密钥不写入仓库、日志或命令行参数。Windows 使用 DPAPI，Linux/macOS 将凭据存放在受限权限的用户配置目录。
+已经保存的 Tunnel ID 会显示在输入框中；Runtime API Key 以星号表示，输入框留空表示复用已保存的密钥。更换 Tunnel ID 或 Runtime API Key 后需再次保存，再重启服务使配置生效。密钥不写入仓库、日志或命令行参数。Windows 使用 DPAPI，Linux/macOS 将凭据存放在受限权限的用户配置目录。Tunnel 服务由 Go 原生管理，不再通过 PowerShell/Bash 脚本启动；开机自启需要手动开启。
 
 **注意：** Tunnel 健康检查通过，只表示本机已连接控制平面，不等于 ChatGPT 插件已获得授权。标准 STDIO MCP 客户端不需要 Tunnel，参见 4.3 节。
-
-原有的 `connect-chatgpt-mcp.ps1` / `connect-chatgpt-mcp.sh` 命令仍保留，可供手动连接使用。
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) 影响力统计为独立的可选集成，默认关闭。
 
@@ -197,8 +195,6 @@ npm run test:renderers
 npm run test:extension
 go build -o .build/syndirelay ./cmd
 ```
-
-Linux/macOS Tunnel 脚本检查：`bash scripts/connect-chatgpt-mcp.test.sh`。Windows PowerShell：`.\scripts\connect-chatgpt-mcp.windows.test.ps1`。
 
 [GitHub Actions](.github/workflows/ci.yml) 在 Linux、macOS 和 Windows 执行 Go 测试、渲染器与扩展测试、原生构建及 Tunnel 脚本检查。脚本检查使用替身，不连接真实 Tunnel。CI 不验证浏览器安装或真实平台账号发布，这些需要在对应系统手动验收。
 

@@ -178,11 +178,9 @@ Install and open the SyndiRelay browser extension, then navigate to **Settings â
 4. Select **Start Service**. Use Stop or Restart when the service is running. The header status reports local Tunnel readiness.
 5. Under **2. ChatGPT plugin**, open [ChatGPT plugin settings](https://chatgpt.com/settings/plugins-settings), create or enable the SyndiRelay connector, and call `list_platforms` to verify the integration.
 
-The saved Tunnel ID remains visible. The Runtime API Key is masked; leave the field blank to reuse the saved credential. After changing either value, save and restart the service to apply it. Credentials are never written to the repository, logs, or process arguments. Windows uses DPAPI; Linux and macOS keep the key in a private user configuration directory.
+The saved Tunnel ID remains visible. The Runtime API Key is masked; leave the field blank to reuse the saved credential. After changing either value, save and restart the service to apply it. Credentials are never written to the repository, logs, or process arguments. Windows uses DPAPI; Linux and macOS keep the key in a private user configuration directory. SyndiRelay manages the Tunnel lifecycle in Go without PowerShell or Bash service wrappers. Login auto-start is opt-in.
 
 **Note:** A healthy local Tunnel is not proof of ChatGPT plugin authorization. Standard STDIO MCP clients do not need a Tunnel; see section 4.3.
-
-The existing `connect-chatgpt-mcp.ps1` and `connect-chatgpt-mcp.sh` scripts remain available for manual setup.
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is an independent, optional integration, disabled by default.
 
@@ -197,8 +195,6 @@ npm run test:renderers
 npm run test:extension
 go build -o .build/syndirelay ./cmd
 ```
-
-Linux/macOS Tunnel script checks: `bash scripts/connect-chatgpt-mcp.test.sh`. Windows PowerShell: `.\scripts\connect-chatgpt-mcp.windows.test.ps1`.
 
 [GitHub Actions](.github/workflows/ci.yml) runs Go tests, renderer/extension tests, native builds, and Tunnel script checks on Linux, macOS, and Windows. Script checks use stubs; they do not contact a real Tunnel. CI does not verify browser installation or publishing with real platform accounts. Those require native manual testing.
 
