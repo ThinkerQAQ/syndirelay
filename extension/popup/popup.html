@@ -418,31 +418,27 @@
           </div>
         </div>
 
-        <section id="mcpConnectionSettings" class="tool-card mcp-setup">
-          <div class="section-title">MCP 连接</div>
-          <p class="card-hint">使用 ChatGPT 自定义 MCP 连接的 Tunnel ID，关联本机 SyndiRelay。仅本机管理连接。</p>
-          <ol class="mcp-setup-steps">
-            <li><a href="https://chatgpt.com/settings/plugins-settings" target="_blank" rel="noopener noreferrer">在 ChatGPT 中创建自定义 MCP Tunnel</a></li>
-            <li>粘贴 Tunnel ID 并启动本机连接</li>
-            <li>回到 ChatGPT 启用 SyndiRelay</li>
-          </ol>
-          <p id="mcpConnectionStatus" class="card-hint" role="status" aria-live="polite">检查本机连接…</p>
-          <label class="field" id="mcpTunnelField"><span>Tunnel ID</span><input id="mcpTunnelID" type="text" spellcheck="false" autocomplete="off" placeholder="tunnel_…" maxlength="80"></label>
-          <div class="mcp-setup-actions">
-            <button id="mcpConnect" class="primary" type="button">连接 ChatGPT</button>
-            <button id="mcpRefresh" class="secondary" type="button">检查连接</button>
-          </div>
-          <p id="mcpConnectionMessage" class="message" role="alert"></p>
-          <details class="mcp-setup-advanced">
-            <summary>高级选项与本地客户端</summary>
+        <section id="mcpConnectionSettings" class="mcp-setup">
+          <section class="tool-card">
+            <div class="status-row"><strong>1. 本地 Tunnel 服务</strong><strong id="mcpConnectionStatus" class="status checking" role="status">检测中</strong></div>
+            <label class="field"><span>Tunnel ID <a href="https://platform.openai.com/settings/organization/tunnels" target="_blank" rel="noopener noreferrer" title="创建 Tunnel ID">?</a></span>
+              <input id="mcpTunnelID" type="text" spellcheck="false" autocomplete="off" maxlength="80"><small id="mcpTunnelHint"></small></label>
+            <label class="field"><span>Runtime API Key <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" title="创建受限 Runtime API Key">?</a></span>
+              <input id="mcpRuntimeKey" type="password" spellcheck="false" autocomplete="new-password" maxlength="512"><small id="mcpRuntimeHint"></small></label>
             <div class="mcp-setup-actions">
-              <button id="mcpRestart" class="secondary" type="button">重新连接</button>
-              <button id="mcpStop" class="secondary" type="button">断开连接</button>
-            </div>
-            <p class="card-hint">本地 AI 客户端可使用下面的 STDIO JSON 配置，无须 Tunnel。</p>
-            <pre id="mcpLocalConfig" class="mcp-local-config"></pre>
-            <button id="mcpCopyConfig" class="secondary" type="button">复制本地配置</button>
-          </details>
+              <button id="mcpSave" class="primary" type="button">保存配置</button>
+              <button id="mcpConnect" class="primary" type="button" disabled>启动服务</button>
+              <button id="mcpRestart" class="secondary" type="button" disabled>重启服务</button></div>
+            <p id="mcpConnectionMessage" class="message" role="alert"></p>
+          </section>
+          <section class="tool-card">
+            <div class="section-title">2. ChatGPT 插件</div>
+            <p class="card-hint">本机 Tunnel 就绪后，在 ChatGPT 中配置并启用 SyndiRelay 插件。Tunnel 就绪不代表 ChatGPT 已授权。</p>
+            <a href="https://chatgpt.com/settings/plugins-settings" target="_blank" rel="noopener noreferrer">打开 ChatGPT 插件设置</a>
+            <details class="mcp-setup-advanced"><summary>本地 MCP 客户端（STDIO）</summary>
+              <pre id="mcpLocalConfig" class="mcp-local-config"></pre>
+              <button id="mcpCopyConfig" class="secondary" type="button">复制本地配置</button></details>
+          </section>
         </section>
 
         <div id="environmentRuntimeTools" class="tool-list"><div class="platform-loading">正在检测本机环境…</div></div>

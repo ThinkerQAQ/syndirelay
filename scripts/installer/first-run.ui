@@ -12,11 +12,15 @@
     <property name="wordWrap"><bool>true</bool></property>
    </widget></item>
    <item><widget class="QCheckBox" name="openAppCheckBox">
-    <property name="text"><string>Register SyndiRelay and open extension folder</string></property>
-    <property name="checked"><bool>true</bool></property>
+    <property name="text"><string>Open SyndiRelay after installation</string></property>
+    <property name="checked"><bool>false</bool></property>
    </widget></item>
    <item><widget class="QCheckBox" name="openExtensionCheckBox">
     <property name="text"><string>Set up the Chrome / Edge extension</string></property>
+    <property name="checked"><bool>false</bool></property>
+   </widget></item>
+   <item><widget class="QCheckBox" name="openReadmeCheckBox">
+    <property name="text"><string>Open local README</string></property>
     <property name="checked"><bool>false</bool></property>
    </widget></item>
    <item><widget class="QLabel" name="extensionInstructions">

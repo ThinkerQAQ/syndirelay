@@ -7,10 +7,46 @@ import platform
 import json
 import plistlib
 import re
+import struct
 import shutil
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+
+def windows_pe_layout(data):
+    if len(data) < 0x40 or data[:2] != b"MZ":
+        raise ValueError("invalid Windows executable DOS header")
+    pe = struct.unpack_from("<I", data, 0x3c)[0]
+    if pe + 26 > len(data) or data[pe:pe + 4] != b"PE\x00\x00":
+        raise ValueError("invalid Windows PE signature")
+    optional = pe + 24
+    magic = struct.unpack_from("<H", data, optional)[0]
+    cert_offset = 128 if magic == 0x10b else 144 if magic == 0x20b else None
+    if cert_offset is None or optional + cert_offset + 8 > len(data):
+        raise ValueError("unsupported or truncated Windows PE header")
+    return optional, optional + cert_offset
+
+def prepare_windows_gui_template(source, destination):
+    """Use a private copy, never patch the SDK or a signed template."""
+    data = bytearray(pathlib.Path(source).read_bytes())
+    optional, security = windows_pe_layout(data)
+    certificate_offset, certificate_size = struct.unpack_from("<II", data, security)
+    if certificate_offset or certificate_size:
+        raise ValueError("refusing to modify a signed Qt installerbase")
+    subsystem = struct.unpack_from("<H", data, optional + 68)[0]
+    if subsystem not in (2, 3):
+        raise ValueError("Qt installerbase has an unsupported subsystem")
+    struct.pack_into("<H", data, optional + 68, 2)
+    struct.pack_into("<I", data, optional + 64, 0)
+    with pathlib.Path(destination).open("xb") as out:
+        out.write(data)
+    require_windows_gui(destination)
+
+def require_windows_gui(path):
+    data = pathlib.Path(path).read_bytes()
+    optional, _ = windows_pe_layout(data)
+    if struct.unpack_from("<H", data, optional + 68)[0] != 2:
+        raise ValueError("Windows installer must have GUI subsystem (2)")
 
 ASSETS = pathlib.Path(__file__).with_name("installer")
 QA_PREPARE_ONLY = False
@@ -156,7 +192,15 @@ def main():
     with tempfile.TemporaryDirectory(prefix="syndirelay-ifw-") as temp:
         tree=pathlib.Path(temp)
         prepare(args.stage.resolve(),tree,args.version,args.os)
-        subprocess.run([args.binarycreator,"--offline-only","-c",str(tree/"config/config.xml"),
-                        "-p",str(tree/"packages"),str(args.output.resolve())],check=True)
+        creator_args = [args.binarycreator, "--offline-only"]
+        if host == "windows":
+            template = tree/"installerbase-gui.exe"
+            prepare_windows_gui_template(pathlib.Path(args.binarycreator).resolve().parent/"installerbase.exe",template)
+            creator_args.extend(["-t",str(template)])
+        creator_args.extend(["-c",str(tree/"config/config.xml"),
+                             "-p",str(tree/"packages"),str(args.output.resolve())])
+        subprocess.run(creator_args,check=True)
+        if host == "windows":
+            require_windows_gui(args.output)
 if __name__=="__main__":
     main()

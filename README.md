@@ -170,30 +170,21 @@ Windows clients should use the native executable, for example `"command": "C:\\t
 
 ### 4.4. Case4: Connect ChatGPT
 
-Complete the build in section 2, then follow this order. A Tunnel ID and a runtime credential are separate values:
+Install and open the SyndiRelay browser extension, then navigate to **Settings → MCP connection**:
 
-1. In OpenAI Platform [Tunnels management](https://platform.openai.com/settings/organization/tunnels), create or select a Tunnel for the relevant ChatGPT workspace and copy its full `tunnel_...` ID. Creating a Tunnel requires Tunnels Manage permission.
-2. At [Runtime API Keys](https://platform.openai.com/settings/organization/api-keys), reuse an authorized runtime key with **Tunnels Read + Use** permissions or create a restricted key with those permissions. Supply it via `CONTROL_PLANE_API_KEY`, or set `SYNDIRELAY_RUNTIME_KEY_REF` to `env:NAME` or `file:ABSOLUTE_PATH`. On Linux/macOS, a credential file must have mode `0600`. **No new one-time or per-project API key is needed**, but a valid runtime credential is required; do not use an admin key instead.
-3. Install the official [tunnel-client](https://github.com/openai/tunnel-client/releases/latest) for your operating system, ensure `tunnel-client` is on `PATH`, then run the commands below. Never commit the actual credential to Git.
+1. Create a Tunnel in [OpenAI Tunnels](https://platform.openai.com/settings/organization/tunnels) and copy its full Tunnel ID.
+2. Create or reuse a restricted Runtime API Key with **Tunnels Read + Use** permission in [OpenAI API Keys](https://platform.openai.com/api-keys). You do not need a new key for every setup.
+3. Under **1. Local Tunnel service**, enter the Tunnel ID and Runtime API Key, then select **Save**. If necessary, SyndiRelay installs and verifies the official Tunnel Client. Saving does not start the service or enable launch-at-login.
+4. Select **Start Service**. Use Stop or Restart when the service is running. The header status reports local Tunnel readiness.
+5. Under **2. ChatGPT plugin**, open [ChatGPT plugin settings](https://chatgpt.com/settings/plugins-settings), create or enable the SyndiRelay connector, and call `list_platforms` to verify the integration.
 
-Linux / macOS, from the checkout:
+The saved Tunnel ID remains visible. The Runtime API Key is masked; leave the field blank to reuse the saved credential. After changing either value, save and restart the service to apply it. Credentials are never written to the repository, logs, or process arguments. Windows uses DPAPI; Linux and macOS keep the key in a private user configuration directory.
 
-```sh
-export SYNDIRELAY_MCP_COMMAND="$PWD/syndirelay mcp-stdio"
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID --status
-```
+**Note:** A healthy local Tunnel is not proof of ChatGPT plugin authorization. Standard STDIO MCP clients do not need a Tunnel; see section 4.3.
 
-Windows PowerShell:
+The existing `connect-chatgpt-mcp.ps1` and `connect-chatgpt-mcp.sh` scripts remain available for manual setup.
 
-```powershell
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
-```
-
-Use the status command shown above to confirm that the SyndiRelay runtime is running and healthy. In [ChatGPT connector settings](https://chatgpt.com/#settings/Connectors), choose **Connection: Tunnel** and select or paste the same Tunnel ID. Call `list_platforms` and confirm an actual tool response; a healthy local runtime alone does not verify ChatGPT connectivity. If the Tunnel is missing, check workspace scope and Tunnels Read + Use permissions. Keep the Bridge local.
-
-[Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is a separate, optional integration and is disabled by default.
+[Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is an independent, optional integration, disabled by default.
 
 ## 5. Development
 

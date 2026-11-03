@@ -12,6 +12,9 @@ Component.prototype.finishFirstRun = function() {
     if (!form) return;
     var target = installer.value("TargetDir");
     console.log("SYNDIRELAY_FINISH_OPTIONS");
+    if (form.openReadmeCheckBox.checked) {
+        QDesktopServices.openUrl("file://" + target + "/README.md");
+    }
     if ("__PLATFORM__" == "windows") {
         var powershell = installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe";
         if (form.openAppCheckBox.checked) {
@@ -28,7 +31,7 @@ Component.prototype.finishFirstRun = function() {
         }
         if (form.openExtensionCheckBox.checked) {
             QDesktopServices.openUrl("file://" + target + "/extension");
-            QDesktopServices.openUrl("file://" + target + "/README.md");
+
         }
     }
 };

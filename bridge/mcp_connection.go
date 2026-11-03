@@ -27,6 +27,11 @@ type MCPConnectionStatus struct {
 	Configured      bool   `json:"configured"`
 	Ready           bool   `json:"ready"`
 	LocalConfig     any    `json:"local_config"`
+	RuntimeKeySaved bool   `json:"runtime_key_saved"`
+	Running         bool   `json:"running"`
+	SetupState      string `json:"setup_state"`
+	Revision        string `json:"revision"`
+	RestartRequired bool   `json:"restart_required"`
 }
 
 func findTunnelClient(goos, home string) string {
@@ -78,6 +83,7 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 	profile, health := mcpPaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
 	client := findTunnelClient(runtime.GOOS, home)
 	out.ClientInstalled = client != ""
+	out.Running = syndirelayTunnelProcessRunning(profile)
 	if f, err := os.Open(profile); err == nil {
 		data, readErr := io.ReadAll(io.LimitReader(f, 128<<10))
 		f.Close()
@@ -88,6 +94,23 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 				out.TunnelID = string(m[1])
 			}
 		}
+	}
+	private := filepath.Dir(health)
+	keyName := "runtime.env"
+	if runtime.GOOS == "windows" {
+		keyName = "runtime-key.dpapi"
+	}
+	if info, err := os.Stat(filepath.Join(private, keyName)); err == nil && !info.IsDir() && info.Size() > 0 {
+		out.RuntimeKeySaved = true
+	}
+	if b, err := os.ReadFile(filepath.Join(private, "setup-state")); err == nil {
+		out.SetupState = strings.TrimSpace(string(b))
+	}
+	if b, err := os.ReadFile(filepath.Join(private, "configuration-revision")); err == nil {
+		out.Revision = strings.TrimSpace(string(b))
+	}
+	if info, err := os.Stat(filepath.Join(private, "restart-required")); err == nil && !info.IsDir() {
+		out.RestartRequired = true
 	}
 	if !out.ClientInstalled {
 		out.State = "client_missing"
@@ -173,14 +196,15 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(status)
 	} else if r.Method == http.MethodPost {
-		var in struct {
-			Action   string `json:"action"`
-			TunnelID string `json:"tunnel_id"`
-		}
+		var in mcpConnectionAction
 		dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
 		dec.DisallowUnknownFields()
 		if dec.Decode(&in) != nil || dec.Decode(new(any)) != io.EOF {
 			http.Error(w, "invalid input", 400)
+			return
+		}
+		if in.Action == "save" {
+			s.handleMCPSave(w, r, in)
 			return
 		}
 		if in.Action == "install-client" {
@@ -222,6 +246,17 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 				if err = managed.Run(); err != nil {
 					http.Error(w, "service action failed; check local service configuration", 409)
 					return
+				}
+				if in.Action == "start" || in.Action == "restart" {
+					home, _ := os.UserHomeDir()
+					profile, health := mcpPaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
+					for attempt := 0; attempt < 3; attempt++ {
+						if syndirelayTunnelProcessRunning(profile) {
+							_ = os.Remove(filepath.Join(filepath.Dir(health), "restart-required"))
+							break
+						}
+						time.Sleep(350 * time.Millisecond)
+					}
 				}
 			}
 		}

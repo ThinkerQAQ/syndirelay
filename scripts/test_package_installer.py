@@ -79,7 +79,7 @@ class InstallerTest(unittest.TestCase):
             self.assertEqual((meta/"license.txt").read_bytes(),(stage/"LICENSE").read_bytes())
             ui=ET.parse(meta/"first-run.ui").getroot()
             checks={w.get("name"):w.findtext("property[@name='checked']/bool") for w in ui.findall(".//widget[@class='QCheckBox']")}
-            self.assertEqual(checks,{"openAppCheckBox":"true","openExtensionCheckBox":"false"})
+            self.assertEqual(checks,{"openAppCheckBox":"false","openExtensionCheckBox":"false","openReadmeCheckBox":"false"})
             self.assertTrue((root/"out/packages/com.thinkerqaq.syndirelay/data/scripts/SyndiRelay-FirstRun.ps1").is_file())
 
     def test_qa_stage_not_distributable(self):
@@ -104,7 +104,12 @@ class InstallerTest(unittest.TestCase):
                     installer.prepare(stage,root/"out","1.2.3","windows")
         with tempfile.TemporaryDirectory() as temp:
             root=pathlib.Path(temp);stage=self.stage(root)
-            (stage/"bin/link").symlink_to(stage/"LICENSE")
+            try:
+                (stage/"bin/link").symlink_to(stage/"LICENSE")
+            except OSError as error:
+                if getattr(error,"winerror",None)==1314:
+                    self.skipTest("Windows symlink privilege is unavailable")
+                raise
             with self.assertRaises(ValueError):
                 installer.prepare(stage,root/"out","1.2.3","windows")
 

@@ -2,6 +2,15 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "1. 本地 Tunnel 服务": "1. Local Tunnel service",
+  "启动服务": "Start Service",
+  "重启服务": "Restart Service",
+  "2. ChatGPT 插件": "2. ChatGPT plugin",
+  "本机 Tunnel 就绪后，在 ChatGPT 中配置并启用 SyndiRelay 插件。Tunnel 就绪不代表 ChatGPT 已授权。": "After the local Tunnel is ready, configure and enable the SyndiRelay plugin in ChatGPT. Tunnel readiness does not confirm ChatGPT authorization.",
+  "本地 MCP 客户端（STDIO）": "Local MCP clients (STDIO)",
+  "创建 Tunnel ID": "Create Tunnel ID",
+  "创建受限 Runtime API Key": "Create a restricted Runtime API Key",
+
   "等待本机设置完成，状态将自动刷新…": "Waiting for local setup to complete. Connection status refreshes automatically.",
   "MCP 连接": "MCP connection",
   "使用 ChatGPT 自定义 MCP 连接的 Tunnel ID，关联本机 SyndiRelay。仅本机管理连接。": "Link local SyndiRelay with the Tunnel ID from a custom ChatGPT MCP connection. Connection management stays local.",

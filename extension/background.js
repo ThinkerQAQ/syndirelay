@@ -1038,11 +1038,15 @@ async function handleMessage(message) {
     }
     case "blogctl.mcp.connection.action": {
       const action = String(message.action || "");
-      if (!["install-client", "setup", "start", "stop", "restart"].includes(action)) {
+      if (!["install-client", "setup", "save", "start", "stop", "restart"].includes(action)) {
         throw new Error("Invalid MCP connection action");
       }
       return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {
         action, tunnel_id: String(message.tunnelId || ""),
+        runtime_api_key: String(message.runtimeApiKey || ""),
+        reuse_key: Boolean(message.reuseKey),
+        replace: Boolean(message.replace),
+        previous_tunnel_id: String(message.previousTunnelId || ""),
       }))) };
     }
 
