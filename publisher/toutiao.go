@@ -163,7 +163,9 @@ func (t *toutiaoAdapter) uploadBinary(ctx context.Context, image RehostImage) (s
 }
 
 func (t *toutiaoAdapter) prepareHTML(ctx context.Context, input DraftInput) (string, error) {
-	return rehostHTMLImages(ctx, t.client, input, normalizeToutiaoSectionReferences(normalizeToutiaoTOC(htmlFor(input))), ImageRehostOptions{
+	content := toutiaoExternalizeSectionLinks(htmlFor(input), input.CanonicalURL)
+	content = normalizeToutiaoSectionReferences(normalizeToutiaoTOC(content))
+	return rehostHTMLImages(ctx, t.client, input, content, ImageRehostOptions{
 		Platform:       t.ID(),
 		FailOpenRemote: true,
 		AlreadyHosted:  isToutiaoImage,
@@ -178,11 +180,30 @@ func (t *toutiaoAdapter) prepareHTML(ctx context.Context, input DraftInput) (str
 }
 
 func truncateToutiaoTitle(value string) string {
-	runes := []rune(strings.TrimSpace(value))
-	if len(runes) <= 30 {
-		return string(runes)
+	const maxRunes = 30
+	trimmed := strings.TrimSpace(value)
+	runes := []rune(trimmed)
+	if len(runes) <= maxRunes {
+		return trimmed
 	}
-	return string(runes[:30])
+	// Keep a short trailing parenthetical note (e.g. "（请勿发布）").
+	// A blind first-30-runes cut can destroy important qualifiers.
+	for _, bracket := range []struct{ start, end string }{
+		{"（", "）"}, {"(", ")"},
+	} {
+		if !strings.HasSuffix(trimmed, bracket.end) {
+			continue
+		}
+		index := strings.LastIndex(trimmed, bracket.start)
+		if index <= 0 {
+			continue
+		}
+		suffix := []rune(trimmed[index:])
+		if len(suffix) > 0 && len(suffix) <= 10 {
+			return string(runes[:maxRunes-len(suffix)-1]) + "…" + string(suffix)
+		}
+	}
+	return string(runes[:maxRunes-1]) + "…"
 }
 
 // toutiaoArticleValues mirrors the creator editor's form for an ordinary

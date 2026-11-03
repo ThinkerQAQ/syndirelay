@@ -56,16 +56,82 @@ export async function read51CTOInventoryInPage() {
   };
 }
 
-// Match a local article only to verified draft titles from the browser page.
+// Match draft and published titles only to verified links from the manager.
 // Do not accept arbitrary remote IDs or fuzzy/substring matches.
-export function match51CTODraftTitles(items, localTitle) {
+export function match51CTOArticleTitles(items, localTitle) {
   const normalized = (value) => String(value || "").trim().replace(/\s+/g, " ");
   const title = normalized(localTitle);
   if (!title) return [];
   return (Array.isArray(items) ? items : []).filter((item) => {
-    if (item?.published || !/^[0-9]{1,20}$/.test(String(item?.id || ""))) return false;
+    if (!/^[0-9]{1,20}$/.test(String(item?.id || "")) || typeof item?.published !== "boolean") return false;
     const remote = normalized(item?.title);
     if (remote === title) return true;
     return [" · ", " - ", " — "].some((separator) => remote.startsWith(title + separator));
   });
+}
+
+
+// Fetch only article identity fields from the signed-in article manager.
+// The manager's pagination is dynamic (javascript: links), so advance it
+// through its own UI instead of calling the obsolete JSON endpoint.
+// This function must remain self-contained for chrome.scripting.executeScript.
+export async function read51CTOPublishedInPage() {
+  if (location.origin !== "https://blog.51cto.com" ||
+      location.pathname !== "/creative-center/manager") {
+    throw new Error("51CTO published inventory requires the authenticated article manager");
+  }
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const collect = () => {
+    const rows = new Map();
+    for (const link of document.querySelectorAll('a[href*="/u_"]')) {
+      let url;
+      try { url = new URL(link.getAttribute("href") || "", location.origin); } catch { continue; }
+      if (url.origin !== location.origin || url.search || url.hash ||
+          url.username || url.password) continue;
+      const match = /^\/u_([0-9]{1,20})\/([0-9]{1,20})\/?$/.exec(url.pathname);
+      if (!match) continue;
+      const title = String(link.textContent || "").replace(/\s+/g, " ").trim();
+      if (!title) continue;
+      rows.set(match[2], {
+        id: match[2], title, published: true,
+        url: `https://blog.51cto.com/u_${match[1]}/${match[2]}`,
+      });
+    }
+    return rows;
+  };
+  let count = null;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const body = String(document.body?.innerText || "");
+    if (body.includes("文章管理") && body.includes("草稿管理")) {
+      const match = /公开\s*[（(]\s*(\d+)\s*[）)]/.exec(body);
+      if (match) { count = Number(match[1]); break; }
+    }
+    await sleep(250);
+  }
+  if (!Number.isInteger(count) || count < 0 || count > 1000) {
+    throw new Error("51CTO published article count is unavailable; refusing partial discovery");
+  }
+
+  const items = new Map();
+  for (let page = 1; page <= 100; page++) {
+    for (const [id, item] of collect()) items.set(id, item);
+    if (items.size >= count) break;
+    const nextPage = String(page + 1);
+    const next = [...document.querySelectorAll("a")].find((link) =>
+      link.getAttribute("href") === "javascript:;" &&
+      String(link.textContent || "").trim() === nextPage);
+    if (!next) throw new Error("51CTO published article pagination is incomplete");
+    const current = [...collect().keys()].join(",");
+    next.click();
+    let advanced = false;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      await sleep(250);
+      if ([...collect().keys()].join(",") !== current) { advanced = true; break; }
+    }
+    if (!advanced) throw new Error("51CTO published article pagination did not advance");
+  }
+  if (items.size !== count) {
+    throw new Error(`51CTO published article inventory incomplete (${items.size}/${count})`);
+  }
+  return { items: [...items.values()] };
 }

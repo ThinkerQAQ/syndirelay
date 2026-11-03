@@ -1028,7 +1028,7 @@ func draftInputFromCompiled(article blogcompiler.CompiledArticle, contentRoot, d
 		ContentHash: article.ContentHash, SourceDir: article.SourceDir, ContentRoot: contentRoot,
 		DistributionRoot: strings.TrimSpace(distributionRoot),
 		Tags:             append([]string{}, article.Tags...), CoverImageURL: article.CoverImageURL,
-		NativeCanonicalURL: article.NativeCanonicalURL, Published: article.Published,
+		NativeCanonicalURL: article.NativeCanonicalURL, CanonicalURL: article.CanonicalURL, Published: article.Published,
 		Assets: assets,
 		R2Fallback: publisher.R2FallbackConfig{
 			AccessKeyID:     r2.AccessKeyID,

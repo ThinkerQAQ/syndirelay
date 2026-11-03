@@ -1,6 +1,6 @@
 import { performToutiaoBrowserRequest } from "./toutiao-request.js";
 import { activeBrowserJobPumps } from "./browser-job-pumps.js";
-import { read51CTOInventoryInPage, match51CTODraftTitles } from "./cto51-inventory.js";
+import { read51CTOInventoryInPage, read51CTOPublishedInPage, match51CTOArticleTitles } from "./cto51-inventory.js";
 import { prepareMediumReplacement, verifyMediumDocument } from "./medium-document.js";
 import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
@@ -977,33 +977,50 @@ function kickGoogleIndexQueuePump() {
 // This read-only inventory action does not use the removed tls-client/fhttp
 // impersonation transport and does not transfer cookies to the Bridge.
 async function read51CTOInventoryFromBrowser() {
-  let tab = null;
-  let created = false;
+  let draftTab = null;
+  let createdDraft = false;
+  let publishedTab = null;
   try {
     const tabs = await chrome.tabs.query({ url: "https://blog.51cto.com/*" });
-    tab = tabs.find((item) => item.status === "complete" &&
+    draftTab = tabs.find((item) => item.status === "complete" &&
       /^https:\/\/blog\.51cto\.com\/creative-center\/draft(?:[?#]|$)/.test(item.url || "")) || null;
-    if (!tab) {
-      tab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
-      created = true;
-      for (let attempt = 0; attempt < 40; attempt++) {
+    if (!draftTab) {
+      draftTab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
+      createdDraft = true;
+    }
+    const waitForTab = async (tab) => {
+      for (let attempt = 0; attempt < 60; attempt++) {
         tab = await chrome.tabs.get(tab.id);
-        if (tab.status === "complete") break;
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        if (tab.status === "complete" && tab.url?.startsWith("https://blog.51cto.com/")) return tab;
+        await new Promise((resolve) => setTimeout(resolve, 250));
       }
-      if (tab.status !== "complete") throw new Error("51CTO background tab did not load");
-    }
-    const result = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      world: "MAIN",
-      func: read51CTOInventoryInPage,
+      throw new Error("51CTO authenticated manager tab did not load");
+    };
+    const read = async (tab, func) => {
+      await waitForTab(tab);
+      const result = await chrome.scripting.executeScript({
+        target: { tabId: tab.id }, world: "MAIN", func,
+      });
+      if (!Array.isArray(result) || result.length !== 1 || !result[0]?.result) {
+        throw new Error("51CTO browser inventory did not return a result");
+      }
+      return result[0].result;
+    };
+    const drafts = await read(draftTab, read51CTOInventoryInPage);
+    // Always use a dedicated background tab for pagination. Never change
+    // the page or selected filter in a user's existing article manager.
+    publishedTab = await chrome.tabs.create({
+      url: "https://blog.51cto.com/creative-center/manager", active: false,
     });
-    if (!Array.isArray(result) || result.length !== 1 || !result[0]?.result) {
-      throw new Error("51CTO browser inventory did not return a result");
-    }
-    return result[0].result;
+    const published = await read(publishedTab, read51CTOPublishedInPage);
+    return {
+      platform: "51cto", account: "",
+      items: [...drafts.items, ...published.items],
+      partial: "",
+    };
   } finally {
-    if (created && tab?.id != null) await chrome.tabs.remove(tab.id).catch(() => {});
+    if (publishedTab?.id != null) await chrome.tabs.remove(publishedTab.id).catch(() => {});
+    if (createdDraft && draftTab?.id != null) await chrome.tabs.remove(draftTab.id).catch(() => {});
   }
 }
 
@@ -1224,11 +1241,11 @@ async function handleMessage(message) {
           (item) => item.slug === String(message.article || ""),
         );
         if (!localArticle?.title) throw new Error("51CTO local article title is unavailable");
-        const candidates = match51CTODraftTitles(result.items, localArticle.title);
+        const candidates = match51CTOArticleTitles(result.items, localArticle.title);
         return { ok: true, match: {
           text: candidates.length
-            ? `已从 51CTO 登录页面实时匹配到 ${candidates.length} 篇草稿；已发布文章暂未核验。`
-            : "已检查 51CTO 登录页面的草稿，未找到同名文章；已发布文章暂未核验。",
+            ? `已从 51CTO 登录页面实时匹配到 ${candidates.length} 篇文章（草稿及已发布）。`
+            : "已检查 51CTO 登录页面的草稿及已发布文章，未找到同名文章。",
           items: candidates,
           bindings: [],
         } };
