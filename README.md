@@ -4,204 +4,148 @@
 
 - [1. Introduction](#1-introduction)
 - [2. Quick Start](#2-quick-start)
-- [3. Configuration](#3-configuration)
-- [4. Optional Features](#4-optional-features)
-- [5. Development](#5-development)
-- [6. License](#6-license)
+- [3. Development](#3-development)
+- [4. License](#4-license)
 
 ## 1. Introduction
 
-SyndiRelay converts Markdown into platform-specific articles and helps authors distribute them from a local workspace. It provides a CLI, a browser extension with a local Bridge, and an MCP server for reading articles, previewing output, and managing publishing tasks.
+I started SyndiRelay because distributing the same Markdown article to several platforms meant repeatedly copying its text, fixing formatting, handling images, and creating drafts one by one.
 
-The compiler supports 11 platform formats: `51cto`, `cnblogs`, `csdn`, `devto`, `hashnode`, `juejin`, `medium`, `oschina`, `segmentfault`, `toutiao`, and `zhihu`. Remote operations depend on each adapter and the connected account; format support alone does not guarantee publishing support.
+Each platform has its own Markdown, HTML, image, and editor requirements. SyndiRelay keeps the original article in a local workspace, generates platform-specific output, and uses a browser extension to operate accounts you have already signed in to. Preview first, then create a draft. **Compiling an article does not publish it remotely.**
 
-SyndiRelay works with ordinary Markdown files. Authors using [Inkerio](https://github.com/ThinkerQAQ/inkerio) can also reuse their existing content repository; installing the blog engine is optional.
+The compiler supports 11 formats: DEV, Medium, Zhihu, Juejin, Toutiao, CSDN, CNBlogs, Hashnode, 51CTO, OSChina, and SegmentFault. Draft creation and updates depend on the adapter and website. Format support does not imply full remote-write support.
+
+SyndiRelay provides native installers for Windows, Linux, and macOS, a browser extension, a CLI, and MCP tools. OpenAI Secure MCP Tunnel connects the local MCP server to ChatGPT on the web without exposing the Bridge publicly. Local MCP clients can also use stdio directly. Ordinary Markdown does not require [Inkerio](https://github.com/ThinkerQAQ/inkerio), while existing Inkerio content repositories can be reused.
 
 ## 2. Quick Start
 
-Compile one Markdown article into DEV-compatible output. No account, browser extension, or configuration file is required.
+Install SyndiRelay, connect the browser extension, and preview an article. Configure a Tunnel only if you also want to use the tools from ChatGPT. **Installers are still under review; no official Release has been published.** Until then, use a local test installer or run from source as described in section 3.
 
-### 2.1. Prerequisites
+### 2.1. Installation
 
-- Windows, macOS, or Linux.
-- Git, Go (see [go.mod](go.mod) for the required version), Node.js **22+**, and npm.
-- Network access to download source and dependencies.
+#### 2.1.1. Graphical Interface
 
-### 2.2. Get the source and build
+**Windows:** Run `SyndiRelay-Setup-*-windows-amd64.exe` and complete the wizard. From the Start Menu, open **SyndiRelay**. It registers the Native Messaging host and opens the extension directory and browser extensions page.
 
-Build from source.
+**macOS:** Open the corresponding installer. After installation, choose **Open SyndiRelay** to open the extension directory.
 
-```sh
-git clone https://github.com/ThinkerQAQ/syndirelay.git
-cd syndirelay
-npm ci
-```
+**Linux:** Run the `.run` installer from a graphical desktop. If blocked, enable execution in its file properties. Choose **Open SyndiRelay** when installation finishes.
 
-Linux / macOS:
+In Edge (`edge://extensions`) or Chrome (`chrome://extensions`), enable developer mode, select **Load unpacked**, and choose the installed `extension/` directory. Browser authorization remains a manual step; the installer does not bypass it.
 
-```sh
-go build -o syndirelay ./cmd
-```
+#### 2.1.2. Command Line
 
-Windows PowerShell:
+Qt Installer Framework also supports unattended installation. From the download directory, on Windows PowerShell:
 
-```powershell
-go build -o syndirelay.exe ./cmd
-```
+~~~powershell
+$installer = (Get-ChildItem .\SyndiRelay-Setup-*-windows-amd64.exe | Select-Object -First 1).FullName
+Start-Process -FilePath $installer -ArgumentList '--accept-licenses --default-answer --confirm-command install' -Wait
+~~~
 
-### 2.3. Compile your first article
+On a Linux desktop:
 
-In the same `syndirelay` checkout, create an example article and compile it for DEV.
+~~~bash
+chmod +x ./SyndiRelay-Setup-*-linux-amd64.run
+QT_QPA_PLATFORM=offscreen ./SyndiRelay-Setup-*-linux-amd64.run --accept-licenses --default-answer --confirm-command install
+~~~
 
-Linux / macOS:
+Unattended installation still requires manual browser extension approval. Source builds and developer commands are in section 3.
 
-```sh
-printf '# Hello SyndiRelay\n\nMy first article.\n' > example.md
-./syndirelay compile --file ./example.md --platform devto
-```
+### 2.2. Configuration
 
-Windows PowerShell:
+#### 2.2.1. Graphical Interface
 
-```powershell
-Set-Content -Path example.md -Encoding utf8 -Value "# Hello SyndiRelay`n`nMy first article."
-.\syndirelay.exe compile --file .\example.md --platform devto
-```
+Open SyndiRelay from the browser toolbar. In **Settings**, choose your content repository, site address, platform credentials, and optional image storage. The local Bridge only listens on `127.0.0.1:32146`, and the Native Messaging host starts it when needed.
 
-### 2.4. Verify the output
+If you use [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template), select the existing content repository; there is no need for a second copy. Remote draft actions require you to be signed in to the target website in the same browser.
 
-The command must exit successfully and print JSON containing:
+#### 2.2.2. Configuration File
 
-- `"platform": "devto"`
-- `"title": "Hello SyndiRelay"`
-- `markdown` containing `My first article.`
-- A nonempty `contentHash`.
+For CLI automation, edit the private `syndirelay.toml` file. On Windows it lives at `Data/syndirelay.toml` below the installation root; Linux and macOS use the system user configuration directory. Set `SYNDIRELAY_DATA_DIR` to an absolute path to override this directory.
 
-`compile` produces local output. Its `published` field describes source content status, not a remote publishing result.
+Minimal setup for an existing content repository:
 
-### 2.5. Troubleshooting
-
-- **Node module or renderer not found:** run `npm ci` and retry from the checkout. When running elsewhere, set `SYNDIRELAY_HOME` to the checkout's absolute path.
-- **Unsupported platform:** use one of the platform IDs listed above.
-- **Invalid input:** provide a nonempty UTF-8 Markdown file no larger than 5 MiB; YAML frontmatter, if present, must be valid.
-- **Diagram/table media need an asset URL:** pass `--asset-base-url https://your-cdn.example/`. This supplies URLs for generated assets; compilation does not upload them.
-- **Missing dependencies:** run `./syndirelay doctor` (PowerShell: `.\syndirelay.exe doctor`) to check Node.js, npm, and Git.
-
-If the problem persists, [open an Issue](https://github.com/ThinkerQAQ/syndirelay/issues) with your OS, command, and redacted error output.
-
-## 3. Configuration
-
-Standalone `compile` only requires `--file` and `--platform`. Optional flags are `--language en|zh-CN`, `--canonical-url`, and `--asset-base-url`; both URL flags require HTTPS. Inspect the complete flags with `./syndirelay compile --help`.
-
-Bridge settings are stored in `blogctl.toml`:
-
-- Windows: `Data\blogctl.toml` beside the executable.
-- Linux: `$XDG_CONFIG_HOME/SyndiRelay/blogctl.toml`, defaulting to `~/.config/SyndiRelay/blogctl.toml`.
-- macOS: `~/Library/Application Support/SyndiRelay/blogctl.toml`.
-- Set `SYNDIRELAY_DATA_DIR` to an **absolute directory** to override the data location.
-
-For content-repository workflows, create or edit `blogctl.toml` at the location above. Create its parent directory if needed, then set your absolute paths and site URL:
-
-```toml
+~~~toml
 content_root = "/absolute/path/to/your-content"
 engine_root = "/absolute/path/to/syndirelay"
-ui_locale = "auto"
 
 [publishing.site]
 origin = "https://your-site.example"
-```
+~~~
 
-On Windows, use TOML literal strings such as `content_root = 'C:\sites\my-content'`. `ui_locale` defaults to `auto` and also accepts `en` or `zh-CN`; `BLOGCTL_LANG` overrides the CLI language.
+Windows paths can be TOML single-quoted strings. Standalone `compile` needs no configuration file. Source CLI workflows use `SYNDIRELAY_HOME` for the checkout and `SYNDIRELAY_CONTENT_ROOT` for the content repository. Other fields are defined in [Bridge configuration](bridge/config.go) and [publishing configuration](publishing/config.go).
 
-Set `SYNDIRELAY_CONTENT_ROOT` and `SYNDIRELAY_HOME` explicitly for CLI repository selection, as shown below. In copyright auto mode, an explicit SyndiRelay copyright policy takes precedence over the content repository's `src/content/site/copyright.json`. Manage platform credentials, image storage, and other optional settings through the extension settings; additional fields are defined in [the configuration types](bridge/config.go) and [publishing settings](publishing/config.go).
+### 2.3. Verify an Article
 
-## 4. Optional Features
+In the extension, select an article and target platform. Preview its output before choosing **Create Draft** if the adapter supports it. Open the returned draft link to inspect the title, body, and images.
 
-### 4.1. Case1: Distribute articles from an Inkerio content repository
+You can also test local compilation without any account or browser. From the [source checkout](#3-development):
 
-A repository created from [Inkerio Content Template](https://github.com/ThinkerQAQ/inkerio-content-template) can serve both your website and SyndiRelay. No second content repository is needed. CLI sync expects `src/content/articles/` and `src/data/content-manifest.json`.
+~~~bash
+printf '# Hello SyndiRelay\n\nMy first article.\n' > example.md
+./syndirelay compile --file ./example.md --platform devto
+~~~
 
-Complete the build in section 2 and configure `publishing.site.origin` as shown in section 3. Return to the SyndiRelay checkout, select your content repository, and preview an existing article. Replace the sample paths and `your-article-slug` with your own values.
+Windows PowerShell:
 
-```sh
+~~~powershell
+Set-Content -Path example.md -Encoding utf8 -Value "# Hello SyndiRelay`n`nMy first article."
+.\syndirelay.exe compile --file .\example.md --platform devto
+~~~
+
+The JSON output should include `platform: "devto"`, title `Hello SyndiRelay`, and a nonempty `contentHash`. This is local compilation and **does not create or publish an article remotely**.
+
+To preview an existing Inkerio article without writing remotely:
+
+~~~bash
 export SYNDIRELAY_HOME="$PWD"
 export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
 ./syndirelay sync --article your-article-slug --platforms devto --dry-run
-```
+~~~
 
-```powershell
-$env:SYNDIRELAY_HOME = (Get-Location).Path
-$env:SYNDIRELAY_CONTENT_ROOT = 'C:\sites\my-content'
-.\syndirelay.exe sync --article your-article-slug --platforms devto --dry-run
-```
+### 2.4. Connect ChatGPT
 
-The command must exit successfully and print the selected article compiled for `devto`. `--dry-run` leaves publishing state unchanged. To create a remote draft after the preview, continue to the next section for the browser extension.
+Create a Tunnel ID in [OpenAI Tunnel settings](https://platform.openai.com/settings/organization/tunnels) and a restricted Runtime API Key in [API Keys](https://platform.openai.com/settings/organization/api-keys).
 
-### 4.2. Case2: Create a draft with the browser extension
+In the extension, open **Settings → MCP Connection**:
 
-Use a native SyndiRelay executable on the same OS as your Edge or Chrome browser. If you already have a content repository, you can skip the optional Inkerio preview above. Complete [2.2](#22-get-the-source-and-build) and keep the terminal in the checkout. Windows does not require WSL.
+1. Under **Local Tunnel Service**, enter the Tunnel ID and Runtime API Key, then choose **Save**. The official Tunnel client is validated but the service is not started.
+2. Select **Start Service** and wait for **Ready**. Use **Restart Service** after changing saved configuration; **Stop Service** remains available while the process runs, even if health checks fail.
+3. **Start Tunnel at login** is optional. Windows uses a per-user Scheduled Task, Linux uses a systemd user unit, and macOS uses a LaunchAgent. Changing login startup does not start or stop the current service.
+4. Under **ChatGPT Plugin**, open [ChatGPT Plugins](https://chatgpt.com/plugins), register and enable the plugin with the same Tunnel ID, and follow [OpenAI's custom MCP connection guide](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt). Call the read-only `list_platforms` tool to verify.
 
-1. Run `./syndirelay install` (PowerShell: `.\syndirelay.exe install`) to register the Native Messaging host.
-2. After `Native Messaging Host registered` appears, open `edge://extensions` or `chrome://extensions`, enable developer mode, choose **Load unpacked**, and select the checkout's `extension/` directory.
-3. Open SyndiRelay from the browser toolbar's extensions menu and confirm its Bridge connection. It listens on `127.0.0.1:32146`; if needed, run `./syndirelay --bridge` (PowerShell: `.\syndirelay.exe --bridge`) and keep that terminal running.
-4. As shown in section 3, point `content_root` to an existing supported content repository, `engine_root` to the SyndiRelay checkout, and set your site URL. Inkerio Content Template repositories must contain `src/content/articles/` and `src/data/content-manifest.json`.
-5. Sign in to the target platform in the same browser. Return to the extension, select an article and platform, preview it, then use the supported draft creation action.
-6. Open the draft URL returned in the task result and check its title and body.
+Saved Runtime API Keys use a masked placeholder; leave the field blank to reuse the saved key. Tunnel lifecycle management is implemented in Go, without the old PowerShell/Bash service scripts. Tunnel readiness does not prove ChatGPT plugin authorization.
 
-Keep the executable at its registered path; rerun `install` if you move it. If the extension cannot connect, verify that it uses the same OS installation and reload it after registration. Platform login and an available adapter operation are required for remote writes.
+**Other local MCP clients** do not need a Tunnel. Configure the installed `bin/syndirelay` (`bin/syndirelay.exe` on Windows) as the executable and `mcp-stdio` as the argument, then call `list_platforms`.
 
-### 4.3. Case3: Connect an MCP client
+### 2.5. Troubleshooting
 
-Complete [2.2](#22-get-the-source-and-build). After adding the server, restart or reconnect your client before calling a tool.
+If the extension cannot connect, check that the browser and native program run on the **same operating system**, the extension is loaded, and the Bridge is reachable. In a source checkout, use `./syndirelay install` to register Native Messaging or `./syndirelay --bridge` to debug the local Bridge.
 
-For a client that supports STDIO MCP, add a server entry using the absolute executable path:
+If an article preview fails, run `npm ci` in the source checkout and verify the content path. If the Tunnel is not ready, check the ID, key, network, and service status. If the Tunnel is ready but ChatGPT cannot call tools, ensure the plugin is enabled for the current conversation.
 
-```json
-{
-  "mcpServers": {
-    "syndirelay": {
-      "command": "/absolute/path/to/syndirelay",
-      "args": ["mcp-stdio"]
-    }
-  }
-}
-```
+Do not post credentials, cookies, private settings, or unredacted logs in public Issues.
 
-Windows clients should use the native executable, for example `"command": "C:\\tools\\syndirelay\\syndirelay.exe"`. Invoke `list_platforms` with `{}` to verify a real tool response. Article tools also need the configured content workspace; browser-backed publishing needs the extension.
+## 3. Development
 
-### 4.4. Case4: Connect ChatGPT
+Installer users do not need this section. Source development needs Git, Go (see [go.mod](go.mod)), Node.js 22+, and npm:
 
-Install and open the SyndiRelay browser extension, then navigate to **Settings → MCP connection**:
-
-1. Create a Tunnel in [OpenAI Tunnels](https://platform.openai.com/settings/organization/tunnels) and copy its full Tunnel ID.
-2. Create or reuse a restricted Runtime API Key with **Tunnels Read + Use** permission in [OpenAI API Keys](https://platform.openai.com/api-keys). You do not need a new key for every setup.
-3. Under **1. Local Tunnel service**, enter the Tunnel ID and Runtime API Key, then select **Save**. If necessary, SyndiRelay installs and verifies the official Tunnel Client. Saving does not start the service or enable launch-at-login.
-4. Select **Start Service**. Use Stop or Restart when the service is running. The header status reports local Tunnel readiness.
-5. Under **2. ChatGPT plugin**, open [ChatGPT plugin settings](https://chatgpt.com/settings/plugins-settings), create or enable the SyndiRelay connector, and call `list_platforms` to verify the integration.
-
-The saved Tunnel ID remains visible. The Runtime API Key is masked; leave the field blank to reuse the saved credential. After changing either value, save and restart the service to apply it. Credentials are never written to the repository, logs, or process arguments. Windows uses DPAPI; Linux and macOS keep the key in a private user configuration directory. SyndiRelay manages the Tunnel lifecycle in Go without PowerShell or Bash service wrappers. Login auto-start is opt-in.
-
-**Note:** A healthy local Tunnel is not proof of ChatGPT plugin authorization. Standard STDIO MCP clients do not need a Tunnel; see section 4.3.
-
-[Reverfolio](https://github.com/ThinkerQAQ/reverfolio) impact tracking is an independent, optional integration, disabled by default.
-
-## 5. Development
-
-Use the prerequisites above. From the checkout:
-
-```sh
+~~~bash
+git clone https://github.com/ThinkerQAQ/syndirelay.git
+cd syndirelay
 npm ci
 go test ./...
 npm run test:renderers
 npm run test:extension
-go build -o .build/syndirelay ./cmd
-```
+go build -o syndirelay ./cmd
+~~~
 
-[GitHub Actions](.github/workflows/ci.yml) runs Go tests, renderer/extension tests, native builds, and Tunnel script checks on Linux, macOS, and Windows. Script checks use stubs; they do not contact a real Tunnel. CI does not verify browser installation or publishing with real platform accounts. Those require native manual testing.
+On Windows, build with `go build -o syndirelay.exe ./cmd`; Windows browser integration does not require WSL. Run `./syndirelay install` (Windows: `.\syndirelay.exe install`) to register Native Messaging, then load `extension/` from the checkout.
 
-## 6. License
+Changes go through PR Review and Squash Merge. [CI](.github/workflows/ci.yml) tests Go, renderers, the extension, and installer preparation on Windows, Linux, and macOS. Real browser sign-in, ChatGPT authorization, and remote publishing require separate integration checks; CI never silently publishes articles.
 
-Original source code is licensed under [MIT](LICENSE). Third-party components retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md) and [extension notices](extension/THIRD_PARTY_NOTICES.md). Public installation packages remain pending dependency-license and native-installation review.
+## 4. License
 
-The source license does not grant rights to user articles, example media, or third-party materials. Publish only content you may use, and follow each platform's terms and authorization requirements; some adapters use undocumented interfaces.
+Original source is licensed under [MIT](LICENSE). Dependencies retain their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.md) and [extension notices](extension/THIRD_PARTY_NOTICES.md). This license does not grant rights to third-party websites, user articles, or photographs.
 
-Keep account credentials, Cookies, local configuration, and publishing state out of Git and distribution packages. Remote publishing sends the selected content to the selected platform.
+Distribution packages must not include application `Data`, platform credentials, cookies, Tunnel keys, private logs, or publishing records. Creating a remote draft sends the selected content to the platform and requires an authorized account.
