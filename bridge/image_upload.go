@@ -199,7 +199,7 @@ func (s *Server) handleMCPImageUpload(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, http.StatusPreconditionFailed, "r2_unavailable", "R2 is not configured", nil)
 		return
 	}
-	url, err := blogr2.Upload(r.Context(), client, r2config, key, result.Bytes, result.ContentType)
+	url, err := blogr2.UploadImmutable(r.Context(), client, r2config, key, result.Bytes, result.ContentType)
 	if err != nil {
 		writeAPIError(w, http.StatusBadGateway, "r2_upload_failed", "R2 upload failed; remote object state may need verification", nil)
 		return

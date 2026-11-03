@@ -3,10 +3,13 @@ package r2
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 )
@@ -28,10 +31,26 @@ func waitUploadRetry(ctx context.Context, attempt int) error {
 	}
 }
 
-// Upload creates a content-addressed R2 object once. A conditional 412 means
-// the exact object key already exists; retries cannot overwrite that key.
-// A retry after an ambiguous network failure is safe for this immutable key.
+// Upload preserves legacy overwrite behavior for caller-provided, mutable keys.
+// Retrying an ambiguous write could overwrite changed content, so it remains
+// a single attempt. Content-addressed callers must use UploadImmutable.
 func Upload(ctx context.Context, client *http.Client, config Config, objectKey string, payload []byte, contentType string) (string, error) {
+	return upload(ctx, client, config, objectKey, payload, contentType, false)
+}
+
+// UploadImmutable creates a digest-named object at most once. A lost response
+// can be retried safely, and 412 means another writer already created the key.
+func UploadImmutable(ctx context.Context, client *http.Client, config Config, objectKey string, payload []byte, contentType string) (string, error) {
+	objectKey = strings.TrimSpace(strings.TrimPrefix(objectKey, "/"))
+	hash := sha256.Sum256(payload)
+	digest := hex.EncodeToString(hash[:16])
+	if !strings.HasPrefix(path.Base(objectKey), digest+".") {
+		return "", errors.New("immutable R2 object key does not match payload checksum")
+	}
+	return upload(ctx, client, config, objectKey, payload, contentType, true)
+}
+
+func upload(ctx context.Context, client *http.Client, config Config, objectKey string, payload []byte, contentType string, immutable bool) (string, error) {
 	if err := Validate(config); err != nil {
 		return "", err
 	}
@@ -44,12 +63,21 @@ func Upload(ctx context.Context, client *http.Client, config Config, objectKey s
 	}
 	rawURL := Endpoint(config) + "/" + url.PathEscape(strings.TrimSpace(config.Bucket)) + "/" + encodePath(objectKey)
 
-	for attempt := 0; attempt < maxUploadAttempts; attempt++ {
+	attempts := 1
+	if immutable {
+		attempts = maxUploadAttempts
+	}
+	for attempt := 0; attempt < attempts; attempt++ {
 		if err := ctx.Err(); err != nil {
 			return "", err
 		}
-		// Re-sign each attempt so the AWS request timestamp stays current.
-		headers, err := SignPut(rawURL, payload, contentType, config, time.Now())
+		var headers map[string]string
+		var err error
+		if immutable {
+			headers, err = SignPutIfAbsent(rawURL, payload, contentType, config, time.Now())
+		} else {
+			headers, err = SignPut(rawURL, payload, contentType, config, time.Now())
+		}
 		if err != nil {
 			return "", err
 		}
@@ -64,19 +92,17 @@ func Upload(ctx context.Context, client *http.Client, config Config, objectKey s
 		if err == nil {
 			response.Body.Close()
 			if response.StatusCode >= 200 && response.StatusCode < 300 ||
-				response.StatusCode == http.StatusPreconditionFailed {
-				// If-None-Match: * is atomic on R2. PreconditionFailed means
-				// another request already committed this content-addressed key.
+				immutable && response.StatusCode == http.StatusPreconditionFailed {
 				return PublicURL(config, objectKey)
 			}
-			if !retryableUploadStatus(response.StatusCode) || attempt == maxUploadAttempts-1 {
+			if !immutable || !retryableUploadStatus(response.StatusCode) || attempt == attempts-1 {
 				return "", fmt.Errorf("R2 upload returned HTTP %d", response.StatusCode)
 			}
 		} else {
 			if response != nil && response.Body != nil {
 				response.Body.Close()
 			}
-			if attempt == maxUploadAttempts-1 {
+			if attempt == attempts-1 {
 				return "", fmt.Errorf("R2 upload request failed: %w", err)
 			}
 		}
