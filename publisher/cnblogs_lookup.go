@@ -85,6 +85,7 @@ func CNBlogsSearchPosts(ctx context.Context, base *http.Client, session Session,
 		return "", nil, err
 	}
 	posts := []CNBlogsPost{}
+	seen := make(map[string]struct{})
 	for page := 0; page < 5; page++ {
 		values := url.Values{"p": {fmt.Sprint(page)}, "cid": {""}, "t": {"1"}, "cfg": {"0"}, "search": {search}, "orderBy": {""}, "s": {""}, "scid": {""}}
 		req, err := adapter.request(ctx, http.MethodGet, cnBlogsOrigin+"/api/posts/list?"+values.Encode(), nil)
@@ -101,6 +102,10 @@ func CNBlogsSearchPosts(ctx context.Context, base *http.Client, session Session,
 		for _, value := range decoded.PostList {
 			post := cnBlogsPostFromMap(value)
 			if post.ID != "" {
+				if _, exists := seen[post.ID]; exists {
+					continue
+				}
+				seen[post.ID] = struct{}{}
 				posts = append(posts, post)
 			}
 		}
