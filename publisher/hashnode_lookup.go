@@ -10,7 +10,7 @@ import (
 )
 
 // HashnodePost is a read-only remote draft or published article. IDs are
-// dashboard IDs, not the public cuid or a BlogCTL binding ID.
+// dashboard IDs, not the public cuid or a SyndiRelay binding ID.
 type HashnodePost struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`

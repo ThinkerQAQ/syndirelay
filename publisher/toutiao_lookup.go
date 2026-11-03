@@ -22,7 +22,13 @@ type ToutiaoPost struct {
 }
 
 func ToutiaoTitleMatches(local, remote string) bool {
-	return CSDNTitleMatches(local, remote) || CSDNTitleMatches(truncateToutiaoTitle(local), remote)
+	if CSDNTitleMatches(local, remote) || CSDNTitleMatches(truncateToutiaoTitle(local), remote) {
+		return true
+	}
+	// Older drafts used a blind 30-rune truncation. Keep finding them after
+	// switching to a visibly abbreviated title with preserved suffixes.
+	runes := []rune(strings.TrimSpace(local))
+	return len(runes) > 30 && CSDNTitleMatches(string(runes[:30]), remote)
 }
 
 func (t *toutiaoAdapter) listDrafts(ctx context.Context) ([]ToutiaoPost, error) {

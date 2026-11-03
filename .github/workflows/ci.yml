@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
       - name: Install only distribution renderer dependencies
         run: npm ci
       - name: Test all original Go platform compilers and publisher modules
@@ -70,6 +73,31 @@ jobs:
           if ($compiled.platform -ne 'devto' -or $compiled.title -ne 'Hello SyndiRelay' -or -not $compiled.markdown.Contains('My first article.') -or -not $compiled.contentHash) {
             throw 'Quick Start output does not match the README'
           }
+      - name: Verify MCP scripts, installer wizard, and bilingual UI
+        shell: bash
+        run: |
+          bash -n scripts/setup-mcp.sh scripts/manage-mcp.sh
+          node --check extension/popup/mcp-connection.js
+          python scripts/test_package_installer.py
+      - name: Validate Windows setup scripts (parse only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $failed = @()
+          foreach ($script in @('Install-SyndiRelay.ps1', 'Open-SyndiRelay.ps1', 'Setup-SyndiRelay-MCP.ps1', 'Manage-SyndiRelay-MCP.ps1')) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD "scripts/$script"), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { $failed += "$script : $errors" }
+          }
+          if ($failed.Count -gt 0) { throw ($failed -join "`n") }
+      - name: Build native portable stage and prepare Qt IFW installer
+        shell: bash
+        run: |
+          python scripts/package_release.py --stage .build/native-stage --qa-only
+          case "${{ runner.os }}" in Linux) target=linux ;; Windows) target=windows ;; macOS) target=darwin ;; esac
+          version="$(python -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')"
+          python scripts/package_installer.py --stage .build/native-stage --version "$version" --os "$target" --output .build/qt-installer-tree --prepare-only
       - name: Check no old risky transport dependencies
         shell: bash
         run: |

@@ -84,7 +84,7 @@ func toutiaoSessionFromHAR(path string) (publisher.Session, error) {
 
 func runToutiaoProbe(args []string, out io.Writer) error {
 	if len(args) < 1 || args[0] != "probe" {
-		return errors.New("usage: blogctl toutiao probe --har <path> [--confirm-create-draft]")
+		return errors.New("usage: syndirelay toutiao probe --har <path> [--confirm-create-draft]")
 	}
 	var harPath string
 	confirm := false

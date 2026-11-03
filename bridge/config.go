@@ -143,13 +143,26 @@ func ResolvedSearchRuntimeConfig() (SearchRuntimeConfig, error) {
 	}, nil
 }
 
+// InstallationRoot supports portable executables in either root/ or root/bin/.
+// Both layouts keep mutable data outside the bin directory.
+func InstallationRoot(executable string) string {
+	directory := filepath.Dir(executable)
+	if strings.EqualFold(filepath.Base(directory), "bin") {
+		root := filepath.Dir(directory)
+		if info, err := os.Stat(filepath.Join(root, "package.json")); err == nil && info.Mode().IsRegular() {
+			return root
+		}
+	}
+	return directory
+}
+
 func defaultConfigDir() (string, error) {
 	if runtime.GOOS == "windows" {
 		executable, err := os.Executable()
 		if err != nil {
 			return "", err
 		}
-		return filepath.Join(filepath.Dir(executable), "Data"), nil
+		return filepath.Join(InstallationRoot(executable), "Data"), nil
 	}
 	dir, err := os.UserConfigDir()
 	if err != nil {
@@ -170,12 +183,52 @@ func ConfigDir() (string, error) {
 	return defaultConfigDir()
 }
 
+// ConfigPath returns the current SyndiRelay configuration path. A previous
+// BlogCTL installation's file is copied once, without altering or deleting the
+// original, to preserve API keys and platform settings across the rename.
 func ConfigPath() (string, error) {
 	dir, err := ConfigDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "blogctl.toml"), nil
+	current := filepath.Join(dir, "syndirelay.toml")
+	if _, err := os.Stat(current); err == nil {
+		return current, nil
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return "", err
+	}
+	legacy := filepath.Join(dir, "blogctl.toml")
+	data, err := os.ReadFile(legacy)
+	if errors.Is(err, os.ErrNotExist) {
+		return current, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", err
+	}
+	// Exclusive create avoids overwriting a configuration written by another
+	// process concurrently. Existing config always takes precedence.
+	file, err := os.OpenFile(current, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if errors.Is(err, os.ErrExist) {
+		return current, nil
+	}
+	if err != nil {
+		return "", err
+	}
+	_, writeErr := file.Write(data)
+	if writeErr == nil {
+		writeErr = file.Sync()
+	}
+	if closeErr := file.Close(); writeErr == nil {
+		writeErr = closeErr
+	}
+	if writeErr != nil {
+		_ = os.Remove(current)
+		return "", fmt.Errorf("copy legacy configuration: %w", writeErr)
+	}
+	return current, nil
 }
 
 func DistributionRoot() (string, error) {

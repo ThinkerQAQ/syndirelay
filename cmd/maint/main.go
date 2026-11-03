@@ -28,7 +28,7 @@ var targets = []target{
 
 func main() {
 	if len(os.Args) != 2 {
-		exit(fmt.Errorf("usage: go run ./cmd/maint <build|verify|package>"))
+		exit(fmt.Errorf("usage: go run ./cmd/maint <build|verify|licenses|package>"))
 	}
 	var err error
 	switch os.Args[1] {
@@ -36,6 +36,8 @@ func main() {
 		err = build()
 	case "verify":
 		err = verify()
+	case "licenses":
+		err = verifyReleaseLicenses()
 	case "package":
 		err = packageRelease()
 	default:
@@ -80,6 +82,14 @@ func verify() error {
 	}
 	fmt.Println("SyndiRelay verification passed")
 	return nil
+}
+func verifyReleaseLicenses() error {
+	licenseRoot := filepath.Join(buildDir, "publish-licenses")
+	if err := validateReleaseLicenses(licenseRoot, "go.mod", "package-lock.json"); err != nil {
+		return fmt.Errorf("third-party license review incomplete: %w", err)
+	}
+	_, err := thirdPartyLicenseFiles(licenseRoot)
+	return err
 }
 func packageRelease() error {
 	// Publish only if a fresh upstream license collection was produced.

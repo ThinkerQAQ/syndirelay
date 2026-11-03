@@ -17,19 +17,28 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// The MCP server is an adapter to the already-running local BlogCTL Bridge.
+// The MCP server is an adapter to the already-running local SyndiRelay Bridge.
 // Credentials remain in the browser Extension and local Bridge, never in tool results.
 type mcpBridgeClient struct {
-	mu    sync.Mutex
-	state bridgeState
-	ready bool
-	http  *http.Client
+	mu            sync.Mutex
+	state         bridgeState
+	ready         bool
+	http          *http.Client
+	stateProvider func() (bridgeState, error) // injectable only for isolated Bridge recovery tests
 }
 
 func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body any) (json.RawMessage, error) {
+	return c.callWithRefresh(ctx, method, path, body, true)
+}
+
+func (c *mcpBridgeClient) callWithRefresh(ctx context.Context, method, path string, body any, retryRead bool) (json.RawMessage, error) {
 	c.mu.Lock()
 	if !c.ready {
-		state, err := ensureBridgeProcess()
+		provider := c.stateProvider
+		if provider == nil {
+			provider = ensureBridgeProcess
+		}
+		state, err := provider()
 		if err != nil {
 			c.mu.Unlock()
 			return nil, err
@@ -38,7 +47,7 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 		// stale/tampered runtime-state file advertises a different address.
 		if state.BaseURL != "http://127.0.0.1:32146" && state.BaseURL != "http://localhost:32146" {
 			c.mu.Unlock()
-			return nil, errors.New("invalid local BlogCTL Bridge origin")
+			return nil, errors.New("invalid local SyndiRelay Bridge origin")
 		}
 		c.state = state
 		c.ready = true
@@ -70,7 +79,7 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 		c.mu.Lock()
 		c.ready = false
 		c.mu.Unlock() // do not automatically retry any operation
-		return nil, fmt.Errorf("local BlogCTL Bridge unavailable: %w", err)
+		return nil, fmt.Errorf("local SyndiRelay Bridge unavailable: %w", err)
 	}
 	defer response.Body.Close()
 	raw, err := io.ReadAll(io.LimitReader(response.Body, 4<<20+1))
@@ -78,7 +87,20 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 		return nil, err
 	}
 	if len(raw) > 4<<20 {
-		return nil, errors.New("BlogCTL response exceeds 4MiB")
+		return nil, errors.New("SyndiRelay response exceeds 4MiB")
+	}
+	if response.StatusCode == http.StatusUnauthorized {
+		c.mu.Lock()
+		// An older in-flight request must not discard a newer Bridge state.
+		if c.state.Token == state.Token && c.state.BaseURL == state.BaseURL {
+			c.ready = false
+		}
+		c.mu.Unlock()
+		if retryRead && method == http.MethodGet {
+			// The Bridge rejected this read before processing it. Refresh once,
+			// but never automatically replay a mutating operation.
+			return c.callWithRefresh(ctx, method, path, body, false)
+		}
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		var failure struct {
@@ -101,7 +123,7 @@ func (c *mcpBridgeClient) call(ctx context.Context, method, path string, body an
 		if message == "" {
 			message = http.StatusText(response.StatusCode)
 		}
-		return nil, fmt.Errorf("BlogCTL: %s (HTTP %d)", message, response.StatusCode)
+		return nil, fmt.Errorf("SyndiRelay: %s (HTTP %d)", message, response.StatusCode)
 	}
 	return json.RawMessage(raw), nil
 }
@@ -149,7 +171,7 @@ func (c *mcpBridgeClient) refreshSessions(ctx context.Context, platforms []strin
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-deadline.C:
-			return errors.New("browser session refresh timed out: keep the BlogCTL Edge/Chrome extension enabled and signed in")
+			return errors.New("browser session refresh timed out: keep the SyndiRelay Edge/Chrome extension enabled and signed in")
 		case <-ticker.C:
 		}
 	}
@@ -191,9 +213,9 @@ func newBlogMCPServer(c *mcpBridgeClient) *mcp.Server {
 		})
 	}
 	addRead("list_articles", "List locally published Chinese articles and whether English mirrors exist.", "GET", "/v1/articles")
-	addRead("list_platforms", "List supported platforms and BlogCTL capabilities; not a guarantee that user is signed in.", "GET", "/v1/mcp/platforms")
+	addRead("list_platforms", "List supported platforms and SyndiRelay capabilities; not a guarantee that user is signed in.", "GET", "/v1/mcp/platforms")
 	addRead("get_publications", "List locally recorded article distribution bindings; does not prove current remote state.", "GET", "/v1/publications")
-	addRead("list_tasks", "List saved BlogCTL tasks and publishing results.", "GET", "/v1/jobs")
+	addRead("list_tasks", "List saved SyndiRelay tasks and publishing results.", "GET", "/v1/jobs")
 	mcp.AddTool(server, mcpTool("get_article", "Read Markdown from the configured local content checkout by slug and language. No arbitrary paths.", true), func(ctx context.Context, _ *mcp.CallToolRequest, in mcpArticleID) (*mcp.CallToolResult, mcpResult, error) {
 		lang := in.Language
 		if lang == "" {
@@ -218,7 +240,7 @@ func newBlogMCPServer(c *mcpBridgeClient) *mcp.Server {
 	remoteWrite := true
 	imageTool.Annotations.OpenWorldHint = &remoteWrite
 	mcp.AddTool(server, imageTool, func(ctx context.Context, _ *mcp.CallToolRequest, in struct {
-		LocalPath string `json:"local_path" jsonschema:"Absolute local image path on BlogCTL host."`
+		LocalPath string `json:"local_path" jsonschema:"Absolute local image path on SyndiRelay host."`
 		Format    string `json:"format,omitempty" jsonschema:"webp (default), jpeg or png."`
 		Alt       string `json:"alt,omitempty" jsonschema:"Optional Markdown image alt text."`
 		DryRun    bool   `json:"dry_run,omitempty" jsonschema:"Sanitize locally, without uploading to R2."`
@@ -239,7 +261,7 @@ func newBlogMCPServer(c *mcpBridgeClient) *mcp.Server {
 		return nil, mcpResult{raw}, err
 	})
 	// Preview is local-only. Existing Bridge dry-run compiles but never creates remote articles.
-	mcp.AddTool(server, mcpTool("preview_publish", "Run BlogCTL dry-run for an explicitly selected article and platform; creates a local task but makes no remote writes.", false), func(ctx context.Context, _ *mcp.CallToolRequest, in struct {
+	mcp.AddTool(server, mcpTool("preview_publish", "Run SyndiRelay dry-run for an explicitly selected article and platform; creates a local task but makes no remote writes.", false), func(ctx context.Context, _ *mcp.CallToolRequest, in struct {
 		Article   string   `json:"article"`
 		Platforms []string `json:"platforms"`
 	}) (*mcp.CallToolResult, mcpResult, error) {

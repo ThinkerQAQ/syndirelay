@@ -109,7 +109,7 @@ func TestCopyrightFooterWithLegacyCustomTemplate(t *testing.T) {
 		if !strings.Contains(footer, "[Example]") || !strings.Contains(footer, "utm_source=juejin") {
 			t.Fatalf("legacy tracking footer changed: %s", footer)
 		}
-		if !strings.Contains(footer, "© Fixture") || !strings.Contains(footer, original+")") {
+		if !strings.Contains(footer, "© Fixture") || !strings.Contains(footer, ">\n> © Fixture") {
 			t.Fatalf("missing copyright or untracked original link: %s", footer)
 		}
 		if strings.Count(footer, "© Fixture") != 1 {
@@ -132,7 +132,7 @@ func TestContentCopyrightChangesSyndicationFooterWithoutChangingTemplate(t *test
 	if !strings.Contains(footer, "CUSTOM CONTENT COPYRIGHT") || strings.Contains(original, "CUSTOM CONTENT COPYRIGHT") {
 		t.Fatalf("no override: %s", footer)
 	}
-	if !strings.Contains(footer, canonical+")") || !strings.Contains(footer, "utm_source=devto") {
+	if strings.Contains(footer, "[Original article](") || !strings.Contains(footer, "utm_source=devto") {
 		t.Fatalf("lost existing canonical attribution: %s", footer)
 	}
 }
@@ -178,6 +178,105 @@ func TestCompilePlatformReadsContentCopyrightForDevtoAndMedium(t *testing.T) {
 			if !strings.Contains(compiled[0].HTML, "SYNDCUSTOM_EN") || !strings.Contains(string(compiled[0].Payload), "SYNDCUSTOM_EN") {
 				t.Fatalf("%s did not load content policy", platform)
 			}
+		}
+	}
+}
+
+func TestFooterIsSingleBlockquoteWithoutRedundantOriginalLink(t *testing.T) {
+	for _, platform := range blogpublishing.PlatformIDs() {
+		for _, lang := range []string{"zh-CN", "en"} {
+			profile := defaultPlatformConfig(platform)
+			profile.Language = lang
+			origin := "https://example.org/articles/example/"
+			copyright := blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0", Source: "Original article"}
+			footer := renderFooter(profile, origin, "Example", copyright)
+			if strings.Count(footer, "https://example.org") != 1 {
+				t.Fatalf("%s/%s canonical must occur once: %q", platform, lang, footer)
+			}
+			if strings.Count(footer, "© Author") != 1 {
+				t.Fatalf("%s/%s copyright duplicated", platform, lang)
+			}
+			if !strings.Contains(footer, "\n>\n> © Author") {
+				t.Fatalf("%s/%s separated blockquotes: %q", platform, lang, footer)
+			}
+			if strings.Contains(footer, "[Original article]") || strings.Contains(footer, "[原文]") {
+				t.Fatalf("%s/%s redundant source label", platform, lang)
+			}
+		}
+	}
+}
+
+func TestCopyrightPlainParagraphForUnquotedTemplate(t *testing.T) {
+	p := defaultPlatformConfig("devto")
+	p.Footer.Template = "See [{site}]({url})."
+	v := renderFooter(p, "https://example.org/articles/a/", "Article", blogpublishing.CopyrightText{Syndication: "© Licensed"})
+	if !strings.Contains(v, ".\n\n© Licensed") || strings.Contains(v, "\n> ©") {
+		t.Fatal(v)
+	}
+}
+
+func TestCnblogsAndCSDNFooterUsesReadableParagraphsAndBoundedLicenseLink(t *testing.T) {
+	for _, lang := range []string{"zh-CN", "en"} {
+		profile := defaultPlatformConfig("cnblogs")
+		profile.Language = lang
+		original := renderFooter(profile, "https://example.org/articles/test/", "Article",
+			blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：允许非商业转载与改编；商业使用需另行授权。"})
+		got := readableEditorFooter(original)
+		if strings.Contains(got, "\n>") || strings.HasPrefix(got, ">") {
+			t.Fatalf("unexpected blockquote: %s", got)
+		}
+		if !strings.Contains(got, "\n\n© Author.") {
+			t.Fatalf("copyright not separated: %s", got)
+		}
+		if !strings.Contains(got, "[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)") {
+			t.Fatalf("license not linked: %s", got)
+		}
+		if strings.Contains(got, "（https://creativecommons.org") {
+			t.Fatalf("bare URL remains: %s", got)
+		}
+		if !strings.Contains(got, "商业使用需另行授权") {
+			t.Fatalf("license text changed: %s", got)
+		}
+		if strings.Count(got, "https://example.org/articles/test/") != 1 {
+			t.Fatalf("duplicate canonical URL: %s", got)
+		}
+	}
+}
+
+func TestPolicyLicenseLinksAreMarkdownOnEveryPlatform(t *testing.T) {
+	for _, platform := range blogpublishing.PlatformIDs() {
+		for _, language := range []string{"zh-CN", "en"} {
+			profile := defaultPlatformConfig(platform)
+			profile.Language = language
+			policy := blogpublishing.CopyrightText{Syndication: "© Author. CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：允许非商业转载与改编；商业使用需另行授权。"}
+			rendered := renderFooter(profile, "https://example.org/articles/example/", "Example", policy)
+			if profile.Footer.Enabled && !strings.Contains(rendered, "[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)") {
+				t.Fatalf("%s/%s: license not formal Markdown link: %s", platform, language, rendered)
+			}
+			if strings.Contains(rendered, "（https://creativecommons.org") {
+				t.Fatalf("%s/%s: bare license URL: %s", platform, language, rendered)
+			}
+			if strings.Contains(rendered, "[原文](") || strings.Contains(rendered, "[Original article](") {
+				t.Fatalf("%s/%s: duplicate source link", platform, language)
+			}
+		}
+	}
+}
+
+func TestPolicyLicenseNormalizationIsIdempotentAndRespectsCustomContent(t *testing.T) {
+	cases := []struct{ policy, expected string }{
+		{"采用 CC BY-NC-SA 4.0（https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans）：授权", "采用 [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans)：授权"},
+		{"See CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en).", "See [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)."},
+		{"自定义协议（https://example.org/license）：仅供查阅。", "自定义协议（[许可协议](https://example.org/license)）：仅供查阅。"},
+		{"Already [MIT](https://opensource.org/licenses/MIT) licensed.", "Already [MIT](https://opensource.org/licenses/MIT) licensed."},
+	}
+	for _, tc := range cases {
+		got := normalizeFooterPolicyLinks(tc.policy, "zh-CN")
+		if got != tc.expected {
+			t.Fatalf("want %q got %q", tc.expected, got)
+		}
+		if normalizeFooterPolicyLinks(got, "zh-CN") != got {
+			t.Fatalf("not idempotent: %s", got)
 		}
 	}
 }

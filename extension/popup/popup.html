@@ -400,7 +400,7 @@
               <option value="en">English</option>
             </select>
           </label>
-          <p class="card-hint">修改后自动保存到 blogctl.toml，仅影响界面，不改变文章语言。</p>
+          <p class="card-hint">修改后自动保存到 syndirelay.toml，仅影响界面，不改变文章语言。</p>
           <p id="uiLocaleMessage" class="message" role="status" aria-live="polite"></p>
         </div>
 
@@ -410,13 +410,36 @@
               <strong>Config</strong>
               <span class="tool-requirement required">必选</span>
             </span>
-            <code class="config-file-name">blogctl.toml</code>
+            <code class="config-file-name">syndirelay.toml</code>
           </div>
-          <code id="environmentConfigPath" class="path-value">正在读取 blogctl.toml…</code>
+          <code id="environmentConfigPath" class="path-value">正在读取 syndirelay.toml…</code>
           <div class="tool-edit-controls">
             <button id="editConfigFile" class="secondary tool-edit-button" type="button">✎ 编辑</button>
           </div>
         </div>
+
+        <section id="mcpConnectionSettings" class="mcp-setup">
+          <section class="tool-card">
+            <div class="status-row"><strong>1. 本地 Tunnel 服务</strong><strong id="mcpConnectionStatus" class="status checking" role="status">检测中</strong></div>
+            <label class="field"><span>Tunnel ID <a href="https://platform.openai.com/settings/organization/tunnels" target="_blank" rel="noopener noreferrer" title="创建 Tunnel ID">?</a></span>
+              <input id="mcpTunnelID" type="text" spellcheck="false" autocomplete="off" maxlength="80"><small id="mcpTunnelHint"></small></label>
+            <label class="field"><span>Runtime API Key <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" title="创建受限 Runtime API Key">?</a></span>
+              <input id="mcpRuntimeKey" type="password" spellcheck="false" autocomplete="new-password" maxlength="512"><small id="mcpRuntimeHint"></small></label>
+            <div class="mcp-setup-actions">
+              <button id="mcpSave" class="primary" type="button">保存配置</button>
+              <button id="mcpConnect" class="primary" type="button" disabled>启动服务</button>
+              <button id="mcpRestart" class="secondary" type="button" disabled>重启服务</button></div>
+            <p id="mcpConnectionMessage" class="message" role="alert"></p>
+          </section>
+          <section class="tool-card">
+            <div class="section-title">2. ChatGPT 插件</div>
+            <p class="card-hint">本机 Tunnel 就绪后，在 ChatGPT 中配置并启用 SyndiRelay 插件。Tunnel 就绪不代表 ChatGPT 已授权。</p>
+            <a href="https://chatgpt.com/settings/plugins-settings" target="_blank" rel="noopener noreferrer">打开 ChatGPT 插件设置</a>
+            <details class="mcp-setup-advanced"><summary>本地 MCP 客户端（STDIO）</summary>
+              <pre id="mcpLocalConfig" class="mcp-local-config"></pre>
+              <button id="mcpCopyConfig" class="secondary" type="button">复制本地配置</button></details>
+          </section>
+        </section>
 
         <div id="environmentRuntimeTools" class="tool-list"><div class="platform-loading">正在检测本机环境…</div></div>
 
@@ -443,7 +466,7 @@
             <label class="field"><span>Secret Access Key</span><input id="r2SecretAccessKey" type="password" autocomplete="new-password" placeholder="未配置"></label>
             <label class="field"><span>Account ID</span><input id="r2AccountId" type="text" autocomplete="off"></label>
             <label class="field"><span>Endpoint（可选）</span><input id="r2Endpoint" type="url" placeholder="留空时由 Account ID 自动生成"></label>
-            <p class="card-hint">R2 配置统一保存在本机 <code>blogctl.toml</code>；Secret Access Key 不会回显到插件。</p>
+            <p class="card-hint">R2 配置统一保存在本机 <code>syndirelay.toml</code>；Secret Access Key 不会回显到插件。</p>
             <div class="tool-edit-controls">
               <button id="editAssets" class="secondary tool-edit-button" type="button">✎ 编辑</button>
               <div id="assetEditActions" class="tool-edit-actions" hidden>
@@ -595,6 +618,7 @@
   <script src="social.js"></script>
   <script src="publishing.js"></script>
   <script src="impact.js"></script>
+  <script src="mcp-connection.js"></script>
   <script src="environment.js"></script>
   <script src="settings-navigation.js"></script>
   <script src="popup.js"></script>

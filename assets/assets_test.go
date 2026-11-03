@@ -17,7 +17,7 @@ func TestPrepareConcurrentPlatformsRenderEachSharedAssetOnce(t *testing.T) {
 		t.Skip("test uses a local POSIX renderer fixture")
 	}
 	root := t.TempDir()
-	renderer := filepath.Join(root, "tools", "blogctl", "renderers", "node", "publishing-image.mjs")
+	renderer := filepath.Join(root, "renderers", "node", "publishing-image.mjs")
 	if err := os.MkdirAll(filepath.Dir(renderer), 0755); err != nil {
 		t.Fatal(err)
 	}

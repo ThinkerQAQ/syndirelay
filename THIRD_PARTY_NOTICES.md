@@ -12,3 +12,7 @@ Never include users' content, session Cookies, access tokens, configuration secr
 
 
 Bundled Extension runtime attributions: see [Extension third-party notices](extension/THIRD_PARTY_NOTICES.md), including the seven pinned CodeMirror-related MIT license files and the existing i18next MIT license file.
+
+## Installer onboarding
+
+The Qt Installer Framework wizard and optional MCP Tunnel setup are adapted from Reverfolio and VidOtter. The upstream VidOtter files carry Apache-2.0 attribution and license texts in `scripts/installer/VIDOTTER_NOTICE` and `scripts/installer/VIDOTTER_LICENSE`. Changes include SyndiRelay-specific native host registration, local MCP configuration and staged runtime assets. The Qt Installer Framework itself is not redistributed by the source tree; installer builders must comply with its license.

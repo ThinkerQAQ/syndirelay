@@ -96,7 +96,7 @@ func (h *mediumBrowserUploadHub) next() map[string]any {
 	}
 	for _, id := range h.order {
 		item, ok := h.pending[id]
-		if !ok || (item.claimed && time.Since(item.claimedAt) < 45*time.Second) {
+		if !ok || (item.claimed && time.Since(item.claimedAt) < 130*time.Second) {
 			continue
 		}
 		item.claimed = true

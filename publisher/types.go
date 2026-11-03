@@ -61,6 +61,7 @@ type DraftInput struct {
 	Tags               []string
 	CoverImageURL      string
 	NativeCanonicalURL string
+	CanonicalURL       string
 	Published          bool
 	ChangedOnly        bool
 	ContentRoot        string

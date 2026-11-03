@@ -165,7 +165,7 @@
     // anchor and surrounding layout stable until the user leaves the control.
     // Polling and push events still update state, so blur paints the latest data.
     if (document.activeElement === el("indexEngineFilter")) {
-      if (!state.renderDeferred) console.debug("[BlogCTL indexing] render deferred while engine selector is focused");
+      if (!state.renderDeferred) console.debug("[SyndiRelay indexing] render deferred while engine selector is focused");
       state.renderDeferred = true;
       return;
     }
@@ -368,7 +368,7 @@
         BlogCTLPopup.setMessage(elements.message, BlogCTLPopup.errorMessage(error), "error");
         BlogCTLPopup.refreshBridgeIndicator().catch(() => {});
       } else {
-        console.warn("[BlogCTL indexing] refresh failed while engine selector is focused", BlogCTLPopup.errorMessage(error));
+        console.warn("[SyndiRelay indexing] refresh failed while engine selector is focused", BlogCTLPopup.errorMessage(error));
       }
     }
   }
@@ -555,7 +555,7 @@
     engineFilter.addEventListener("blur", () => {
       if (!state.active) return;
       if (state.renderDeferred) {
-        console.debug("[BlogCTL indexing] applying deferred render after engine selector blur");
+        console.debug("[SyndiRelay indexing] applying deferred render after engine selector blur");
         render();
       }
       refresh();

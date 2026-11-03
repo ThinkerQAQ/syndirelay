@@ -106,7 +106,7 @@ func applyLoggingConfig(config bridgeConfig) error {
 	return nil
 }
 
-// ConfigureLogging loads the persisted BlogCTL configuration and installs the
+// ConfigureLogging loads the persisted SyndiRelay configuration and installs the
 // process-wide structured logger before the Bridge starts serving requests.
 func ConfigureLogging() error {
 	return applyLoggingConfig(loadBridgeConfig())

@@ -150,7 +150,7 @@ func prepareOne(ctx context.Context, config Config, asset blogcompiler.Asset, ou
 			return false, errors.New("node was not found for publishing renderer")
 		}
 	}
-	renderer := filepath.Join(config.EngineRoot, "tools", "blogctl", "renderers", "node", "publishing-image.mjs")
+	renderer := filepath.Join(config.EngineRoot, "renderers", "node", "publishing-image.mjs")
 	if info, err := os.Stat(renderer); err != nil || info.IsDir() {
 		return false, fmt.Errorf("publishing renderer was not found: %s", renderer)
 	}

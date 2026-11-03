@@ -335,7 +335,7 @@
   function renderTools() {
     const tools = state.tools.filter((item) => item.kind !== "publishing" && item.kind !== "social");
     const bridgeTool = tools.find((item) => item.name === "bridge");
-    configPath.textContent = bridgeTool?.health?.path || "未找到 blogctl.toml";
+    configPath.textContent = bridgeTool?.health?.path || "未找到 syndirelay.toml";
     const searchNames = new Set(["search-site", "indexnow", "bing-webmaster", "baidu-search-resource", "google-search-console-api"]);
     const searchTools = tools.filter((item) => searchNames.has(item.name));
     const dependencyItems = tools.filter((item) => item.kind === "dependency");
@@ -403,10 +403,10 @@
 
   async function editConfigFile() {
     configEditButton.disabled = true;
-    BlogCTLPopup.setMessage(message, "正在打开 blogctl.toml…");
+    BlogCTLPopup.setMessage(message, "正在打开 syndirelay.toml…");
     try {
       const response = await BlogCTLPopup.send("blogctl.config.edit");
-      BlogCTLPopup.setMessage(message, `已用系统编辑器打开 ${response.path || "blogctl.toml"}。`, "ok");
+      BlogCTLPopup.setMessage(message, `已用系统编辑器打开 ${response.path || "syndirelay.toml"}。`, "ok");
     } catch (error) {
       BlogCTLPopup.setMessage(message, BlogCTLPopup.errorMessage(error), "error");
     } finally {
@@ -450,6 +450,7 @@
     message = document.getElementById("environmentMessage");
 
     configEditButton.addEventListener("click", editConfigFile);
+    root.BlogCTLMCPConnection?.init();
     BlogCTLImpact.init();
     BlogCTLAssets.init();
     BlogCTLPublishing.init();
