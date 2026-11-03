@@ -40,11 +40,12 @@ func SignPut(rawURL string, payload []byte, contentType string, config Config, n
 	canonicalHeaders := strings.Join([]string{
 		"content-type:" + contentType,
 		"host:" + parsed.Host,
+		"if-none-match:*",
 		"x-amz-content-sha256:" + payloadHash,
 		"x-amz-date:" + amzDate,
 		"",
 	}, "\n")
-	signedHeaders := "content-type;host;x-amz-content-sha256;x-amz-date"
+	signedHeaders := "content-type;host;if-none-match;x-amz-content-sha256;x-amz-date"
 	path := parsed.EscapedPath()
 	if path == "" {
 		path = "/"
@@ -75,6 +76,7 @@ func SignPut(rawURL string, payload []byte, contentType string, config Config, n
 		"authorization": "AWS4-HMAC-SHA256 Credential=" + config.AccessKeyID + "/" + scope +
 			", SignedHeaders=" + signedHeaders + ", Signature=" + signature,
 		"content-type":         contentType,
+		"if-none-match":        "*",
 		"x-amz-content-sha256": payloadHash,
 		"x-amz-date":           amzDate,
 		"cache-control":        "public, max-age=31536000, immutable",
