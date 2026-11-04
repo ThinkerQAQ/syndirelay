@@ -47,7 +47,16 @@ func uploadR2Fallback(ctx context.Context, client *http.Client, input DraftInput
 		return "", errors.New("R2 fallback object key is empty")
 	}
 
-	publicURL, err := blogr2.Upload(ctx, client, config, objectKey, image.Payload, image.ContentType)
+	var publicURL string
+	var err error
+	digest := sha256.Sum256(image.Payload)
+	if strings.HasPrefix(filepath.Base(objectKey), hex.EncodeToString(digest[:16])+".") {
+		// Only payload-digest keys can be treated as immutable.
+		publicURL, err = blogr2.UploadImmutable(ctx, client, config, objectKey, image.Payload, image.ContentType)
+	} else {
+		// Explicit asset keys can be mutable even without a recorded public URL.
+		publicURL, err = blogr2.Upload(ctx, client, config, objectKey, image.Payload, image.ContentType)
+	}
 	if err != nil {
 		return "", err
 	}
