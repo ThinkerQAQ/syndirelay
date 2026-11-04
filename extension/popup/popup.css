@@ -365,6 +365,27 @@ body { color: var(--ui-text); background: var(--ui-background); }
 .settings-category-panes, .settings-category-pane { min-width: 0; }
 .settings-category-pane:not([hidden]) { display: grid; gap: 10px; }
 .settings-category-pane .environment-large-card { margin-top: 0; }
+.settings-category-pane .settings-runtime-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 45px;
+  padding: 10px;
+  text-align: left;
+  background: #fafafa;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius);
+  color: var(--ui-text);
+}
+.settings-category-pane .settings-runtime-link:hover { background: #f8fafc; }
+.settings-category-pane .settings-runtime-chevron {
+  flex: 0 0 auto;
+  color: #94a3b8;
+  font-size: 16px;
+  line-height: 1;
+}
 @media (min-width: 800px) {
   .app { max-width: 1120px; margin-inline: auto; }
 }

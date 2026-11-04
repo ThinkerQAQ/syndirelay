@@ -83,7 +83,8 @@
     const back = document.createElement("button");
     back.type = "button";
     back.className = "secondary compact settings-back";
-    back.textContent = "← 返回设置";
+    const activeMeta = CATEGORY_META.find((item) => item.id === active);
+    back.textContent = activeMeta?.parent ? "← 返回运行环境" : "← 返回设置";
     back.hidden = !isDetail;
     back.addEventListener("click", () => {
       const meta = CATEGORY_META.find((item) => item.id === selected);
@@ -99,22 +100,6 @@
       tree.append(heading);
     } else {
       tree.append(list);
-    }
-    if (active === "runtime") {
-      const child = CATEGORY_META.find((item) => item.parent === "runtime");
-      if (child) {
-        const entry = document.createElement("button");
-        entry.type = "button";
-        entry.className = "settings-category-row";
-        entry.dataset.settingsCategory = child.id;
-        entry.textContent = child.title + " ›";
-        entry.addEventListener("click", () => {
-          selected = child.id;
-          render();
-          root.BlogCTLMCPConnection?.refresh();
-        });
-        tree.append(entry);
-      }
     }
     for (const meta of CATEGORY_META) {
       nodes.get(meta.id).hidden = meta.id !== active;
@@ -158,6 +143,32 @@
       nodes.set(meta.id, section);
       panes.append(section);
     }
+    // Runtime tools and this entry share the same card geometry and width.
+    // Mount the link once in the runtime pane, not in the global settings tree.
+    const mcp = CATEGORY_META.find((item) => item.id === "mcp");
+    const entry = document.createElement("button");
+    entry.type = "button";
+    entry.className = "tool-card settings-runtime-link";
+    entry.dataset.settingsCategory = mcp.id;
+    const title = document.createElement("span");
+    title.className = "tool-identity";
+    const name = document.createElement("strong");
+    name.textContent = mcp.title;
+    const badge = document.createElement("span");
+    badge.className = "tool-requirement optional";
+    badge.textContent = "可选";
+    title.append(name, badge);
+    const arrow = document.createElement("span");
+    arrow.className = "settings-runtime-chevron";
+    arrow.textContent = "›";
+    arrow.setAttribute("aria-hidden", "true");
+    entry.append(title, arrow);
+    entry.addEventListener("click", () => {
+      selected = mcp.id;
+      render();
+      root.BlogCTLMCPConnection?.refresh();
+    });
+    nodes.get("runtime").prepend(entry);
     panel.replaceChildren(heading, intro, search, tree, panes);
     initialized = true;
     render();

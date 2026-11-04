@@ -50,8 +50,11 @@ test('MCP connection appears immediately below runtime environment in Settings',
   const platforms = nav.indexOf('id: "platforms"');
   assert.ok(runtime >= 0 && runtime < mcp && mcp < platforms);
   assert.match(nav, /id: "mcp", parent: "runtime"/);
-  assert.match(nav, /if \(active === "runtime"\)/);
+  assert.match(nav, /entry\.className = "tool-card settings-runtime-link"/);
+  assert.match(nav, /nodes\.get\("runtime"\)\.prepend\(entry\)/);
+  assert.doesNotMatch(nav, /tree\.append\(entry\)/);
   assert.match(nav, /selected = meta\?\.parent \|\| ""/);
+  assert.match(css, /\.settings-category-pane \.settings-runtime-link \{/);
 });
 
 test('Tunnel supervisor controls and automatic connection are independent', () => {
