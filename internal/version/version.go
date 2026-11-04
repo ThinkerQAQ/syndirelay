@@ -2,4 +2,4 @@ package version
 
 // Current is the version shared by the SyndiRelay executable, Native Host,
 // Bridge API, and browser extension release.
-const Current = "0.1.193"
+const Current = "0.1.194"

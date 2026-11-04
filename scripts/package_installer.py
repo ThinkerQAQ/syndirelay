@@ -50,6 +50,7 @@ def require_windows_gui(path):
 
 ASSETS = pathlib.Path(__file__).with_name("installer")
 QA_PREPARE_ONLY = False
+LOCAL_TEST_ONLY = False
 
 PAYLOAD = ("bin", "extension", "renderers", "node_modules", "scripts",
            "package.json", "package-lock.json", "LICENSE", "README.md", "README_ZH.md",
@@ -72,8 +73,10 @@ def prepare(stage, destination, version, target):
             raise ValueError("release is missing "+name)
     if not (stage/"THIRD_PARTY_LICENSES"/"MANIFEST.json").is_file() and not (stage/".qa-only").exists():
         raise ValueError("reviewed third-party licenses are required")
-    if (stage/".qa-only").exists() and not QA_PREPARE_ONLY:
+    if (stage/".qa-only").exists() and not (QA_PREPARE_ONLY or LOCAL_TEST_ONLY):
         raise ValueError("QA-only stage cannot produce a distributable installer")
+    if LOCAL_TEST_ONLY and not (stage/".qa-only").exists():
+        raise ValueError("local test installer requires an explicit QA-only stage")
     # Explicit allowlist. Even accidentally staged secrets must never enter an installer.
     for path in stage.rglob("*"):
         if path.is_symlink():
@@ -91,12 +94,14 @@ def prepare(stage, destination, version, target):
     data.mkdir()
     for name in PAYLOAD:
         src = stage/name
-        if name == "THIRD_PARTY_LICENSES" and QA_PREPARE_ONLY and not src.exists():
+        if name == "THIRD_PARTY_LICENSES" and (QA_PREPARE_ONLY or LOCAL_TEST_ONLY) and not src.exists():
             continue
         if src.is_dir():
             shutil.copytree(src, data/name)
         elif src.is_file():
             shutil.copy2(src, data/name)
+    if LOCAL_TEST_ONLY:
+        (data/"LOCAL-TEST-ONLY.txt").write_text("SyndiRelay local QA build. Not approved for redistribution or GitHub Release.\n", encoding="utf-8")
     xml(config/"config.xml", "Installer", {
         "Name":"SyndiRelay", "Version":version, "Title":"SyndiRelay",
         "Publisher":"ThinkerQAQ", "StartMenuDir":"SyndiRelay",
@@ -177,9 +182,13 @@ def main():
     parser.add_argument("--binarycreator", default="binarycreator")
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--prepare-only", action="store_true", help="Generate inspectable IFW tree instead of an installer")
+    parser.add_argument("--local-test", action="store_true", help="Build local QA installer; not distributable or a public Release")
     args=parser.parse_args()
-    global QA_PREPARE_ONLY
+    global QA_PREPARE_ONLY, LOCAL_TEST_ONLY
     QA_PREPARE_ONLY = args.prepare_only
+    LOCAL_TEST_ONLY = args.local_test
+    if QA_PREPARE_ONLY and LOCAL_TEST_ONLY:
+        parser.error("choose --prepare-only or --local-test")
     if args.output.exists():
         parser.error("refusing to overwrite output")
     if args.prepare_only:
