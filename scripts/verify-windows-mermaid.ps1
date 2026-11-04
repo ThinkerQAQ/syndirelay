@@ -6,11 +6,11 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-$renderer = Join-Path $EngineRoot 'tools\blogctl\renderers\node\publishing-image.mjs'
+$renderer = Join-Path $EngineRoot 'renderers\node\publishing-image.mjs'
 if (-not (Test-Path -LiteralPath $renderer -PathType Leaf)) {
-    throw "BlogCTL renderer not found: $renderer"
+    throw "SyndiRelay renderer not found: $renderer"
 }
-$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ('blogctl-windows-mermaid-e2e-' + [guid]::NewGuid().ToString('N'))
+$tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ('syndirelay-windows-mermaid-e2e-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 try {
     $source = Join-Path $tempDir 'sample.mmd'

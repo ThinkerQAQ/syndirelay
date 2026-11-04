@@ -79,12 +79,12 @@ func (a app) runNPM(prepare bool, args ...string) error {
 
 func (a app) runDiagrams(args []string) error {
 	if len(args) > 1 {
-		return errors.New("usage: blogctl diagrams [plantuml|drawio]")
+		return errors.New("usage: syndirelay diagrams [plantuml|drawio]")
 	}
 	target := "diagrams"
 	if len(args) == 1 {
 		if args[0] != "plantuml" && args[0] != "drawio" {
-			return errors.New("usage: blogctl diagrams [plantuml|drawio]")
+			return errors.New("usage: syndirelay diagrams [plantuml|drawio]")
 		}
 		target += ":" + args[0]
 	}

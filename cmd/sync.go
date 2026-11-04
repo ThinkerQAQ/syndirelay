@@ -212,7 +212,7 @@ func printBridgeSyncJob(out io.Writer, job bridgeSyncJob) {
 func (a app) runLiveSyncViaBridge(ctx context.Context, options syncOptions) error {
 	state, err := ensureBridgeProcess()
 	if err != nil {
-		return fmt.Errorf("start BlogCTL Bridge: %w", err)
+		return fmt.Errorf("start SyndiRelay Bridge: %w", err)
 	}
 	fmt.Fprintf(a.out, "[bridge] ready on %s\n", state.BaseURL)
 

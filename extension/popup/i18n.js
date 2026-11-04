@@ -6,7 +6,7 @@
 (function (root) {
   const SUPPORTED = new Set(["auto", "zh-CN", "en"]);
   const catalog = root.BlogCTLEnMessages;
-  if (!root.i18next || !catalog) throw new Error("BlogCTL translation assets are missing");
+  if (!root.i18next || !catalog) throw new Error("SyndiRelay translation assets are missing");
 
   const engine = root.i18next.createInstance();
   engine.init({
@@ -162,7 +162,7 @@
     if (observer) return;
     const select = document.getElementById("blogctlUiLocale");
     const message = document.getElementById("uiLocaleMessage");
-    if (!select || !message) throw new Error("BlogCTL interface language setting is missing");
+    if (!select || !message) throw new Error("SyndiRelay interface language setting is missing");
     select.addEventListener("change", async () => {
       select.disabled = true;
       message.textContent = "";
@@ -174,7 +174,7 @@
       } catch (error) {
         message.textContent = "保存失败，请检查 Bridge 连接。";
         message.className = "message error";
-        console.warn("[BlogCTL i18n] language preference was not saved:", error);
+        console.warn("[SyndiRelay i18n] language preference was not saved:", error);
       } finally {
         select.disabled = false;
       }

@@ -50,23 +50,47 @@ func cto51BindingState(binding publisher.PublicationBinding, post publisher.Cto5
 }
 
 func (s *Server) cto51Candidates(ctx context.Context, slug string) (
-	articleSummary, string, string, []publisher.Cto51Post, publisher.PublicationBinding, error,
+	articleSummary, string, string, []publisher.Cto51Post, publisher.PublicationBinding, bool, error,
 ) {
 	article, root, err := s.cnBlogsArticle(slug)
 	if err != nil {
-		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, err
+		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, false, err
 	}
 	session, client, err := (bridgeNativePublisher{server: s}).publisherSession("51cto")
 	if err != nil {
-		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, err
+		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, false, err
 	}
 	account, posts, err := publisher.Cto51ListPosts(ctx, client, session)
+	fromLocalHistory := false
+	if err != nil && strings.Contains(err.Error(), "invalid JSON response") {
+		// The remote list is unavailable. Offer only exact IDs from the
+		// account's successful local task history, clearly labeled as
+		// unverified; the user must explicitly select them for update.
+		s.mu.Lock()
+		history := make([]*durableTaskJob, 0, len(s.taskJobOrder))
+		for _, id := range s.taskJobOrder {
+			if job := s.taskJobs[id]; job != nil {
+				copy := *job
+				history = append(history, &copy)
+			}
+		}
+		s.mu.Unlock()
+		fromHistory := cached51CTODraftPosts(history, root)
+		if len(fromHistory) > 0 {
+			posts = make([]publisher.Cto51Post, 0, len(fromHistory))
+			for _, item := range fromHistory {
+				posts = append(posts, publisher.Cto51Post{ID: item.ID, Title: item.Title, URL: item.URL})
+			}
+			err = nil
+			fromLocalHistory = true
+		}
+	}
 	if err != nil {
-		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, err
+		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, false, err
 	}
 	binding, _, err := publisher.LoadPublicationBinding(s.publicationBindingsPath(), slug, "51cto")
 	if err != nil {
-		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, err
+		return articleSummary{}, "", "", nil, publisher.PublicationBinding{}, false, err
 	}
 	matches := make([]publisher.Cto51Post, 0, len(posts))
 	for _, post := range posts {
@@ -75,7 +99,7 @@ func (s *Server) cto51Candidates(ctx context.Context, slug string) (
 			matches = append(matches, post)
 		}
 	}
-	return article, root, account, matches, binding, nil
+	return article, root, account, matches, binding, fromLocalHistory, nil
 }
 
 func (s *Server) handleCto51ArticleList(response http.ResponseWriter, request *http.Request, slug string) {
@@ -84,7 +108,7 @@ func (s *Server) handleCto51ArticleList(response http.ResponseWriter, request *h
 	}
 	ctx, cancel := context.WithTimeout(request.Context(), 20*time.Second)
 	defer cancel()
-	_, _, account, posts, binding, err := s.cto51Candidates(ctx, slug)
+	_, _, account, posts, binding, fromLocalHistory, err := s.cto51Candidates(ctx, slug)
 	if err != nil {
 		writeAPIError(response, http.StatusBadGateway, "lookup_failed", err.Error(), nil)
 		return
@@ -97,8 +121,12 @@ func (s *Server) handleCto51ArticleList(response http.ResponseWriter, request *h
 			Bound: bound, BindingState: state,
 		})
 	}
+	warning := ""
+	if fromLocalHistory {
+		warning = "51CTO 实时列表不可用；候选仅来自本机成功任务记录，远端状态尚未核验。请选择已确认的草稿 ID。"
+	}
 	writeJSON(response, http.StatusOK, map[string]any{
-		"account": account, "candidates": candidates, "bindings": cto51BindingViews(binding),
+		"account": account, "candidates": candidates, "bindings": cto51BindingViews(binding), "partial": warning,
 	})
 }
 

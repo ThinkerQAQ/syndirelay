@@ -260,7 +260,29 @@ func (a *devtoAdapter) listArticles(ctx context.Context) ([]devtoArticle, error)
 func (a *devtoAdapter) getArticle(ctx context.Context, id string) (devtoArticle, error) {
 	var article devtoArticle
 	err := a.request(ctx, http.MethodGet, "articles/"+url.PathEscape(id), nil, &article)
-	return article, err
+	if err == nil {
+		if article.ID == 0 || strconv.FormatInt(article.ID, 10) != id {
+			return devtoArticle{}, platformError(ErrUpstream, "devto", "read-article", 0, "DEV.to returned a different article ID", false)
+		}
+		return article, nil
+	}
+	if !IsKind(err, ErrRemoteDraftMissing) {
+		return devtoArticle{}, err
+	}
+	// DEV.to's public GET /api/articles/{id} responds 404 for unlisted
+	// drafts. A read scoped to the authenticated author can still find them.
+	// Match the exact ID, never title/canonical, so an update cannot mutate
+	// another article or turn a missing draft into an implicit create.
+	own, listErr := a.listArticles(ctx)
+	if listErr != nil {
+		return devtoArticle{}, listErr
+	}
+	for _, item := range own {
+		if strconv.FormatInt(item.ID, 10) == id {
+			return item, nil
+		}
+	}
+	return devtoArticle{}, err
 }
 
 func (a *devtoAdapter) findExisting(ctx context.Context, desired devtoPayload) (*devtoArticle, error) {
@@ -282,15 +304,11 @@ func (a *devtoAdapter) findExisting(ctx context.Context, desired devtoPayload) (
 
 func (a *devtoAdapter) upsertExisting(ctx context.Context, existing devtoArticle, input DraftInput) (DraftResult, error) {
 	desired := devtoDesired(input)
+	// The authenticated listing may omit the body of private drafts, while
+	// the public detail endpoint returns 404. In that case update by the
+	// selected, owner-verified ID without assuming the existing body is equal.
 	full := existing
-	if strings.TrimSpace(full.BodyMarkdown) == "" {
-		var err error
-		full, err = a.getArticle(ctx, strconv.FormatInt(existing.ID, 10))
-		if err != nil {
-			return DraftResult{}, err
-		}
-	}
-	// "Save" is a draft operation in BlogCTL. Updating a public DEV.to article
+	// "Save" is a draft operation in SyndiRelay. Updating a public DEV.to article
 	// would make the new body live immediately, bypassing preview + explicit
 	// publish. Fail closed until a separate published-update workflow exists.
 	if !input.Published && devtoArticlePublished(full) {

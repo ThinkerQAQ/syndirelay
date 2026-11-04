@@ -134,6 +134,12 @@ func TestMediumBrowserUploadClaimRecoversAfterWorkerSuspension(t *testing.T) {
 	hub.mu.Lock()
 	hub.pending[task["id"].(string)].claimedAt = time.Now().Add(-46 * time.Second)
 	hub.mu.Unlock()
+	if duplicate := hub.next(); duplicate != nil {
+		t.Fatal("Medium task was reclaimed while first browser insertion could still be in progress")
+	}
+	hub.mu.Lock()
+	hub.pending[task["id"].(string)].claimedAt = time.Now().Add(-131 * time.Second)
+	hub.mu.Unlock()
 	retried := hub.next()
 	if retried == nil || retried["id"] != task["id"] {
 		t.Fatal("crashed browser worker never recovered the upload")

@@ -1,5 +1,5 @@
 // Runs only in the actual Medium editor's MAIN world. No Cookie or XSRF
-// value is ever returned to BlogCTL; only native fileId and dimensions.
+// value is ever returned to SyndiRelay; only native fileId and dimensions.
 export async function uploadMediumInPage(base64, mimeType, filename, expectedDraftID) {
   const expectedPath = "/p/" + expectedDraftID + "/edit";
   if (location.origin !== "https://medium.com" || location.pathname !== expectedPath ||
@@ -45,23 +45,56 @@ export function validMediumUploadTask(task) {
     task.base64.length <= 28 * 1024 * 1024);
 }
 
+// Edge/Chrome sometimes reject tab operations while the user is dragging a tab.
+ // Retry only the browser's explicit temporary "tabs cannot be edited" error,
+ // never timeouts, redirects, permission failures or content/script errors.
+export function transientMediumTabError(error) {
+  return /Tabs cannot be edited right now|user may be dragging a tab/i.test(String(error?.message || error));
+}
+export async function retryMediumTabOperation(operation, sleep = ms => new Promise(resolve => setTimeout(resolve, ms))) {
+  for (let attempt = 0; attempt < 7; attempt++) {
+    try { return await operation(); } catch (error) {
+      if (!transientMediumTabError(error) || attempt === 6) throw error;
+      await sleep(Math.min(2000, 300 * (attempt + 1)));
+    }
+  }
+}
+
 // Extension context: after chrome.tabs.create(), Edge may report about:blank
 // as tab.url and the requested editor address only in pendingUrl until the
 // first navigation commits. Never treat this expected transition as redirect.
 export async function findMediumEditorTab(draftId, tabs = chrome.tabs, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))) {
   if (!/^[a-f0-9]{8,24}$/.test(draftId)) throw new Error("Invalid Medium draft identifier");
   const editorUrl = "https://medium.com/p/" + draftId + "/edit";
-  const found = await tabs.query({ url: "https://medium.com/p/*/edit" });
-  const matches = found.filter(tab => tab.url === editorUrl);
-  if (matches.length > 1) {
-    throw new Error("Multiple Medium editor tabs exist for the same draft; close duplicates before using BlogCTL");
+  const query = () => retryMediumTabOperation(() => tabs.query({ url: "https://medium.com/p/*/edit" }), sleep);
+  const matching = async () => {
+    const found = await query();
+    const matches = found.filter(tab => tab.url === editorUrl || tab.pendingUrl === editorUrl);
+    if (matches.length > 1) {
+      throw new Error("Multiple Medium editor tabs exist for the same draft; close duplicates before using SyndiRelay");
+    }
+    return matches[0];
+  };
+  let tab = await matching();
+  if (!tab) {
+    // A rejected create may still leave a pending navigation behind.
+    // Query again before each attempt; never open duplicate editor tabs.
+    for (let attempt = 0; attempt < 7; attempt++) {
+      try {
+        tab = await tabs.create({ url: editorUrl, active: false });
+        break;
+      } catch (error) {
+        if (!transientMediumTabError(error) || attempt === 6) throw error;
+        await sleep(Math.min(2000, 300 * (attempt + 1)));
+        tab = await matching();
+        if (tab) break;
+      }
+    }
   }
-  const existing = matches[0];
-  const tab = existing ?? await tabs.create({ url: editorUrl, active: false });
   if (!Number.isInteger(tab?.id)) throw new Error("Could not open Medium editor tab");
 
   for (let attempt = 0; attempt < 120; attempt++) {
-    const current = await tabs.get(tab.id);
+    const current = await retryMediumTabOperation(() => tabs.get(tab.id), sleep);
     // If already at the final editor document, this is safe to inject even
     // if the browser still exposes a stale pendingUrl property.
     if (current.status === "complete" && current.url === editorUrl) return current.id;

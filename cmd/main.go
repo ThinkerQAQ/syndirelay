@@ -66,7 +66,7 @@ func rootsForCommand(args []string) (string, string, error) {
 		return "", "", nil
 	}
 	command := args[0]
-	if command == "social" || command == "compile" {
+	if command == "social" || command == "compile" || command == "doctor" {
 		return "", "", nil
 	}
 	if command == "sync" || command == "toutiao" {

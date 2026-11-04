@@ -1,5 +1,33 @@
 // These functions execute in the logged-in Medium editor's MAIN world.
 // Neither manipulates private Medium deltas or exposes browser credentials.
+
+// Medium can render a native uploaded image from either its older CDN or
+// miro.medium.com. Only exact Medium-owned HTTPS hosts count as persisted;
+// external or lookalike hosts must not satisfy draft verification.
+export function loadedNativeMediumImage(img) {
+  if (!img?.complete || !(img.naturalWidth > 0)) return false;
+  const url = img.currentSrc || img.src;
+  if (typeof url !== "string") return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && (
+      /^cdn-images(?:-\d+)?\.medium\.com$/.test(parsed.hostname) ||
+      parsed.hostname === "miro.medium.com" ||
+      parsed.hostname === "images.medium.com");
+  } catch { return false; }
+}
+
+function mediumEditorImages(root) {
+  if (!root) return [];
+  return [...new Set([...root.querySelectorAll("figure img,article img,img")])];
+}
+
+// An older image that is still loading must not make the next image fail.
+// The final full-draft verification checks every expected image separately.
+export function hasNewLoadedMediumImage(before, after) {
+  const seen = new Set(before);
+  return after.length > before.length && after.some(img => !seen.has(img) && loadedNativeMediumImage(img));
+}
 export async function insertMediumImageInPage(base64, mimeType, filename, expectedDraftID, marker) {
   const fail = (message) => ({ error: message });
   if (location.origin !== "https://medium.com" ||
@@ -9,7 +37,29 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
       !/^image\/(?:png|jpeg|gif|webp)$/.test(mimeType)) {
     return fail("Medium editor image task failed validation");
   }
-  const imageCount = () => new Set([...document.querySelectorAll("figure img,article img,[contenteditable] img")]).size;
+  // executeScript serializes ONLY this function, not imported module helpers.
+  // Keep every dependency used in MAIN world inside the injected function.
+  const nativeMediumImage = (img) => {
+    if (!img?.complete || !(img.naturalWidth > 0)) return false;
+    const url = img.currentSrc || img.src;
+    if (typeof url !== "string") return false;
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" &&
+        (/^cdn-images(?:-\d+)?\.medium\.com$/.test(parsed.hostname) ||
+         parsed.hostname === "miro.medium.com" || parsed.hostname === "images.medium.com");
+    } catch { return false; }
+  };
+  const imagesFrom = (element) => element
+    ? [...new Set([...element.querySelectorAll("figure img,article img,img")])] : [];
+  const hasNewImage = (previous, images) => {
+    const known = new Set(previous);
+    return images.length > previous.length &&
+      images.some(img => !known.has(img) && nativeMediumImage(img));
+  };
+  const editor = () => document.querySelector('.postArticle-content[contenteditable="true"]');
+  const imagesInEditor = () => imagesFrom(editor());
+  const imageCount = () => imagesInEditor().length;
   const matches = () => {
     const all = [...document.querySelectorAll("p,div,span,h1,h2,h3,h4")].filter((el) =>
       el.isContentEditable && el.textContent?.trim() === marker &&
@@ -48,20 +98,18 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
   // A missing marker is NOT sufficient for an idempotent retry: only skip
   // after a matching, already-rendered native picture occupies its position.
   const alreadySaved = () => {
-    const paragraphs = [...document.querySelectorAll("p")];
+    const paragraphs = [...(editor()?.querySelectorAll("p") || [])];
     const remaining = paragraphs.map(p => (p.textContent || "").trim())
       .filter(t => /^\[BLOGCTL_IMAGE_\d{3}\]$/.test(t));
     if (remaining.includes(marker)) return false;
     if (remaining.some(t => Number(t.slice(-4, -1)) < markerNumber)) return false;
     const next = paragraphs.find(p => /^\[BLOGCTL_IMAGE_\d{3}\]$/.test(p.textContent?.trim() || "") &&
       Number(p.textContent.trim().slice(-4, -1)) > markerNumber);
-    const pictures = [...new Set([...document.querySelectorAll("figure img,article img,[contenteditable] img")])];
+    const pictures = imagesInEditor();
     const beforeNext = next
       ? pictures.filter(img => Boolean(img.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING))
       : pictures;
-    return beforeNext.length >= markerNumber &&
-      beforeNext.every(img => img.complete && img.naturalWidth > 0 &&
-        (img.currentSrc || img.src).startsWith("https://cdn-images"));
+    return beforeNext.length >= markerNumber && beforeNext.every(nativeMediumImage);
   };
   try {
     if (conflictingEdit()) return fail("Medium rejected autosave due to concurrent edits; inspect the draft before retrying");
@@ -73,7 +121,18 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
     let ready = false;
     const readyStart = Date.now();
     while (Date.now() - readyStart < 70000) {
-      if (document.querySelector('[contenteditable="true"]') && matches().length === 1) {
+      // A challenge can have the final /p/id/edit URL but no editor. Detect
+      // it immediately rather than waiting beyond the Bridge's task lease.
+      const currentBody = document.body?.innerText || "";
+      if (/验证您是真人|请验证您是真人|verify you are human|Checking your browser|正在进行安全验证/i.test(currentBody)) {
+        return fail("Medium requires human verification in this draft; complete it in the browser before resuming");
+      }
+      // A prior attempt can finish saving after its browser task times out.
+      // Re-check the same saved draft rather than inserting a duplicate.
+      if (alreadySaved() && savedStatus()) {
+        return { inserted: true, alreadyPresent: true, imageCount: imageCount() };
+      }
+      if (editor() && matches().length === 1) {
         ready = true; break;
       }
       await new Promise((r) => setTimeout(r, 500));
@@ -88,7 +147,8 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
     const { node, editable } = locate();
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
     const file = new File([bytes], filename, { type: mimeType });
-    const before = imageCount();
+    const beforeImages = imagesInEditor();
+    const before = beforeImages.length;
     select(node, editable, true);
     const data = new DataTransfer();
     data.items.add(file);
@@ -99,12 +159,9 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
       await new Promise((r) => setTimeout(r, 250));
     }
     if (imageCount() <= before) return fail("Medium editor did not insert the PNG at " + marker);
-    // Do not delete a marker if the editor mutated it unexpectedly.
-    const current = locate();
-    select(current.node, current.editable, false);
-    if (!document.execCommand("delete", false, null) || matches().length !== 0) {
-      return fail("Image was inserted, but marker deletion failed; inspect before retry");
-    }
+    // Preserve the exact marker until a fully loaded native Medium CDN image
+    // is visible. Deleting it earlier turns a transient upload failure into an
+    // unresumable draft with neither placeholder nor verified image.
     // A native image is committed asynchronously. Do not time out an
     // individual insertion merely because Medium has not changed its
     // DraftSaving indicator to DraftSaved: our real 2-series test showed
@@ -118,14 +175,28 @@ export async function insertMediumImageInPage(base64, mimeType, filename, expect
       if (conflictingEdit()) {
         return fail("Medium rejected autosave due to concurrent edits");
       }
-      const images = [...new Set([...document.querySelectorAll("figure img,article img,[contenteditable] img")])];
-      uploaded = images.length > before && images.every(img =>
-        img.complete && img.naturalWidth > 0 &&
-        (img.currentSrc || img.src).startsWith("https://cdn-images"));
-      if (uploaded && matches().length === 0 && Date.now()-settledAt >= 1100) break;
+      const images = imagesInEditor();
+      uploaded = hasNewImage(beforeImages, images);
+      if (uploaded && Date.now()-settledAt >= 1100) break;
     }
-    if (!uploaded || matches().length) {
-      return fail("Medium did not render the inserted CDN image at " + marker);
+    if (!uploaded) {
+      const images = imagesInEditor();
+      const native = images.filter(nativeMediumImage).length;
+      return fail("Medium did not confirm a loaded native CDN image at " + marker +
+        " (editor images " + images.length + ", loaded Medium images " + native +
+        ", marker preserved for retry " + (matches().length > 0) + ")");
+    }
+    // Only now is it safe to remove the placeholder. A saved image may be
+    // present before Medium finishes transforming its initial blob: preview.
+    const remaining = matches();
+    if (remaining.length === 1) {
+      const current = locate();
+      select(current.node, current.editable, false);
+      if (!document.execCommand("delete", false, null) || matches().length !== 0) {
+        return fail("Native image loaded but marker deletion failed; inspect before retry");
+      }
+    } else if (remaining.length !== 0) {
+      return fail("Native image loaded but marker count changed; inspect draft before retry");
     }
     return { inserted: true, imageCount: imageCount() };
   } catch (error) {
@@ -140,6 +211,16 @@ export function verifyMediumDraftInPage(expectedDraftID, expectedImages) {
       location.pathname !== "/p/" + expectedDraftID + "/edit") {
     return { error: "Browser verification is not on the expected Medium draft" };
   }
+  // Chrome MAIN-world injection has no access to module-scope helpers.
+  const nativeMediumImage = img => {
+    if (!img?.complete || !(img.naturalWidth > 0)) return false;
+    try {
+      const parsed = new URL(img.currentSrc || img.src);
+      return parsed.protocol === "https:" &&
+        (/^cdn-images(?:-\d+)?\.medium\.com$/.test(parsed.hostname) ||
+         parsed.hostname === "miro.medium.com" || parsed.hostname === "images.medium.com");
+    } catch { return false; }
+  };
   const root = document.querySelector('.postArticle-content[contenteditable="true"]');
   if (!root) return { error: "Medium draft editor has not loaded" };
   if (/Saving failed because someone is also editing|Reload to see their changes/i
@@ -156,8 +237,7 @@ export function verifyMediumDraftInPage(expectedDraftID, expectedImages) {
     return { error: "Medium editor has " + pictures.length +
       " images; expected " + expectedImages };
   }
-  if (pictures.some(img => !img.complete || img.naturalWidth < 1 ||
-    !(img.currentSrc || img.src).startsWith("https://cdn-images"))) {
+  if (pictures.some(img => !nativeMediumImage(img))) {
     return { error: "Medium image uploads have not all resolved to native CDN images" };
   }
   const status = document.querySelector(".js-metabarMessage");

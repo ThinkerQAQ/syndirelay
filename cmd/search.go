@@ -18,7 +18,7 @@ import (
 
 func (a app) runSearch(args []string) error {
 	if len(args) == 0 {
-		return errors.New("usage: blogctl search <build|inventory|submit|audit|notify> [options]")
+		return errors.New("usage: syndirelay search <build|inventory|submit|audit|notify> [options]")
 	}
 	switch args[0] {
 	case "build":
@@ -32,7 +32,7 @@ func (a app) runSearch(args []string) error {
 	case "notify":
 		return a.runSearchNotify(args[1:])
 	default:
-		return errors.New("usage: blogctl search <build|inventory|submit|audit|notify> [options]")
+		return errors.New("usage: syndirelay search <build|inventory|submit|audit|notify> [options]")
 	}
 }
 
@@ -169,7 +169,7 @@ func searchSiteURL(args []string) (string, error) {
 		value = config.Site.GoogleProperty
 	}
 	if value != config.Site.GoogleProperty {
-		return "", errors.New("--site-url must match search.google_property in blogctl.toml")
+		return "", errors.New("--site-url must match search.google_property in syndirelay.toml")
 	}
 	return value, nil
 }
@@ -285,7 +285,7 @@ func (a app) runSearchSubmit(args []string) error {
 	if containsString(providers, "baidu") {
 		token := strings.TrimSpace(localConfig.BaiduToken)
 		if token == "" {
-			return errors.New("Baidu token is required in blogctl.toml for Baidu submission")
+			return errors.New("Baidu token is required in syndirelay.toml for Baidu submission")
 		}
 		site := localConfig.Site.Origin
 		config, err := blogsearch.ResolveBaiduConfig(origin, site, token)
@@ -309,7 +309,7 @@ func (a app) runSearchSubmit(args []string) error {
 			return err
 		}
 		if accessToken == "" {
-			fmt.Fprintln(a.out, "[search:google] skipped: Google service account is not configured in blogctl.toml")
+			fmt.Fprintln(a.out, "[search:google] skipped: Google service account is not configured in syndirelay.toml")
 		} else {
 			results, err := blogsearch.SubmitGoogleSitemaps(ctx, client, siteURL, origin, accessToken, localConfig.Site.SitemapURL, localConfig.Site.URLListURL)
 			if err != nil {
@@ -343,7 +343,7 @@ func googleAccessTokenForCLI(ctx context.Context, client *http.Client, configure
 		if optional {
 			return "", nil
 		}
-		return "", errors.New("Google service account is required in blogctl.toml")
+		return "", errors.New("Google service account is required in syndirelay.toml")
 	}
 	credentials, err := blogsearch.ParseGoogleServiceAccount(raw)
 	if err != nil {
@@ -498,7 +498,7 @@ func (a app) runSearchNotify(args []string) error {
 	if err != nil {
 		return err
 	}
-	temporary, err := os.CreateTemp("", "blogctl-sitemap-*.txt")
+	temporary, err := os.CreateTemp("", "syndirelay-sitemap-*.txt")
 	if err != nil {
 		return err
 	}

@@ -1,12 +1,12 @@
 import { performToutiaoBrowserRequest } from "./toutiao-request.js";
 import { activeBrowserJobPumps } from "./browser-job-pumps.js";
-import { read51CTOInventoryInPage } from "./cto51-inventory.js";
+import { read51CTOInventoryInPage, read51CTOPublishedInPage, match51CTOArticleTitles } from "./cto51-inventory.js";
 import { prepareMediumReplacement, verifyMediumDocument } from "./medium-document.js";
 import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
 import { collectBrowserSessionCookieBatches, cookieHeaderFromRequest, cookieQueryDiagnostic, selectBrowserSessionCookies } from "./session.js";
 import { toError } from "./errors.js";
-import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab } from "./medium-upload.js";
+import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab, retryMediumTabOperation } from "./medium-upload.js";
 import { insertMediumImageInPage, verifyMediumDraftInPage, validMediumEditorTask } from "./medium-insert.js";
 
 const NATIVE_HOST = "com.thinkerqaq.syndirelay";
@@ -36,11 +36,11 @@ const openControlTab = () => chrome.tabs.create({ url: chrome.runtime.getURL("po
 
 if (chrome.sidePanel?.setPanelBehavior) {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch((error) => {
-    console.error("BlogCTL side panel setup failed:", errorMessage(error));
+    console.error("SyndiRelay side panel setup failed:", errorMessage(error));
     chrome.action.onClicked.addListener(openControlTab);
   });
 } else {
-  console.warn("BlogCTL side panel API is unavailable in this browser");
+  console.warn("SyndiRelay side panel API is unavailable in this browser");
   chrome.action.onClicked.addListener(openControlTab);
 }
 
@@ -94,7 +94,7 @@ async function writeBridgeLog(level, message, fields = {}) {
       fields,
     }));
   } catch (error) {
-    console.warn("[BlogCTL][log] failed to write Bridge log", errorMessage(error));
+    console.warn("[SyndiRelay][log] failed to write Bridge log", errorMessage(error));
   }
 }
 
@@ -117,11 +117,11 @@ function requestNativeBridge() {
     chrome.runtime.sendNativeMessage(NATIVE_HOST, { command: "ensure_bridge" }, (response) => {
       const error = chrome.runtime.lastError;
       if (error) {
-        reject(new Error(`无法连接 BlogCTL Native Host：${error.message}`));
+        reject(new Error(`无法连接 SyndiRelay Native Host：${error.message}`));
         return;
       }
       if (!response?.ok || !response.baseUrl || !response.token) {
-        reject(new Error(response?.error || "BlogCTL Native Host 返回无效结果"));
+        reject(new Error(response?.error || "SyndiRelay Native Host 返回无效结果"));
         return;
       }
       resolve(response);
@@ -296,7 +296,7 @@ function runtimeVersionHealth(version, expectedVersion, healthySummary, detail =
   if (!normalized) {
     return {
       ok: false, status: "error", summary: "版本未知", version: "",
-      detail: ["当前组件未提供版本握手；需要更新本机 BlogCTL runtime。", detail].filter(Boolean).join(" · "),
+      detail: ["当前组件未提供版本握手；需要更新本机 SyndiRelay runtime。", detail].filter(Boolean).join(" · "),
       path,
     };
   }
@@ -318,9 +318,9 @@ async function environmentTools(serverTools = []) {
 
   const extensionTool = {
     name: "extension",
-    displayName: "BlogCTL Extension",
+    displayName: "SyndiRelay Extension",
     kind: "runtime",
-    description: "浏览器侧控制面。版本必须与 BlogCTL Bridge 一致。",
+    description: "浏览器侧控制面。版本必须与 SyndiRelay Bridge 一致。",
     required: true,
     health: !bridge.running
       ? {
@@ -381,7 +381,7 @@ async function environmentTools(serverTools = []) {
 }
 
 async function platformSessionStatus(platform, bridge) {
-  if (!bridge.running) return { known: false, synced: false, unavailable: true, expiresInSeconds: 0, error: bridge.error || "BlogCTL Bridge 未运行" };
+  if (!bridge.running) return { known: false, synced: false, unavailable: true, expiresInSeconds: 0, error: bridge.error || "SyndiRelay Bridge 未运行" };
   try {
     const session = await fetchJSON(`/v1/sessions/${encodeURIComponent(platform)}/status`);
     return { known: true, synced: Boolean(session?.authenticated), expiresInSeconds: Number(session?.expiresInSeconds || 0) };
@@ -398,7 +398,7 @@ async function getStatus() {
       const publishing = await fetchJSON("/v1/publishing");
       publishingPlatforms = publishing?.platforms ?? [];
     } catch (error) {
-      console.warn("BlogCTL platform capabilities unavailable:", errorMessage(error));
+      console.warn("SyndiRelay platform capabilities unavailable:", errorMessage(error));
     }
   }
   const publishingByID = new Map(publishingPlatforms.map((item) => [item.id, item]));
@@ -955,7 +955,7 @@ function kickGoogleIndexQueuePump() {
   if (googleIndexPumpPromise) return googleIndexPumpPromise;
   googleIndexPumpPromise = pumpGoogleIndexQueue()
     .catch(async (error) => {
-      console.warn("[BlogCTL][google-index] queue pump failed", errorMessage(error));
+      console.warn("[SyndiRelay][google-index] queue pump failed", errorMessage(error));
       await writeBridgeLog("error", "gsc queue pump failed", { error: errorMessage(error) });
       try {
         const paused = await fetchJSON("/v1/search/index/google/request-queue/pause", { method: "POST" });
@@ -977,39 +977,79 @@ function kickGoogleIndexQueuePump() {
 // This read-only inventory action does not use the removed tls-client/fhttp
 // impersonation transport and does not transfer cookies to the Bridge.
 async function read51CTOInventoryFromBrowser() {
-  let tab = null;
-  let created = false;
+  let draftTab = null;
+  let createdDraft = false;
+  let publishedTab = null;
   try {
     const tabs = await chrome.tabs.query({ url: "https://blog.51cto.com/*" });
-    tab = tabs.find((item) => item.status === "complete" && item.url?.startsWith("https://blog.51cto.com/creative-center/"))
-      || tabs.find((item) => item.status === "complete") || null;
-    if (!tab) {
-      tab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
-      created = true;
-      for (let attempt = 0; attempt < 40; attempt++) {
+    draftTab = tabs.find((item) => item.status === "complete" &&
+      /^https:\/\/blog\.51cto\.com\/creative-center\/draft(?:[?#]|$)/.test(item.url || "")) || null;
+    if (!draftTab) {
+      draftTab = await chrome.tabs.create({ url: "https://blog.51cto.com/creative-center/draft", active: false });
+      createdDraft = true;
+    }
+    const waitForTab = async (tab) => {
+      for (let attempt = 0; attempt < 60; attempt++) {
         tab = await chrome.tabs.get(tab.id);
-        if (tab.status === "complete") break;
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        if (tab.status === "complete" && tab.url?.startsWith("https://blog.51cto.com/")) return tab;
+        await new Promise((resolve) => setTimeout(resolve, 250));
       }
-      if (tab.status !== "complete") throw new Error("51CTO background tab did not load");
-    }
-    const result = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      world: "MAIN",
-      func: read51CTOInventoryInPage,
-    });
-    if (!Array.isArray(result) || result.length !== 1 || !result[0]?.result) {
+      throw new Error("51CTO authenticated manager tab did not load");
+    };
+    const read = async (tab, func) => {
+      await waitForTab(tab);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const result = await chrome.scripting.executeScript({
+          target: { tabId: tab.id }, world: "MAIN", func,
+        });
+        if (Array.isArray(result) && result.length === 1 && result[0]?.result) {
+          return result[0].result;
+        }
+        // A just-initialized background tab may transiently return no
+        // injection result. Re-check only this read, never mutate a draft.
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 300));
+      }
       throw new Error("51CTO browser inventory did not return a result");
-    }
-    return result[0].result;
+    };
+    const drafts = await read(draftTab, read51CTOInventoryInPage);
+    // Always use a dedicated background tab for pagination. Never change
+    // the page or selected filter in a user's existing article manager.
+    publishedTab = await chrome.tabs.create({
+      url: "https://blog.51cto.com/creative-center/manager", active: false,
+    });
+    const published = await read(publishedTab, read51CTOPublishedInPage);
+    return {
+      platform: "51cto", account: "",
+      items: [...drafts.items, ...published.items],
+      partial: "",
+    };
   } finally {
-    if (created && tab?.id != null) await chrome.tabs.remove(tab.id).catch(() => {});
+    if (publishedTab?.id != null) await chrome.tabs.remove(publishedTab.id).catch(() => {});
+    if (createdDraft && draftTab?.id != null) await chrome.tabs.remove(draftTab.id).catch(() => {});
   }
 }
 
 async function handleMessage(message) {
   switch (message.type) {
     case "blogctl.status": return { ok: true, status: await getStatus() };
+    case "blogctl.mcp.connection.get": {
+      const connection = await fetchJSON("/v1/mcp-connection");
+      return { ok: true, connection };
+    }
+    case "blogctl.mcp.connection.action": {
+      const action = String(message.action || "");
+      if (!["install-client", "setup", "save", "start", "stop", "restart"].includes(action)) {
+        throw new Error("Invalid MCP connection action");
+      }
+      return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {
+        action, tunnel_id: String(message.tunnelId || ""),
+        runtime_api_key: String(message.runtimeApiKey || ""),
+        reuse_key: Boolean(message.reuseKey),
+        replace: Boolean(message.replace),
+        previous_tunnel_id: String(message.previousTunnelId || ""),
+      }))) };
+    }
+
     case "blogctl.impact.get": return fetchJSON("/v1/impact");
     case "blogctl.impact.save": return fetchJSON("/v1/impact",jsonOptions("PUT",message.config));
     case "blogctl.impact.retry": return fetchJSON("/v1/impact/retry",jsonOptions("POST",{}));
@@ -1200,22 +1240,23 @@ async function handleMessage(message) {
         } };
       }
       if (platform === "51cto") {
-        await syncPlatformSession("51cto");
-        const result = await fetchJSON(`/v1/51cto/articles/list?article=${article}`, { method: "POST" });
-        const candidates = result.candidates ?? [];
+        // The legacy Bridge AJAX list now returns HTML. Read the actual
+        // authenticated draft-management DOM in the user's Edge profile.
+        const [result, local] = await Promise.all([
+          read51CTOInventoryFromBrowser(),
+          fetchJSON("/v1/articles"),
+        ]);
+        const localArticle = (local?.articles ?? []).find(
+          (item) => item.slug === String(message.article || ""),
+        );
+        if (!localArticle?.title) throw new Error("51CTO local article title is unavailable");
+        const candidates = match51CTOArticleTitles(result.items, localArticle.title);
         return { ok: true, match: {
           text: candidates.length
-            ? `从 51CTO 草稿列表和已发布文章列表本地匹配到 ${candidates.length} 条候选。`
-            : "已读取 51CTO 草稿列表和已发布文章列表，本地未匹配到同名文章。",
-          items: candidates.map((post) => ({
-            title: post.title,
-            id: post.id,
-            published: post.published,
-            url: post.url || "",
-            bound: Boolean(post.bound),
-            bindingState: post.bindingState || "",
-          })),
-          bindings: result.bindings ?? [],
+            ? `已从 51CTO 登录页面实时匹配到 ${candidates.length} 篇文章（草稿及已发布）。`
+            : "已检查 51CTO 登录页面的草稿及已发布文章，未找到同名文章。",
+          items: candidates,
+          bindings: [],
         } };
       }
       if (platform === "medium") {
@@ -1716,19 +1757,19 @@ async function processMediumUpload(task) {
       }
       throw new Error("Medium draft autosave verification failed: " + lastError);
     }
-    const rows = await chrome.scripting.executeScript({
+    const rows = await retryMediumTabOperation(() => chrome.scripting.executeScript({
       target: { tabId }, world: "MAIN", func: insertMediumImageInPage,
       args: [task.base64, task.mimeType, task.filename, task.draftId, task.marker],
-    });
+    }));
     return rows?.[0]?.result ?? { error: "Medium editor returned no image insertion result" };
   }
   if (!validMediumUploadTask(task)) throw new Error("Invalid Medium browser upload task");
   const tabId = await findMediumEditorTab(task.draftId);
-  const results = await chrome.scripting.executeScript({
+  const results = await retryMediumTabOperation(() => chrome.scripting.executeScript({
     target: { tabId }, world: "MAIN",
     func: uploadMediumInPage,
     args: [task.base64, task.mimeType, task.filename, task.draftId],
-  });
+  }));
   const response = results?.[0]?.result;
   if (!response || typeof response !== "object") {
     throw new Error("Medium page did not return an upload result");
@@ -1773,7 +1814,7 @@ async function pollMediumUploads() {
       }));
     }
   } catch (error) {
-    console.warn("BlogCTL Medium browser upload polling paused:", errorMessage(error));
+    console.warn("SyndiRelay Medium browser upload polling paused:", errorMessage(error));
     await writeBridgeLog("error", "medium browser upload pump failed", {
       error: errorMessage(error).slice(0, 220),
     });
@@ -1840,7 +1881,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const task = handleMessage(message);
   if (!task) return false;
   task.then(sendResponse).catch(async (error) => {
-    console.error("BlogCTL extension request failed:", message.type, errorMessage(error));
+    console.error("SyndiRelay extension request failed:", message.type, errorMessage(error));
     sendResponse({ ok: false, error: errorMessage(error), code: error?.code || "", status: error?.status || 0, details: error?.details || null });
   });
   return true;

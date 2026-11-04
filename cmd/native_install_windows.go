@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ThinkerQAQ/syndirelay/bridge"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -16,7 +17,7 @@ var browserRegistryKeys = []string{
 }
 
 func windowsNativeHostManifestPath(executable string) string {
-	return filepath.Join(filepath.Dir(executable), "Data", nativeHostName+".json")
+	return filepath.Join(bridge.InstallationRoot(executable), "Data", nativeHostName+".json")
 }
 
 func registerNativeHost(executable string) (int, error) {

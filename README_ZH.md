@@ -170,28 +170,19 @@ Windows 客户端使用原生程序，例如 `"command": "C:\\tools\\syndirelay\
 
 ### 4.4. Case4: 连接 ChatGPT
 
-先完成第 2 节构建，再按以下顺序连接 ChatGPT。Tunnel ID 和运行凭据是两个不同的东西：
+安装并打开 SyndiRelay 的浏览器扩展，在 **设置 → MCP 连接** 中完成以下操作：
 
-1. 打开 OpenAI Platform 的 [Tunnels 管理页](https://platform.openai.com/settings/organization/tunnels)，为对应 ChatGPT 工作区创建或选择已有 Tunnel，复制完整的 `tunnel_...` ID。创建 Tunnel 需要 Tunnels 管理权限。
-2. 在 [Runtime API Keys](https://platform.openai.com/settings/organization/api-keys) 中复用已有、具备 **Tunnels Read + Use** 权限的运行密钥，或创建具有上述权限的受限密钥。将密钥通过环境变量 `CONTROL_PLANE_API_KEY` 提供，或让 `SYNDIRELAY_RUNTIME_KEY_REF` 指向 `env:NAME` / `file:ABSOLUTE_PATH`。Linux/macOS 的密钥文件权限必须为 `0600`。**不需要为每个项目新建一次性 API Key**；但运行 Tunnel 必须有有效授权凭据，不能用管理密钥代替。
-3. 安装与你的系统匹配的官方 [tunnel-client](https://github.com/openai/tunnel-client/releases/latest)，确保 `tunnel-client` 可在 `PATH` 中找到，然后执行下面对应系统的命令。不要把实际密钥写入 README 或 Git。
+1. 打开 [OpenAI Tunnels](https://platform.openai.com/settings/organization/tunnels) 创建 Tunnel，复制完整的 Tunnel ID。
+2. 打开 [OpenAI API Keys](https://platform.openai.com/api-keys)，创建或复用具备 **Tunnels Read + Use** 权限的受限 Runtime API Key。该密钥仅供本机 Tunnel 使用，不需要每次新建。
+3. 在 **1. 本地 Tunnel 服务** 输入 Tunnel ID 和 Runtime API Key，点击「保存配置」。官方 Tunnel Client 缺失时将自动安装并校验。保存过程不自动启动服务，也不修改开机自启设置。
+4. 保存成功后点击「启动服务」。已启动时可停止或重启。顶部状态显示本机 Tunnel 是否就绪。
+5. 在 **2. ChatGPT 插件** 点击链接打开 [ChatGPT 插件设置](https://chatgpt.com/settings/plugins-settings)，创建或启用 SyndiRelay 连接，然后调用 `list_platforms` 验证。
 
-Linux / macOS，在仓库目录执行：
+已经保存的 Tunnel ID 会显示在输入框中；Runtime API Key 以星号表示，输入框留空表示复用已保存的密钥。更换 Tunnel ID 或 Runtime API Key 后需再次保存，再重启服务使配置生效。密钥不写入仓库、日志或命令行参数。Windows 使用 DPAPI，Linux/macOS 将凭据存放在受限权限的用户配置目录。
 
-```sh
-export SYNDIRELAY_MCP_COMMAND="$PWD/syndirelay mcp-stdio"
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID
-./scripts/connect-chatgpt-mcp.sh tunnel_YOUR_TUNNEL_ID --status
-```
+**注意：** Tunnel 健康检查通过，只表示本机已连接控制平面，不等于 ChatGPT 插件已获得授权。标准 STDIO MCP 客户端不需要 Tunnel，参见 4.3 节。
 
-Windows PowerShell：
-
-```powershell
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID
-.\scripts\connect-chatgpt-mcp.ps1 -TunnelId tunnel_YOUR_TUNNEL_ID -Status
-```
-
-使用上方对应系统的状态检查命令，确认 SyndiRelay 运行实例正在运行且健康，然后打开 [ChatGPT 连接设置](https://chatgpt.com/#settings/Connectors)，选择 **Connection: Tunnel**，选中或粘贴上述同一个 Tunnel ID。连接后调用 `list_platforms`，确认收到实际工具响应；仅 Tunnel 运行正常不代表 ChatGPT 已连通。如看不到 Tunnel，请核对所属工作区与 Tunnels Read + Use 权限。Bridge 保持本地监听。
+原有的 `connect-chatgpt-mcp.ps1` / `connect-chatgpt-mcp.sh` 命令仍保留，可供手动连接使用。
 
 [Reverfolio](https://github.com/ThinkerQAQ/reverfolio) 影响力统计为独立的可选集成，默认关闭。
 

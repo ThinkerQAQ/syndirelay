@@ -1,0 +1,6 @@
+Tunnel client installation and management scripts adapted from ThinkerQAQ/vidotter at ddf72dc735102131418427bd9af0810efc107897.
+Source: https://github.com/ThinkerQAQ/vidotter
+Modified for Reverfolio configuration paths, binary names and local management routes.
+Original license: Apache-2.0; the license is included in this directory.
+
+The single-product wizard controller and first-run assets in scripts/installer/ are also adapted from VidOtter's installer onboarding assets, with Reverfolio branding, optional extension activation, and application launch choices.

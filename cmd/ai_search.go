@@ -44,7 +44,7 @@ type cloudflareEnvelope struct {
 
 func (a app) runAISearch(args []string) error {
 	if len(args) == 0 {
-		return errors.New("usage: blogctl ai-search <prepare|sync|verify> [options]")
+		return errors.New("usage: syndirelay ai-search <prepare|sync|verify> [options]")
 	}
 	switch args[0] {
 	case "prepare":
@@ -54,7 +54,7 @@ func (a app) runAISearch(args []string) error {
 	case "verify":
 		return a.runAISearchVerify(args[1:])
 	default:
-		return errors.New("usage: blogctl ai-search <prepare|sync|verify> [options]")
+		return errors.New("usage: syndirelay ai-search <prepare|sync|verify> [options]")
 	}
 }
 

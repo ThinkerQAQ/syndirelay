@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -123,8 +124,21 @@ func (c *cto51Adapter) listPosts(ctx context.Context, listType int, published bo
 }
 
 func (c *cto51Adapter) listDrafts(ctx context.Context) ([]Cto51Post, error) {
-	// 51CTO's draft page initializes the same list endpoint with type=4.
-	return c.listPosts(ctx, 4, false, "list-drafts")
+	// Prefer the structured endpoint. If this legacy AJAX endpoint no
+	// longer serves JSON, the same authenticated account exposes exact
+	// draft-editor links on its draft management page.
+	posts, err := c.listPosts(ctx, 4, false, "list-drafts")
+	if err == nil {
+		return posts, nil
+	}
+	if !strings.Contains(err.Error(), "invalid JSON response") {
+		return nil, err
+	}
+	fallback, fallbackErr := c.listDraftsFromManagement(ctx)
+	if fallbackErr != nil {
+		return nil, fmt.Errorf("51CTO AJAX draft list failed: %v; management fallback: %w", err, fallbackErr)
+	}
+	return fallback, nil
 }
 
 func (c *cto51Adapter) listPublished(ctx context.Context) ([]Cto51Post, error) {

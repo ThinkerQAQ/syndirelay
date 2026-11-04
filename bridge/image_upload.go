@@ -77,18 +77,14 @@ func (s *Server) imageConfig() (bridgeConfig, *http.Client) {
 }
 func sanitizeImage(ctx context.Context, engineRoot string, input []byte, format string) (cleanedImage, error) {
 	script := filepath.Join(engineRoot, "renderers", "node", "sanitize-image.mjs")
-	if info, err := os.Stat(script); err != nil || info.IsDir() {
-		// Compatibility for the original BlogCTL repo before the move.
-		script = filepath.Join(engineRoot, "tools", "blogctl", "renderers", "node", "sanitize-image.mjs")
-		if legacyInfo, legacyErr := os.Stat(script); legacyErr != nil || legacyInfo.IsDir() {
-			return cleanedImage{}, errors.New("image sanitizer unavailable; configure SyndiRelay workspace and install Node dependencies")
-		}
+	if info, err := os.Stat(script); err != nil || !info.Mode().IsRegular() {
+		return cleanedImage{}, errors.New("image sanitizer unavailable; configure SyndiRelay workspace and install Node dependencies")
 	}
 	node, err := exec.LookPath("node")
 	if err != nil {
 		return cleanedImage{}, errors.New("Node.js is required for image privacy processing")
 	}
-	temp, err := os.CreateTemp("", "blogctl-image-clean-*")
+	temp, err := os.CreateTemp("", "syndirelay-image-clean-*")
 	if err != nil {
 		return cleanedImage{}, errors.New("cannot allocate private image buffer")
 	}

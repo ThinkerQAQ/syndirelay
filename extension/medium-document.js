@@ -22,7 +22,12 @@ export function readMediumEditorDocument(id,expected=null) {
  return {inserted:true,imageCount:expected?nodes.length:allNodes.length};
 }
 const valid=task=>/^[0-9a-f]{32}$/.test(task.id||"")&&/^[0-9a-f]{8,24}$/.test(task.draftId||"");
-async function readSaved(tabId,id,expected=null){let last;for(let n=0;n<100;n++){last=(await chrome.scripting.executeScript({target:{tabId},world:"MAIN",func:readMediumEditorDocument,args:[id,expected]}))[0]?.result;if(last?.inserted)return last;if(last?.error&&!/not loaded|not confirmed/.test(last.error))break;await new Promise(r=>setTimeout(r,400));}throw Error(last?.error||"Medium document readback failed");}
+async function readSaved(tabId,id,expected=null){let last;for(let n=0;n<100;n++){last=(await chrome.scripting.executeScript({target:{tabId},world:"MAIN",func:readMediumEditorDocument,args:[id,expected]}))[0]?.result;if(last?.inserted)return last;
+  // Medium may show the prior autosaved revision for a short period after a
+  // server Delta write. Only the exact compiler document is accepted, but
+  // paragraph mismatches are transient until that revision becomes visible.
+  if(last?.error && !/not loaded|not confirmed|paragraph \d+ differs|has \d+ paragraphs/i.test(last.error))break;
+  await new Promise(r=>setTimeout(r,400));}throw Error(last?.error||"Medium document readback failed");}
 export async function prepareMediumReplacement(task){
  if(!valid(task))throw Error("Invalid Medium replacement task");
  const tabId=await findMediumEditorTab(task.draftId);const tab=await chrome.tabs.get(tabId);const win=await chrome.windows.get(tab.windowId);

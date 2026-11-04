@@ -303,6 +303,14 @@ func (s *Server) serveHTTP(response http.ResponseWriter, request *http.Request) 
 		return
 	}
 
+	if request.URL.Path == "/v1/mcp-connection" {
+		if request.Header.Get("x-thinkerqaq-token") != s.token {
+			writeAPIError(response, http.StatusUnauthorized, "unauthorized", "invalid bridge token", nil)
+			return
+		}
+		s.handleMCPConnection(response, request)
+		return
+	}
 	if request.URL.Path == "/v1/mcp/images/upload" {
 		if request.Header.Get("x-thinkerqaq-token") != s.token {
 			writeAPIError(response, http.StatusUnauthorized, "unauthorized", "invalid bridge token", nil)
@@ -820,12 +828,12 @@ func (s *Server) handleConfigEdit(response http.ResponseWriter, request *http.Re
 	config := s.config
 	s.mu.Unlock()
 	if err := saveBridgeConfig(config); err != nil {
-		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法写入 BlogCTL 配置文件", nil)
+		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法写入 SyndiRelay 配置文件", nil)
 		return
 	}
 	path, err := ConfigPath()
 	if err != nil {
-		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法解析 BlogCTL 配置文件路径", nil)
+		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法解析 SyndiRelay 配置文件路径", nil)
 		return
 	}
 	if err := openConfigFile(path); err != nil {
@@ -906,7 +914,7 @@ func (s *Server) handleConfigPut(response http.ResponseWriter, request *http.Req
 		return
 	}
 	if err := saveBridgeConfig(normalized); err != nil {
-		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法保存 BlogCTL 配置", nil)
+		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法保存 SyndiRelay 配置", nil)
 		return
 	}
 	s.mu.Lock()
@@ -1082,7 +1090,7 @@ func (s *Server) handleToolConfigPut(response http.ResponseWriter, request *http
 		if name == "logging" {
 			_ = applyLoggingConfig(current)
 		}
-		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法保存 BlogCTL 配置", nil)
+		writeAPIError(response, http.StatusInternalServerError, "internal_error", "无法保存 SyndiRelay 配置", nil)
 		return
 	}
 	s.mu.Lock()

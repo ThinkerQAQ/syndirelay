@@ -314,7 +314,7 @@ button { border: 0; border-radius: 8px; font: inherit; cursor: pointer; } button
 
 .remote-inventory-card .job-platform-main { gap: 8px; align-items: center; }
 
-/* Shared BlogCTL design system. Both the extension host and Web Console
+/* Shared SyndiRelay design system. Both the extension host and Web Console
    import this file, so their controls and interactions remain identical. */
 :root {
   --ui-background: #f8fafc;
@@ -766,3 +766,11 @@ input, select { min-height: 42px; font-size: 13px; }
 
 .social-channel-row { gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ui-border); font-size: 12px; }
 .social-channel-row > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+
+/* Reverfolio-style guided MCP connection; scoped to the settings detail. */
+.mcp-setup { padding: 16px; }
+.mcp-setup-steps { padding-left: 22px; line-height: 1.8; }
+.mcp-setup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.mcp-setup-actions button { flex: 1 1 120px; }
+.mcp-setup-advanced { margin-top: 18px; border-top: 1px solid var(--border, #d9e2ef); padding-top: 12px; }
+.mcp-local-config { overflow-wrap: anywhere; white-space: pre-wrap; font-size: 11px; max-height: 200px; overflow: auto; }

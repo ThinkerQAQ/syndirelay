@@ -334,7 +334,7 @@ func executableHealth(config bridgeConfig, name string) toolHealth {
 	if name == "node" && config.ProxyEnabled && version != "" && !nodeVersionSupportsProxy(version) {
 		return toolHealth{
 			Status: "error", Summary: "版本不兼容", Path: path, Version: version,
-			Detail: "BlogCTL Network Proxy 需要 Node.js 22.21+ 或 24+；请点击更新切换到当前 LTS。",
+			Detail: "SyndiRelay Network Proxy 需要 Node.js 22.21+ 或 24+；请点击更新切换到当前 LTS。",
 		}
 	}
 	return toolHealth{OK: true, Status: "ok", Summary: "可用", Path: path, Version: version, Detail: detail}
@@ -532,7 +532,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "network-proxy", DisplayName: "Network Proxy", Kind: "runtime", Required: false,
-			Description: "启用后只代理 BlogCTL 自己的网络组件：Bridge HTTP Client 与 BlogCTL 启动的外部工具进程；不会修改 Chrome/Edge、系统或其他应用的代理。",
+			Description: "启用后只代理 SyndiRelay 自己的网络组件：Bridge HTTP Client 与 SyndiRelay 启动的外部工具进程；不会修改 Chrome/Edge、系统或其他应用的代理。",
 			Health: func() toolHealth {
 				if !config.ProxyEnabled {
 					return toolHealth{OK: true, Status: "disabled", Summary: "直连"}
@@ -541,7 +541,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			}(),
 			Config: toolConfigView{
 				Scope: "bridge", Values: map[string]any{"proxyEnabled": config.ProxyEnabled, "proxyHost": config.ProxyHost, "proxyPort": config.ProxyPort},
-				Toggle: &toolToggle{Key: "proxyEnabled", Label: "启用代理", Description: "只影响 BlogCTL Bridge 与子进程网络；浏览器和系统代理不变"},
+				Toggle: &toolToggle{Key: "proxyEnabled", Label: "启用代理", Description: "只影响 SyndiRelay Bridge 与子进程网络；浏览器和系统代理不变"},
 				Schema: []toolField{
 					{Key: "proxyHost", Label: "代理主机", Type: "text", Placeholder: "127.0.0.1"},
 					{Key: "proxyPort", Label: "代理端口", Type: "integer", Placeholder: "7890", Min: 1, Max: 65535},
@@ -550,7 +550,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "logging", DisplayName: "日志", Kind: "runtime", Required: false,
-			Description: "BlogCTL Bridge 的结构化运行日志。可配置日志目录和最低日志级别；日志页实时读取当前日志文件。",
+			Description: "SyndiRelay Bridge 的结构化运行日志。可配置日志目录和最低日志级别；日志页实时读取当前日志文件。",
 			Health:      loggingHealth(config),
 			Config: toolConfigView{
 				Scope: "bridge",
@@ -579,7 +579,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "buffer-api", DisplayName: "Buffer API", Kind: "social", Required: false,
-			Description: "LinkedIn / X / Bluesky 社交动态通过 Buffer 官方 GraphQL API 发布；密钥仅保存在本机 blogctl.toml。",
+			Description: "LinkedIn / X / Bluesky 社交动态通过 Buffer 官方 GraphQL API 发布；密钥仅保存在本机 syndirelay.toml。",
 			Health: func() toolHealth {
 				if config.Social.Buffer.APIKey == "" {
 					if os.Getenv("BUFFER_API_KEY") != "" {
@@ -600,7 +600,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "devto-api", DisplayName: "DEV.to API", Kind: "publishing", Required: false,
-			Description: "DEV.to 文章生命周期使用官方 API；图片优先通过浏览器会话上传到 DEV.to，失败时回退 R2。API Key 仅保存在本机 BlogCTL 配置中。",
+			Description: "DEV.to 文章生命周期使用官方 API；图片优先通过浏览器会话上传到 DEV.to，失败时回退 R2。API Key 仅保存在本机 SyndiRelay 配置中。",
 			Health:      devtoAPIHealth(config),
 			Config: toolConfigView{
 				Scope:  "bridge",
@@ -685,7 +685,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Health:      executableHealth(config, "node"),
 			Actions: []toolAction{{
 				ID: "update", Label: "更新",
-				Description: "升级到当前 Node.js LTS；Windows 使用 WinGet，并沿用 BlogCTL Network Proxy。",
+				Description: "升级到当前 Node.js LTS；Windows 使用 WinGet，并沿用 SyndiRelay Network Proxy。",
 			}},
 			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["node"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 node")},
 		},
@@ -694,7 +694,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Description: "必选。负责安装 SyndiRelay 渲染器的 micromark、Sharp 等依赖。", Health: executableHealth(config, "npm"),
 			Actions: []toolAction{{
 				ID: "update", Label: "更新",
-				Description: "执行 npm install -g npm@latest，并沿用 BlogCTL Network Proxy。",
+				Description: "执行 npm install -g npm@latest，并沿用 SyndiRelay Network Proxy。",
 			}},
 			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["npm"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 npm")},
 		},
@@ -703,7 +703,7 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 			Description: "必选。用于仓库版本工作流，以及 AI Search 增量同步时计算提交差异。", Health: executableHealth(config, "git"),
 			Actions: []toolAction{{
 				ID: "update", Label: "更新",
-				Description: "升级 Git for Windows；Windows 使用 WinGet，并沿用 BlogCTL Network Proxy。",
+				Description: "升级 Git for Windows；Windows 使用 WinGet，并沿用 SyndiRelay Network Proxy。",
 			}},
 			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["git"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 git")},
 		},
@@ -1028,7 +1028,7 @@ func draftInputFromCompiled(article blogcompiler.CompiledArticle, contentRoot, d
 		ContentHash: article.ContentHash, SourceDir: article.SourceDir, ContentRoot: contentRoot,
 		DistributionRoot: strings.TrimSpace(distributionRoot),
 		Tags:             append([]string{}, article.Tags...), CoverImageURL: article.CoverImageURL,
-		NativeCanonicalURL: article.NativeCanonicalURL, Published: article.Published,
+		NativeCanonicalURL: article.NativeCanonicalURL, CanonicalURL: article.CanonicalURL, Published: article.Published,
 		Assets: assets,
 		R2Fallback: publisher.R2FallbackConfig{
 			AccessKeyID:     r2.AccessKeyID,

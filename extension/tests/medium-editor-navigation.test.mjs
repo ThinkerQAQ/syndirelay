@@ -67,3 +67,44 @@ test("reject a navigation that changes pendingUrl to an unrelated document", asy
 test("invalid draft ID is rejected before tab access", async () => {
   await assert.rejects(findMediumEditorTab("../../other", {}, fast), /Invalid Medium draft/);
 });
+
+test("tab dragging transient error retries without creating duplicate Medium editors",async()=>{
+  let opened=false, attempted=0;
+  const mock={
+    async query() {return opened ? [{id:74,url:editor,status:"complete"}] : [];},
+    async create() {
+      attempted++;
+      // Chrome may create the tab but still reject the Promise while the user
+      // drags tabs. The next query must reuse the new tab.
+      opened=true;
+      throw new Error("Tabs cannot be edited right now (user may be dragging a tab).");
+    },
+    async get() {return {id:74,url:editor,status:"complete"};}
+  };
+  assert.equal(await findMediumEditorTab(id,mock,fast),74);
+  assert.equal(attempted,1);
+});
+
+test("temporary tabs.get error does not abandon the saved Medium draft",async()=>{
+  let gets=0;
+  const mock={
+    async query(){return [{id:6,url:editor,status:"complete"}];},
+    async create(){throw Error("must not create duplicate");},
+    async get() {
+      if (++gets<3) throw Error("Tabs cannot be edited right now (user may be dragging a tab).");
+      return {id:6,url:editor,status:"complete"};
+    }
+  };
+  assert.equal(await findMediumEditorTab(id,mock,fast),6);
+  assert.equal(gets,3);
+});
+
+test("nontransient Medium browser tab failures are not retried", async()=>{
+  let calls=0;
+  const mock={
+    async query(){return [];},
+    async create(){calls++;throw Error("Missing host permission");}
+  };
+  await assert.rejects(findMediumEditorTab(id,mock,fast),/Missing host permission/);
+  assert.equal(calls,1);
+});
