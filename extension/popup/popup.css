@@ -946,11 +946,11 @@ input, select { min-height: 42px; font-size: 13px; }
   white-space: nowrap;
 }
 #mcpConnectionSettings .mcp-button-row .mcp-primary {
-  background: var(--ui-primary, #2563eb);
-  border-color: var(--ui-primary, #2563eb);
+  background: #25364e;
+  border-color: #25364e;
   color: #fff;
 }
-#mcpConnectionSettings .mcp-button-row .mcp-primary:hover:not(:disabled) { background: var(--ui-primary-hover, #1d4ed8); }
+#mcpConnectionSettings .mcp-button-row .mcp-primary:hover:not(:disabled) { background: #17263c; border-color: #17263c; }
 #mcpConnectionSettings .mcp-secondary:hover:not(:disabled) { background: #f5f7fb; }
 #mcpConnectionSettings .mcp-button-row button:disabled,
 #mcpConnectionSettings .mcp-secondary:disabled {
@@ -992,7 +992,7 @@ input, select { min-height: 42px; font-size: 13px; }
 
 #mcpConnectionSettings .mcp-auto-connect { margin-top: 12px; }
 #mcpConnectionSettings .mcp-tunnel-actions { margin-top: 12px; }
-#mcpConnectionSettings .mcp-tunnel-actions .mcp-secondary { width: auto; min-width: 100px; }
+#mcpConnectionSettings .mcp-tunnel-actions .mcp-secondary { width: auto; min-width: 100px; min-height: 36px; background: #fff; border: 1px solid #cfd8e5; }
 
 #mcpConnectionSettings .mcp-startup-error { display: block; margin: 6px 0 0 30px; font-size: 11px; color: #9b6435; }
 #mcpConnectionSettings .mcp-startup-error:empty { display: none; }

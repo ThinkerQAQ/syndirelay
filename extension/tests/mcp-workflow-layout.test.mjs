@@ -56,8 +56,12 @@ test('MCP connection appears immediately below runtime environment in Settings',
 
 test('Tunnel supervisor controls and automatic connection are independent', () => {
   assert.match(html, /id="mcpAutoStart"/);
+  assert.match(html, /本地服务开机自启/);
   assert.match(html, /id="mcpAutoConnect"/);
+  assert.match(html, /Tunnel 自动连接/);
   assert.match(html, /id="mcpTunnelToggle"/);
+  assert.match(html, /id="mcpSave"[^>]*>保存<\/button>/);
+  assert.match(css, /\.mcp-primary \{\s*background: #25364e/);
   assert.match(js, /auto-connect-enable/);
   assert.match(js, /auto-connect-disable/);
   assert.match(js, /action:connecting\?'disconnect':'connect'/);

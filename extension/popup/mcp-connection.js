@@ -163,7 +163,7 @@
    if(action==='save'){
     state.pending={id,revision:s.revision||'',deadline:Date.now()+120000};
     $('mcpRuntimeKey').value='';
-    message('已提交后台校验；保存成功前不会启动服务。');
+    message('已提交配置校验；保存成功前不会启动服务。');
    }else message('操作已提交，正在刷新服务状态。');
   }catch(e){message(root.BlogCTLPopup.errorMessage(e),true);}
   finally{state.busy=false;await refresh();}
