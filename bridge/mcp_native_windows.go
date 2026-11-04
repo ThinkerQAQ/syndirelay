@@ -59,8 +59,27 @@ func mcpRunnerExclusive(_ string) (func(), error) {
 	}
 	return func() { windows.CloseHandle(h) }, nil
 }
-func mcpSameProcess(pid int, wantedExe string) bool {
-	if pid <= 0 || wantedExe == "" {
+func mcpProcessStartTime(pid int) (uint64, error) {
+	if pid <= 0 {
+		return 0, errors.New("invalid process ID")
+	}
+	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	if err != nil {
+		return 0, err
+	}
+	defer windows.CloseHandle(h)
+	var created, exited, kernel, user windows.Filetime
+	if err := windows.GetProcessTimes(h, &created, &exited, &kernel, &user); err != nil {
+		return 0, err
+	}
+	return uint64(created.HighDateTime)<<32 | uint64(created.LowDateTime), nil
+}
+
+// Windows changes the reported image path after an installer replaces a
+// running EXE (e.g. *.tmpUpdate.*). PID + recorded creation time identifies
+// the same process across updates without trusting that mutable path.
+func mcpSameProcess(pid int, wantedExe string, startedAt uint64) bool {
+	if pid <= 0 || wantedExe == "" || startedAt == 0 {
 		return false
 	}
 	h, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
@@ -69,16 +88,15 @@ func mcpSameProcess(pid int, wantedExe string) bool {
 	}
 	defer windows.CloseHandle(h)
 	var code uint32
-	if windows.GetExitCodeProcess(h, &code) != nil || code != 259 {
+	if windows.GetExitCodeProcess(h, &code) != nil || code != 259 { // STILL_ACTIVE
 		return false
 	}
-	out := make([]uint16, 32768)
-	length := uint32(len(out))
-	if windows.QueryFullProcessImageName(h, 0, &out[0], &length) != nil {
+	var created, exited, kernel, user windows.Filetime
+	if windows.GetProcessTimes(h, &created, &exited, &kernel, &user) != nil {
 		return false
 	}
-	actual := windows.UTF16ToString(out[:length])
-	return strings.EqualFold(filepath.Clean(actual), filepath.Clean(wantedExe))
+	current := uint64(created.HighDateTime)<<32 | uint64(created.LowDateTime)
+	return current == startedAt
 }
 func mcpAutoManage(action string, executable string) (bool, error) {
 	const task = "SyndiRelay-Tunnel"

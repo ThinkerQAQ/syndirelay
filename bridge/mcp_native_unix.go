@@ -28,7 +28,8 @@ func mcpRunnerExclusive(private string) (func(), error) {
 	}
 	return func() { _ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN); f.Close() }, nil
 }
-func mcpSameProcess(pid int, wantedExe string) bool {
+func mcpProcessStartTime(_ int) (uint64, error) { return 0, nil }
+func mcpSameProcess(pid int, wantedExe string, _ uint64) bool {
 	if pid <= 0 || wantedExe == "" {
 		return false
 	}

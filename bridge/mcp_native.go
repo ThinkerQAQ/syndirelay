@@ -302,9 +302,10 @@ func readTunnelID(path string) string {
 func writeMCPState(path, state string) { _ = privateWrite(path, []byte(state)) }
 
 type tunnelRunnerInfo struct {
-	PID   int    `json:"pid"`
-	Token string `json:"token"`
-	Exe   string `json:"exe"`
+	PID       int    `json:"pid"`
+	Token     string `json:"token"`
+	Exe       string `json:"exe"`
+	StartedAt uint64 `json:"started_at,omitempty"`
 }
 
 func readRunnerInfo(p nativeMCPPaths) tunnelRunnerInfo {
@@ -320,14 +321,14 @@ func readRunnerInfo(p nativeMCPPaths) tunnelRunnerInfo {
 }
 func mcpRunnerRunning(p nativeMCPPaths) bool {
 	info := readRunnerInfo(p)
-	if info.PID <= 0 || !mcpSameProcess(info.PID, info.Exe) {
+	if info.PID <= 0 || !mcpSameProcess(info.PID, info.Exe, info.StartedAt) {
 		return false
 	}
 	return true
 }
 func nativeRequestStop(p nativeMCPPaths) error {
 	info := readRunnerInfo(p)
-	if info.PID == 0 || !mcpSameProcess(info.PID, info.Exe) {
+	if info.PID == 0 || !mcpSameProcess(info.PID, info.Exe, info.StartedAt) {
 		return nil
 	}
 	if err := privateWrite(p.Stop, []byte(info.Token)); err != nil {
@@ -460,7 +461,11 @@ func RunTunnel(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	info := tunnelRunnerInfo{PID: os.Getpid(), Token: token, Exe: exe}
+	startedAt, err := mcpProcessStartTime(os.Getpid())
+	if err != nil {
+		return fmt.Errorf("read Tunnel runner process identity: %w", err)
+	}
+	info := tunnelRunnerInfo{PID: os.Getpid(), Token: token, Exe: exe, StartedAt: startedAt}
 	record, err := json.Marshal(info)
 	if err != nil {
 		return err

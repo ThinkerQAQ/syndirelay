@@ -176,7 +176,7 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 		}
 	case "connect", "disconnect":
 		if err := mcpControlTunnel(in.Action); err != nil {
-			http.Error(w, "Tunnel connection action failed: "+err.Error(), 409)
+			writeAPIError(w, http.StatusConflict, "mcp_tunnel_conflict", "Tunnel 连接操作失败："+err.Error(), nil)
 			return
 		}
 	case "auto-connect-enable", "auto-connect-disable":
@@ -186,7 +186,7 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 		}
 	case "start", "stop", "restart":
 		if err := nativeAction(in.Action); err != nil {
-			http.Error(w, "Tunnel service action failed: "+err.Error(), 409)
+			writeAPIError(w, http.StatusConflict, "mcp_service_conflict", "Tunnel 服务操作失败："+err.Error(), nil)
 			return
 		}
 	case "auto-status", "auto-enable", "auto-disable":
