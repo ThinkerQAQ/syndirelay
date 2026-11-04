@@ -2,6 +2,20 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "本地服务运行中 · Tunnel 未连接": "Local service running · Tunnel disconnected",
+  "本地服务正在运行，但 Tunnel 未连接。点击「连接 Tunnel」，等待就绪后再到 ChatGPT 管理插件。": "The local service is running, but the Tunnel is disconnected. Choose Connect Tunnel and wait until ready before managing the plugin in ChatGPT.",
+
+  "无法读取系统自启动设置，请检查系统权限或登录会话。": "Unable to read system startup settings. Check system permissions or your login session.",
+
+  "Tunnel 自动连接": "Connect Tunnel automatically",
+  "本地服务启动后自动连接 Tunnel。修改后需要重启当前服务生效。": "Connect the Tunnel when the local service starts. Restart the running service to apply changes.",
+  "连接 Tunnel": "Connect Tunnel",
+  "断开 Tunnel": "Disconnect Tunnel",
+  "Tunnel 已断开，本地服务仍运行。": "Tunnel disconnected. The local service remains running.",
+  "Tunnel 连接请求已提交，正在检查状态。": "Tunnel connection requested. Checking status.",
+  "已保存。重启服务后，新的自动连接设置生效。": "Saved. Restart the service to apply the new automatic connection preference.",
+  "Tunnel 自动连接设置已保存。": "Automatic Tunnel connection preference saved.",
+
   "正在检查…": "Checking…",
   "本地 Tunnel 服务": "Local Tunnel service",
   "保存连接配置后启动服务；服务运行时，重启可应用已保存的修改。": "Save your connection settings, then start the service. Restart applies saved changes.",

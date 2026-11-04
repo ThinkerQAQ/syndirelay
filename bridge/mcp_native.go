@@ -10,18 +10,19 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
 const mcpExampleID = "tunnel_0123456789abcdef0123456789abcdef"
 const mcpRunnerCommand = "tunnel-run"
 
-var nativeSetupMu sync.Mutex
 var nativeLifecycleMu sync.Mutex
 
 type nativeMCPPaths struct {
@@ -128,7 +129,11 @@ func mcpSnapshot(path string) (data []byte, exists bool, err error) {
 }
 func mcpRestore(path string, data []byte, exists bool) error {
 	if !exists {
-		return os.Remove(path)
+		err := os.Remove(path)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
 	}
 	return privateWrite(path, data)
 }
@@ -143,7 +148,7 @@ func mcpRunClient(ctx context.Context, client string, key string, arguments ...s
 	}
 	return nil
 }
-func nativeSave(ctx context.Context, in mcpConnectionAction) error {
+func nativeSave(ctx context.Context, in mcpConnectionAction) (err error) {
 	if !validNativeTunnel(in.TunnelID) {
 		return errors.New("invalid or example Tunnel ID")
 	}
@@ -151,6 +156,12 @@ func nativeSave(ctx context.Context, in mcpConnectionAction) error {
 	if err != nil {
 		return err
 	}
+	// A Save transaction and runner startup must never see a torn profile/key.
+	release, err := mcpConfigurationLock(p.Private)
+	if err != nil {
+		return err
+	}
+	defer release()
 	client := findTunnelClient(runtime.GOOS, func() string { h, _ := os.UserHomeDir(); return h }())
 	if client == "" {
 		return errors.New("official Tunnel client is missing")
@@ -178,6 +189,13 @@ func nativeSave(ctx context.Context, in mcpConnectionAction) error {
 		key = in.RuntimeAPIKey
 		if !validRuntimeKey(key) {
 			return errors.New("invalid Runtime API Key")
+		}
+	}
+	if currentID == in.TunnelID {
+		if oldKey, readErr := mcpReadKey(p); readErr == nil && oldKey == key {
+			if revision, readErr := os.ReadFile(p.Revision); readErr == nil && len(revision) > 0 {
+				return nil // identical Save is idempotent across GUI and CLI.
+			}
 		}
 	}
 	exe, err := os.Executable()
@@ -218,37 +236,52 @@ func nativeSave(ctx context.Context, in mcpConnectionAction) error {
 	if err != nil {
 		return err
 	}
-	profileOld, profileExists, err := mcpSnapshot(p.Profile)
-	if err != nil {
-		return err
+	// Snapshot every file, including markers, before changing persistent state.
+	type backup struct {
+		path   string
+		data   []byte
+		exists bool
 	}
-	keyOld, keyExists, err := mcpSnapshot(p.Key)
-	if err != nil {
-		return err
-	}
-	// Both files are backed up before mutation. Failures roll back without
-	// touching the currently running Tunnel, whose process inherits its old key.
-	if err = privateWrite(p.Profile, yaml); err != nil {
-		return err
-	}
-	if err = privateWrite(p.Key, encrypted); err != nil {
-		_ = mcpRestore(p.Profile, profileOld, profileExists)
-		return err
+	backups := make([]backup, 0, 4)
+	for _, path := range []string{p.Profile, p.Key, p.Revision, p.Restart} {
+		data, exists, readErr := mcpSnapshot(path)
+		if readErr != nil {
+			return readErr
+		}
+		backups = append(backups, backup{path, data, exists})
 	}
 	revision, err := nativeRevision()
 	if err != nil {
 		return err
 	}
+	committed := false
+	defer func() {
+		if committed {
+			return
+		}
+		for _, old := range backups {
+			if restoreErr := mcpRestore(old.path, old.data, old.exists); restoreErr != nil {
+				err = errors.Join(err, fmt.Errorf("configuration rollback failed: %w", restoreErr))
+			}
+		}
+	}()
+	if err = privateWrite(p.Profile, yaml); err != nil {
+		return err
+	}
+	if err = privateWrite(p.Key, encrypted); err != nil {
+		return err
+	}
 	if err = privateWrite(p.Revision, []byte(revision)); err != nil {
-		_ = mcpRestore(p.Profile, profileOld, profileExists)
-		_ = mcpRestore(p.Key, keyOld, keyExists)
 		return err
 	}
 	if mcpRunnerRunning(p) {
-		_ = privateWrite(p.Restart, []byte("true"))
-	} else {
-		_ = os.Remove(p.Restart)
+		if err = privateWrite(p.Restart, []byte("true")); err != nil {
+			return err
+		}
+	} else if err = os.Remove(p.Restart); err != nil && !os.IsNotExist(err) {
+		return err
 	}
+	committed = true
 	return nil
 }
 func readTunnelID(path string) string {
@@ -368,8 +401,9 @@ func nativeAction(action string) error {
 	}
 }
 
-// RunTunnel is the only entry point of the application-managed Tunnel runner.
-// It is never accessed by the browser as an arbitrary subprocess command.
+// RunTunnel runs a local supervisor even when automatic Tunnel connection is disabled.
+// Connect/disconnect are authenticated by a per-process token in private files and
+// never stop the supervisor. Only a service Restart adopts saved configuration.
 func RunTunnel(ctx context.Context) error {
 	p, err := localMCPPaths()
 	if err != nil {
@@ -383,13 +417,36 @@ func RunTunnel(ctx context.Context) error {
 		return err
 	}
 	defer unlock()
-	key, err := mcpReadKey(p)
+	configRelease, err := mcpConfigurationLock(p.Private)
 	if err != nil {
 		return err
 	}
-	if readTunnelID(p.Profile) == "" {
-		return errors.New("Tunnel profile missing")
+	key, err := mcpReadKey(p)
+	if err != nil {
+		configRelease()
+		return err
 	}
+	profile, err := os.ReadFile(p.Profile)
+	if err != nil || len(profile) == 0 || len(profile) > 128<<10 {
+		configRelease()
+		return errors.New("Tunnel profile missing or invalid")
+	}
+	// Freeze the profile with the same revision as the key. Reconnect must not
+	// combine old credentials with a newer saved Tunnel ID.
+	active := filepath.Join(p.Private, "active-"+strconv.Itoa(os.Getpid())+".yaml")
+	if err = privateWrite(active, profile); err != nil {
+		configRelease()
+		return err
+	}
+	// Hold the lock until the runner marker is visible to Save.
+	// A concurrent Save must either precede this snapshot or mark Restart.
+	locked := true
+	defer func() {
+		if locked {
+			configRelease()
+		}
+	}()
+	defer os.Remove(active)
 	home, _ := os.UserHomeDir()
 	client := findTunnelClient(runtime.GOOS, home)
 	if client == "" {
@@ -404,54 +461,135 @@ func RunTunnel(ctx context.Context) error {
 		return err
 	}
 	info := tunnelRunnerInfo{PID: os.Getpid(), Token: token, Exe: exe}
-	state, err := json.Marshal(info)
+	record, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
-	// Lock protects this marker across process instances.
-	if err = privateWrite(p.Runner, state); err != nil {
+	if err = privateWrite(p.Runner, record); err != nil {
 		return err
 	}
+	connecting := mcpAutoConnectEnabled(p)
+	current := mcpRunnerState{Token: token, Connecting: connecting}
+	if err = mcpWriteRunnerState(p, current); err != nil {
+		return err
+	}
+	configRelease()
+	locked = false
 	defer func() {
+		if state, ok := mcpReadRunnerState(p); ok && state.Token == token {
+			_ = os.Remove(mcpRunnerStatePath(p))
+		}
 		if readRunnerInfo(p).Token == token {
 			_ = os.Remove(p.Runner)
 		}
+		_ = os.Remove(mcpRunnerCommandPath(p))
 		if b, e := os.ReadFile(p.Stop); e == nil && strings.TrimSpace(string(b)) == token {
 			_ = os.Remove(p.Stop)
 		}
 	}()
 	_ = os.Remove(p.Stop)
-	cmd := exec.CommandContext(ctx, client, "run", "--config", p.Profile, "--health.url-file", p.Health)
-	cmd.Env = append(os.Environ(), "CONTROL_PLANE_API_KEY="+key)
-	cmd.Stdin = nil
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
-	mcpHideProcess(cmd)
-	if err = cmd.Start(); err != nil {
-		return errors.New("Tunnel client failed to launch")
+
+	var child *exec.Cmd
+	var terminate func() error
+	var exited chan error
+	var retry <-chan time.Time
+	stopChild := func() error {
+		retry = nil
+		if child == nil {
+			return nil
+		}
+		if err := terminate(); err != nil {
+			return fmt.Errorf("could not stop owned Tunnel process: %w", err)
+		}
+		child = nil
+		channel := exited
+		exited = nil
+		select {
+		case <-channel:
+		case <-time.After(4 * time.Second):
+			return errors.New("owned Tunnel child did not stop")
+		}
+		terminate = nil
+		_ = os.Remove(p.Health)
+		return nil
 	}
-	exited := make(chan error, 1)
-	go func() { exited <- cmd.Wait() }()
-	ticker := time.NewTicker(250 * time.Millisecond)
+	defer func() { _ = stopChild() }()
+	startChild := func() {
+		if !connecting || child != nil {
+			return
+		}
+		_ = os.Remove(p.Health)
+		command := exec.Command(client, "run", "--config", active, "--health.url-file", p.Health)
+		command.Env = append(os.Environ(), "CONTROL_PLANE_API_KEY="+key)
+		command.Stdin = nil
+		command.Stdout = io.Discard
+		command.Stderr = io.Discard
+		stop, launchErr := mcpLaunchChild(command)
+		if launchErr != nil {
+			retry = time.After(5 * time.Second)
+			return
+		}
+		terminate = stop
+		child = command
+		exited = make(chan error, 1)
+		go func(c *exec.Cmd, ch chan error) { ch <- c.Wait() }(command, exited)
+	}
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signals)
+	startChild()
+	ticker := time.NewTicker(150 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
-		case err := <-exited:
-			if err != nil {
-				return errors.New("Tunnel client exited unexpectedly")
-			}
-			return nil
 		case <-ctx.Done():
-			_ = cmd.Process.Kill()
-			<-exited
 			return nil
+		case <-signals:
+			return nil
+		case <-exited:
+			if terminate != nil {
+				_ = terminate()
+				terminate = nil
+			}
+			child = nil
+			exited = nil
+			if connecting {
+				retry = time.After(5 * time.Second)
+			}
+		case <-retry:
+			retry = nil
+			startChild()
 		case <-ticker.C:
-			b, e := os.ReadFile(p.Stop)
-			if e == nil && strings.TrimSpace(string(b)) == token {
-				_ = cmd.Process.Kill()
-				<-exited
+			if data, e := os.ReadFile(p.Stop); e == nil && strings.TrimSpace(string(data)) == token {
 				return nil
 			}
+			raw, e := os.ReadFile(mcpRunnerCommandPath(p))
+			if e != nil {
+				continue
+			}
+			_ = os.Remove(mcpRunnerCommandPath(p))
+			if len(raw) > 2048 {
+				continue
+			}
+			var request mcpRunnerControlRequest
+			if json.Unmarshal(raw, &request) != nil || request.Token != token || len(request.ID) != 32 {
+				continue
+			}
+			switch request.Action {
+			case "connect":
+				connecting = true
+				startChild()
+			case "disconnect":
+				connecting = false
+				if err := stopChild(); err != nil {
+					continue
+				}
+			default:
+				continue
+			}
+			current.Connecting = connecting
+			current.ActionID = request.ID
+			_ = mcpWriteRunnerState(p, current)
 		}
 	}
 }

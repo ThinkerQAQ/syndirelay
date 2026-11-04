@@ -33,6 +33,17 @@
   $('mcpConnect').disabled=run?!c.canStop:!c.canStart;
   $('mcpConnect').textContent=run?'停止服务':'启动服务';
   $('mcpRestart').disabled=!c.canRestart;
+  const connectPref=$('mcpAutoConnect');
+  if(connectPref){
+   connectPref.disabled=!c.canAutoStart||!s.configured;
+   connectPref.checked=s.tunnel_auto_connect!==false;
+  }
+  const toggle=$('mcpTunnelToggle');
+  if(toggle) {
+   const connecting=Boolean(s.tunnel_connecting||s.ready);
+   toggle.textContent=connecting?'断开 Tunnel':'连接 Tunnel';
+   toggle.disabled=state.busy||!!state.pending||!run||(!connecting&&c.changed)||(!connecting&&s.restart_required);
+  }
   if($('mcpAutoStart')) {
    $('mcpAutoStart').disabled=!c.canAutoStart||!state.autoKnown;
    $('mcpAutoStart').checked=state.autoStart;
@@ -41,6 +52,7 @@
   if(state.pending){label='正在保存';kind='checking';}
   else if(s.restart_required&&run){label='等待重启';kind='checking';}
   else if(s.ready){label='Ready';kind='ok';}
+  else if(run&&!s.tunnel_connecting){label='本地服务运行中 · Tunnel 未连接';kind='disabled';}
   else if(run){label='正在启动 / 未就绪';kind='checking';}
   else if(s.configured){label='已停止';kind='disabled';}
   $('mcpConnectionStatusText').textContent=label;
@@ -52,7 +64,9 @@
     ? '已保存的修改等待重启生效。重启服务后再到 ChatGPT 中管理插件。'
     : s.ready
       ? '本地 Tunnel 已就绪。请在 ChatGPT 中创建或管理插件，授权结果以 ChatGPT 为准。'
-      : '先启动本地 Tunnel 并等待就绪，再到 ChatGPT 中创建或管理插件。';
+      : run&&!s.tunnel_connecting
+        ? '本地服务正在运行，但 Tunnel 未连接。点击「连接 Tunnel」，等待就绪后再到 ChatGPT 管理插件。'
+        : '先启动本地 Tunnel 并等待就绪，再到 ChatGPT 中创建或管理插件。';
   $('mcpTunnelHint').textContent=s.configured?'已保存；可修改后再次保存':'尚未保存';
   $('mcpRuntimeHint').textContent=s.runtime_key_saved?'已保存；留空则复用':'尚未保存';
   const reveal=$('mcpKeyReveal');
@@ -158,10 +172,38 @@
   try{
    const r=await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{action:'auto-status'});
    state.autoStart=!!r.auto_start;state.autoKnown=true;
-  }catch(e){state.autoKnown=false;}
+    $('mcpStartupError').textContent='';
+  }catch(e){
+    state.autoKnown=false;
+    $('mcpStartupError').textContent='无法读取系统自启动设置，请检查系统权限或登录会话。';
+  }
   show();
  }
- async function autoChanged(){
+   async function autoConnectChanged(){
+   if(state.busy||state.pending)return;
+   const c=controls(state.status,form());
+   if(!c.canAutoStart){show();return;}
+   const wanted=!!$('mcpAutoConnect').checked;
+   state.busy=true;show();
+   try {
+    await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{action:wanted?'auto-connect-enable':'auto-connect-disable'});
+    message(state.status.running?'已保存。重启服务后，新的自动连接设置生效。':'Tunnel 自动连接设置已保存。');
+   }catch(e){message(root.BlogCTLPopup.errorMessage(e),true);}
+   finally{state.busy=false;await refresh();}
+  }
+  async function tunnelChanged(){
+   const s=state.status;
+   if(state.busy||state.pending||!running(s))return;
+   const connecting=Boolean(s.tunnel_connecting||s.ready);
+   if(!connecting&&(!controls(s,form()).stored||controls(s,form()).changed||s.restart_required))return;
+   state.busy=true;show();
+   try {
+    await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{action:connecting?'disconnect':'connect'});
+    message(connecting?'Tunnel 已断开，本地服务仍运行。':'Tunnel 连接请求已提交，正在检查状态。');
+   }catch(e){message(root.BlogCTLPopup.errorMessage(e),true);}
+   finally{state.busy=false;await refresh();}
+  }
+async function autoChanged(){
   if(state.busy||state.pending)return;
   const c=controls(state.status,form());
   if(!c.canAutoStart){show();return;}
@@ -182,6 +224,8 @@
   $('mcpConnect').addEventListener('click',()=>action(running(state.status)?'stop':'start'));
   $('mcpRestart').addEventListener('click',()=>action('restart'));
   $('mcpAutoStart')?.addEventListener('change',autoChanged);
+  $('mcpAutoConnect')?.addEventListener('change',autoConnectChanged);
+  $('mcpTunnelToggle')?.addEventListener('click',tunnelChanged);
   $('mcpKeyReveal')?.addEventListener('click',()=>{
    const input=$('mcpRuntimeKey'),reveal=$('mcpKeyReveal');
    if(!input.value || reveal.disabled)return;

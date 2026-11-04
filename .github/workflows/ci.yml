@@ -70,6 +70,9 @@ jobs:
         run: |
           node --check extension/popup/mcp-connection.js
           python scripts/test_package_installer.py
+      - name: Exercise isolated Go-native Tunnel lifecycle
+        if: runner.os == 'Linux'
+        run: python3 scripts/test_mcp_tunnel_lifecycle.py
       - name: Build native portable stage and prepare Qt IFW installer
         shell: bash
         run: |

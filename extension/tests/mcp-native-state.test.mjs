@@ -86,3 +86,14 @@ test('running unhealthy state displays Stop and not Stopped',async()=>{
  assert.equal(elem('mcpConnect').disabled,false);
  assert.notEqual(elem('mcpConnectionStatus').textContent,'已停止');
 });
+
+test('standby supervisor remains running and displays Tunnel disconnected',async()=>{
+ const {api,elem,saved}=fakeUI();
+ saved.running=true;saved.ready=false;saved.tunnel_connecting=false;
+ api.init();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(elem('mcpConnectionStatusText').textContent,'本地服务运行中 · Tunnel 未连接');
+ assert.equal(elem('mcpConnect').textContent,'停止服务');
+ assert.equal(elem('mcpConnect').disabled,false);
+ assert.equal(elem('mcpTunnelToggle').textContent,'连接 Tunnel');
+});

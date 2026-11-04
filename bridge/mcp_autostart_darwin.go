@@ -27,7 +27,14 @@ func mcpAutoManage(action, executable string) (bool, error) {
 	label := "gui/" + uid + "/com.thinkerqaq.syndirelay.tunnel"
 	switch action {
 	case "status":
-		return exists, nil
+		if !exists {
+			return false, nil
+		}
+		out, checkErr := exec.Command("launchctl", "print-disabled", "gui/"+uid).Output()
+		if checkErr != nil {
+			return false, checkErr
+		}
+		return !strings.Contains(string(out), "\"com.thinkerqaq.syndirelay.tunnel\" => true"), nil
 	case "enable":
 		if !filepath.IsAbs(executable) || strings.ContainsAny(executable, "\r\n") {
 			return false, errors.New("invalid executable path")
@@ -37,21 +44,22 @@ func mcpAutoManage(action, executable string) (bool, error) {
 <plist version="1.0"><dict>
 <key>Label</key><string>com.thinkerqaq.syndirelay.tunnel</string>
 <key>ProgramArguments</key><array><string>` + escapePlist(executable) + `</string><string>tunnel-run</string></array>
-<key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+<key>RunAtLoad</key><true/><key>KeepAlive</key><false/>
 </dict></plist>`
 		if err = privateWrite(unit, []byte(content)); err != nil {
 			return false, err
 		}
-		// The preference is stored by the LaunchAgent itself; enable does not
-		// start a Tunnel immediately.
+		// Enable on next login without bootstrapping a worker now.
+		if err = exec.Command("launchctl", "enable", label).Run(); err != nil {
+			return false, err
+		}
 		return true, nil
 	case "disable":
 		if !exists {
 			return false, nil
 		}
-		// Stop only the task entry; running Tunnel stays controlled separately.
-		_ = exec.Command("launchctl", "bootout", label).Run()
-		if err = os.Remove(unit); err != nil {
+		// Disable the next login startup; never bootout a running worker.
+		if err = exec.Command("launchctl", "disable", label).Run(); err != nil {
 			return false, err
 		}
 		return false, nil

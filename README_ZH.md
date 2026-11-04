@@ -107,14 +107,16 @@ export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
 
 先从 [OpenAI Tunnel 设置](https://platform.openai.com/settings/organization/tunnels)创建 Tunnel ID，在 [API Keys](https://platform.openai.com/settings/organization/api-keys)中创建受限 Runtime API Key。
 
-在浏览器扩展中打开**设置 → MCP 连接**：
+在浏览器扩展中打开**设置 → 运行环境 → MCP 连接**。新版 MCP 使用独立配置，不读取、迁移旧 Tunnel ID、Key 或脚本配置；重新填写即可，文章和发布记录不受影响：
 
 1. 在**本地 Tunnel 服务**中填写 Tunnel ID 和 Runtime API Key，点击**保存配置**。系统会校验官方 Tunnel Client，但不会启动服务。
 2. 点击**启动服务**，等待状态显示 **Ready**。修改配置后使用**重启服务**；即使 Tunnel 进程运行但健康检查失败，也可以停止。
-3. **开机自启 Tunnel** 是可选项。Windows 使用当前用户计划任务，Linux 使用 systemd 用户单元，macOS 使用 LaunchAgent。修改开机自启不会立即启停当前服务。
+3. **开机自启 Tunnel** 控制本地服务是否随系统登录启动；**Tunnel 自动连接** 决定服务启动后是否立即建立 Tunnel。两项独立设置，修改自动连接后重启服务生效。服务运行期间也可手动点击**连接 Tunnel**或**断开 Tunnel**，不会停止本地服务。
 4. 在**ChatGPT 插件**模块打开 [ChatGPT Plugins](https://chatgpt.com/plugins)，用相同的 Tunnel ID 注册并启用插件。详细流程见 [OpenAI 自定义 MCP 连接指南](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)，然后调用只读工具 `list_platforms` 验证。
 
 已保存的 Runtime API Key 显示星号占位，留空即可复用。Tunnel 生命周期由 Go 负责，不再经由 PowerShell/Bash 服务脚本。Tunnel 已就绪不代表 ChatGPT 插件已授权。
+
+命令行可使用 `syndirelay mcp status|start|stop|restart|connect|disconnect` 管理同一服务；`syndirelay mcp configure` 从标准输入读取 JSON（`tunnel_id` 和 `runtime_api_key`），不通过命令参数传密钥。
 
 **其他本地 MCP 客户端**不需要 Tunnel。把安装目录的 `bin/syndirelay`（Windows 为 `bin/syndirelay.exe`）作为程序，参数设置为 `mcp-stdio`，再调用 `list_platforms` 验证。
 

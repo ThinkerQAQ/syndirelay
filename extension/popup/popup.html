@@ -464,10 +464,18 @@
                   <input id="mcpAutoStart" type="checkbox" disabled>
                   <span><strong>开机自启 Tunnel</strong><small>下次登录系统时启动。修改此选项不会立即启动或停止服务。</small></span>
                 </label>
+                <small id="mcpStartupError" class="mcp-startup-error" role="status" aria-live="polite"></small>
+                <label class="mcp-preference mcp-auto-connect" for="mcpAutoConnect">
+                  <input id="mcpAutoConnect" type="checkbox" checked disabled>
+                  <span><strong>Tunnel 自动连接</strong><small>本地服务启动后自动连接 Tunnel。修改后需要重启当前服务生效。</small></span>
+                </label>
                 <div class="mcp-button-row">
                   <button id="mcpSave" class="mcp-primary" type="button">保存配置</button>
                   <button id="mcpConnect" class="mcp-secondary" type="button" disabled>启动服务</button>
                   <button id="mcpRestart" class="mcp-secondary" type="button" disabled>重启服务</button>
+                </div>
+                <div class="mcp-tunnel-actions">
+                  <button id="mcpTunnelToggle" class="mcp-secondary" type="button" disabled>连接 Tunnel</button>
                 </div>
                 <p id="mcpConnectionMessage" class="mcp-message" role="status" aria-live="polite"></p>
               </div>

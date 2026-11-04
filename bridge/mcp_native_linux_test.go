@@ -65,6 +65,15 @@ esac
 	}
 	original, _ := os.ReadFile(p.Profile)
 	revision, _ := os.ReadFile(p.Revision)
+	// Saving identical credentials must not invalidate a running revision.
+	identical := mcpConnectionAction{TunnelID: id1, ReuseKey: true, Replace: true, PreviousTunnelID: id1}
+	if err := nativeSave(context.Background(), identical); err != nil {
+		t.Fatalf("idempotent Save: %v", err)
+	}
+	sameRevision, _ := os.ReadFile(p.Revision)
+	if string(revision) != string(sameRevision) {
+		t.Fatal("unchanged configuration generated a new revision")
+	}
 	t.Setenv("FAKE_DOCTOR_FAIL", "1")
 	failed := mcpConnectionAction{TunnelID: id2, RuntimeAPIKey: key, Replace: true, PreviousTunnelID: id1}
 	if err := nativeSave(context.Background(), failed); err == nil {

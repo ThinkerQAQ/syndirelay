@@ -42,3 +42,23 @@ test('MCP status and plugin text follow actual runtime state', () => {
   assert.match(js, /data-kind/);
   assert.match(css, /mcp-status-chip\[data-kind="ready"\]/);
 });
+
+test('MCP connection appears immediately below runtime environment in Settings', () => {
+  const nav = fs.readFileSync(path.join(dir, '../popup/settings-navigation.js'), 'utf8');
+  const runtime = nav.indexOf('id: "runtime"');
+  const mcp = nav.indexOf('id: "mcp"');
+  const platforms = nav.indexOf('id: "platforms"');
+  assert.ok(runtime >= 0 && runtime < mcp && mcp < platforms);
+  assert.match(nav, /id: "mcp", parent: "runtime"/);
+  assert.match(nav, /if \(active === "runtime"\)/);
+  assert.match(nav, /selected = meta\?\.parent \|\| ""/);
+});
+
+test('Tunnel supervisor controls and automatic connection are independent', () => {
+  assert.match(html, /id="mcpAutoStart"/);
+  assert.match(html, /id="mcpAutoConnect"/);
+  assert.match(html, /id="mcpTunnelToggle"/);
+  assert.match(js, /auto-connect-enable/);
+  assert.match(js, /auto-connect-disable/);
+  assert.match(js, /action:connecting\?'disconnect':'connect'/);
+});

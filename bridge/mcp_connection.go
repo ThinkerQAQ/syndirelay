@@ -19,17 +19,19 @@ var tunnelIDPattern = regexp.MustCompile(`^tunnel_(?:[a-z0-9]{32}|[a-z0-9]{4}_[a
 var profileTunnelID = regexp.MustCompile(`(?m)^\s*tunnel_id:\s*["']?(tunnel_[a-z0-9_]+)`)
 
 type MCPConnectionStatus struct {
-	State           string `json:"state"`
-	TunnelID        string `json:"tunnel_id"`
-	ClientInstalled bool   `json:"client_installed"`
-	Configured      bool   `json:"configured"`
-	Ready           bool   `json:"ready"`
-	LocalConfig     any    `json:"local_config"`
-	RuntimeKeySaved bool   `json:"runtime_key_saved"`
-	Running         bool   `json:"running"`
-	SetupState      string `json:"setup_state"`
-	Revision        string `json:"revision"`
-	RestartRequired bool   `json:"restart_required"`
+	State             string `json:"state"`
+	TunnelID          string `json:"tunnel_id"`
+	ClientInstalled   bool   `json:"client_installed"`
+	Configured        bool   `json:"configured"`
+	Ready             bool   `json:"ready"`
+	LocalConfig       any    `json:"local_config"`
+	RuntimeKeySaved   bool   `json:"runtime_key_saved"`
+	Running           bool   `json:"running"`
+	SetupState        string `json:"setup_state"`
+	Revision          string `json:"revision"`
+	RestartRequired   bool   `json:"restart_required"`
+	TunnelAutoConnect bool   `json:"tunnel_auto_connect"`
+	TunnelConnecting  bool   `json:"tunnel_connecting"`
 }
 
 func findTunnelClient(goos, home string) string {
@@ -43,14 +45,17 @@ func findTunnelClient(goos, home string) string {
 	return ""
 }
 func mcpPaths(goos, home, local, xdg string) (string, string) {
+	// NativeMCP is a fresh namespace. Old script-managed Tunnel configuration
+	// is deliberately ignored; users explicitly configure a new connection.
 	if goos == "windows" {
-		p := filepath.Join(local, "SyndiRelay", "MCP")
+		p := filepath.Join(local, "SyndiRelay", "NativeMCP")
 		return filepath.Join(p, "syndirelay.yaml"), filepath.Join(p, "health.url")
 	}
 	if xdg == "" {
 		xdg = filepath.Join(home, ".config")
 	}
-	return filepath.Join(xdg, "tunnel-client", "syndirelay.yaml"), filepath.Join(xdg, "syndirelay", "mcp", "health.url")
+	p := filepath.Join(xdg, "syndirelay", "native-mcp")
+	return filepath.Join(p, "syndirelay.yaml"), filepath.Join(p, "health.url")
 }
 func tunnelReady(ctx context.Context, client, health string) bool {
 	if client == "" {
@@ -81,7 +86,12 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 	profile, health := mcpPaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
 	client := findTunnelClient(runtime.GOOS, home)
 	out.ClientInstalled = client != ""
-	out.Running = mcpRunnerRunning(mcpNativePaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME")))
+	privatePaths := mcpNativePaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
+	out.Running = mcpRunnerRunning(privatePaths)
+	out.TunnelAutoConnect = mcpAutoConnectEnabled(privatePaths)
+	if state, ok := mcpReadRunnerState(privatePaths); ok {
+		out.TunnelConnecting = state.Connecting
+	}
 	if f, err := os.Open(profile); err == nil {
 		data, readErr := io.ReadAll(io.LimitReader(f, 128<<10))
 		f.Close()
@@ -117,9 +127,13 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 	} else if out.Configured {
 		out.State = "stopped_or_unhealthy"
 		if out.Running {
-			out.State = "starting_or_unhealthy"
+			if out.TunnelConnecting {
+				out.State = "starting_or_unhealthy"
+			} else {
+				out.State = "standby"
+			}
 		}
-		out.Ready = tunnelReady(ctx, client, health)
+		out.Ready = out.Running && out.TunnelConnecting && tunnelReady(ctx, client, health)
 		if out.Ready {
 			out.State = "ready"
 		}
@@ -162,6 +176,16 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 		}
 		if _, err = installTunnelClient(r.Context(), tunnelReleaseHTTPClient(), runtime.GOOS, runtime.GOARCH, home); err != nil {
 			http.Error(w, "official Tunnel Client verification or installation failed", 502)
+			return
+		}
+	case "connect", "disconnect":
+		if err := mcpControlTunnel(in.Action); err != nil {
+			http.Error(w, "Tunnel connection action failed: "+err.Error(), 409)
+			return
+		}
+	case "auto-connect-enable", "auto-connect-disable":
+		if err := mcpSetAutoConnect(in.Action == "auto-connect-enable"); err != nil {
+			http.Error(w, "Tunnel connection preference update failed", 409)
 			return
 		}
 	case "start", "stop", "restart":
