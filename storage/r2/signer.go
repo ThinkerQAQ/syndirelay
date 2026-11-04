@@ -17,7 +17,17 @@ func hmacSHA256(key []byte, value string) []byte {
 	return mac.Sum(nil)
 }
 
+// SignPut preserves the existing unconditional PUT semantics for mutable keys.
 func SignPut(rawURL string, payload []byte, contentType string, config Config, now time.Time) (map[string]string, error) {
+	return signPut(rawURL, payload, contentType, config, now, false)
+}
+
+// SignPutIfAbsent atomically creates an immutable R2 key only once.
+func SignPutIfAbsent(rawURL string, payload []byte, contentType string, config Config, now time.Time) (map[string]string, error) {
+	return signPut(rawURL, payload, contentType, config, now, true)
+}
+
+func signPut(rawURL string, payload []byte, contentType string, config Config, now time.Time, createOnce bool) (map[string]string, error) {
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
@@ -37,14 +47,17 @@ func SignPut(rawURL string, payload []byte, contentType string, config Config, n
 	dateStamp := utc.Format("20060102")
 	payloadHashBytes := sha256.Sum256(payload)
 	payloadHash := hex.EncodeToString(payloadHashBytes[:])
-	canonicalHeaders := strings.Join([]string{
-		"content-type:" + contentType,
-		"host:" + parsed.Host,
-		"x-amz-content-sha256:" + payloadHash,
-		"x-amz-date:" + amzDate,
-		"",
-	}, "\n")
-	signedHeaders := "content-type;host;x-amz-content-sha256;x-amz-date"
+
+	canonical := []string{"content-type:" + contentType, "host:" + parsed.Host}
+	signedHeaders := "content-type;host"
+	if createOnce {
+		canonical = append(canonical, "if-none-match:*")
+		signedHeaders += ";if-none-match"
+	}
+	canonical = append(canonical, "x-amz-content-sha256:"+payloadHash, "x-amz-date:"+amzDate, "")
+	signedHeaders += ";x-amz-content-sha256;x-amz-date"
+	canonicalHeaders := strings.Join(canonical, "\n")
+
 	path := parsed.EscapedPath()
 	if path == "" {
 		path = "/"
@@ -70,13 +83,16 @@ func SignPut(rawURL string, payload []byte, contentType string, config Config, n
 	serviceKey := hmacSHA256(regionKey, "s3")
 	signingKey := hmacSHA256(serviceKey, "aws4_request")
 	signature := hex.EncodeToString(hmacSHA256(signingKey, stringToSign))
-
-	return map[string]string{
+	headers := map[string]string{
 		"authorization": "AWS4-HMAC-SHA256 Credential=" + config.AccessKeyID + "/" + scope +
 			", SignedHeaders=" + signedHeaders + ", Signature=" + signature,
 		"content-type":         contentType,
 		"x-amz-content-sha256": payloadHash,
 		"x-amz-date":           amzDate,
 		"cache-control":        "public, max-age=31536000, immutable",
-	}, nil
+	}
+	if createOnce {
+		headers["if-none-match"] = "*"
+	}
+	return headers, nil
 }
