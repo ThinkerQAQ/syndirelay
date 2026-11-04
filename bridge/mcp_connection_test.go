@@ -29,7 +29,7 @@ func TestNativeMCPBoundaries(t *testing.T) {
 		t.Fatal("valid test key rejected")
 	}
 	for _, osName := range []string{"windows", "linux", "darwin"} {
-		paths := mcpNativePaths(osName, "/home/sample", "C:/Temp/Local", "/tmp/xdg")
+		paths := mcpNativePaths(osName, filepath.Join(t.TempDir(), "Data"))
 		if !strings.HasSuffix(paths.Profile, "syndirelay.yaml") || !strings.Contains(paths.Runner, "runner.json") {
 			t.Fatalf("%s: %+v", osName, paths)
 		}

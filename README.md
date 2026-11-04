@@ -114,7 +114,7 @@ In the extension, open **Settings → Runtime Environment → MCP Connection**. 
 3. **Start Tunnel at login** controls whether the local service starts at system login. **Connect Tunnel automatically** independently controls whether that service establishes a Tunnel on start. Restart the service after changing automatic connection. While running, **Connect Tunnel** and **Disconnect Tunnel** control the Tunnel without stopping the local service.
 4. Under **ChatGPT Plugin**, open [ChatGPT Plugins](https://chatgpt.com/plugins), register and enable the plugin with the same Tunnel ID, and follow [OpenAI's custom MCP connection guide](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt). Call the read-only `list_platforms` tool to verify.
 
-Saved Runtime API Keys use a masked placeholder; leave the field blank to reuse the saved key. Tunnel lifecycle management is implemented in Go, without the old PowerShell/Bash service scripts. Tunnel readiness does not prove ChatGPT plugin authorization.
+Saved Runtime API Keys use a masked placeholder; leave the field blank to reuse the saved key. Tunnel configuration and runtime state reside in `mcp/` under the existing SyndiRelay data directory (`Data/mcp/` for Windows installations); old Tunnel settings are never imported. Tunnel lifecycle management is implemented in Go, without the old PowerShell/Bash service scripts. Tunnel readiness does not prove ChatGPT plugin authorization.
 
 The CLI manages the same runtime with `syndirelay mcp status|start|stop|restart|connect|disconnect`. `syndirelay mcp configure` reads JSON with `tunnel_id` and `runtime_api_key` from stdin, never from process arguments.
 

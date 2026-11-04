@@ -44,17 +44,10 @@ func findTunnelClient(goos, home string) string {
 	}
 	return ""
 }
-func mcpPaths(goos, home, local, xdg string) (string, string) {
-	// NativeMCP is a fresh namespace. Old script-managed Tunnel configuration
-	// is deliberately ignored; users explicitly configure a new connection.
-	if goos == "windows" {
-		p := filepath.Join(local, "SyndiRelay", "NativeMCP")
-		return filepath.Join(p, "syndirelay.yaml"), filepath.Join(p, "health.url")
-	}
-	if xdg == "" {
-		xdg = filepath.Join(home, ".config")
-	}
-	p := filepath.Join(xdg, "syndirelay", "native-mcp")
+func mcpPaths(dataDir string) (string, string) {
+	// Tunnel state belongs to SyndiRelay's existing data directory on every OS.
+	// Never read or migrate the obsolete script-managed Tunnel configuration.
+	p := filepath.Join(dataDir, "mcp")
 	return filepath.Join(p, "syndirelay.yaml"), filepath.Join(p, "health.url")
 }
 func tunnelReady(ctx context.Context, client, health string) bool {
@@ -83,10 +76,13 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 	}
 	args := []string{"mcp-stdio"}
 	out.LocalConfig = map[string]any{"mcpServers": map[string]any{"syndirelay": map[string]any{"command": exe, "args": args}}}
-	profile, health := mcpPaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
+	privatePaths, err := localMCPPaths()
+	if err != nil {
+		return out, err
+	}
+	profile, health := privatePaths.Profile, privatePaths.Health
 	client := findTunnelClient(runtime.GOOS, home)
 	out.ClientInstalled = client != ""
-	privatePaths := mcpNativePaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))
 	out.Running = mcpRunnerRunning(privatePaths)
 	out.TunnelAutoConnect = mcpAutoConnectEnabled(privatePaths)
 	if state, ok := mcpReadRunnerState(privatePaths); ok {
@@ -109,7 +105,7 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 		keyName = "runtime-key.dpapi"
 	}
 	if info, err := os.Stat(filepath.Join(private, keyName)); err == nil && !info.IsDir() && info.Size() > 0 {
-		if _, err := mcpReadKey(mcpNativePaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME"))); err == nil {
+		if _, err := mcpReadKey(privatePaths); err == nil {
 			out.RuntimeKeySaved = true
 		}
 	}

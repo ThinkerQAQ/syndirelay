@@ -50,17 +50,18 @@ def main():
         fake_client.write_text('#!/bin/sh\nif [ "$1" != "run" ]; then exit 12; fi\nprintf "%s\\n" "$$" > "$MOCK_TUNNEL_PID"\nwhile true; do sleep 2; done\n',encoding="utf-8")
         fake_client.chmod(0o700)
         cfg=d/"config"
-        private=cfg/"syndirelay"/"native-mcp"
+        data=d/"Data"
+        private=data/"mcp"
         profile=private/"syndirelay.yaml"
         private.mkdir(parents=True)
-        profile.parent.mkdir(parents=True, exist_ok=True)
         profile.write_text("tunnel_id: tunnel_1234567890abcdef1234567890abcdef\n",encoding="utf-8")
         (private/"runtime.env").write_text("synthetic_only_runtime_key_1234567890\n",encoding="utf-8")
         atomic_json(private/"auto-connect.json",{"auto_connect":False})
         pid_file=d/"fake-tunnel.pid"
         env=os.environ.copy()
-        env.update({"HOME":str(d),"XDG_CONFIG_HOME":str(cfg),"PATH":str(fake_bin)+os.pathsep+env.get("PATH",""),
-                   "MOCK_TUNNEL_PID":str(pid_file)})
+        env.update({"HOME":str(d),"XDG_CONFIG_HOME":str(cfg),"SYNDIRELAY_DATA_DIR":str(data),
+                    "PATH":str(fake_bin)+os.pathsep+env.get("PATH",""),
+                    "MOCK_TUNNEL_PID":str(pid_file)})
         process=subprocess.Popen([str(executable),"tunnel-run"],env=env,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         try:
             standby=wait(lambda: (lambda x:x if x.get("token") else None)(read_json(private/"runner-state.json")),"standby runner")

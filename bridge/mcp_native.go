@@ -29,8 +29,8 @@ type nativeMCPPaths struct {
 	Profile, Health, Private, Key, Revision, Restart, State, Runner, Stop string
 }
 
-func mcpNativePaths(goos, home, local, xdg string) nativeMCPPaths {
-	profile, health := mcpPaths(goos, home, local, xdg)
+func mcpNativePaths(goos, dataDir string) nativeMCPPaths {
+	profile, health := mcpPaths(dataDir)
 	private := filepath.Dir(health)
 	key := filepath.Join(private, "runtime.env")
 	if goos == "windows" {
@@ -41,11 +41,11 @@ func mcpNativePaths(goos, home, local, xdg string) nativeMCPPaths {
 		filepath.Join(private, "setup-state"), filepath.Join(private, "runner.json"), filepath.Join(private, "stop-request")}
 }
 func localMCPPaths() (nativeMCPPaths, error) {
-	home, err := os.UserHomeDir()
+	dataDir, err := ConfigDir()
 	if err != nil {
 		return nativeMCPPaths{}, err
 	}
-	return mcpNativePaths(runtime.GOOS, home, os.Getenv("LOCALAPPDATA"), os.Getenv("XDG_CONFIG_HOME")), nil
+	return mcpNativePaths(runtime.GOOS, dataDir), nil
 }
 func validNativeTunnel(id string) bool { return tunnelIDPattern.MatchString(id) && id != mcpExampleID }
 func validRuntimeKey(key string) bool {
