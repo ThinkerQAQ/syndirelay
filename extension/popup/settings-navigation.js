@@ -7,8 +7,8 @@
   const CATEGORY_META = [
     { id: "interface", title: "界面与语言", summary: "语言偏好与界面显示", selectors: ["#environmentInterfaceSettings"] },
     { id: "content", title: "配置文件", summary: "TOML 配置文件", selectors: [".environment-config-file"] },
-    { id: "mcp", title: "MCP 连接", summary: "连接 ChatGPT 或本地 AI 客户端", selectors: ["#mcpConnectionSettings"] },
     { id: "runtime", title: "运行环境", summary: "Bridge、Extension 与本地依赖", selectors: ["#environmentRuntimeTools", "#environmentDependencyTools"] },
+    { id: "mcp", parent: "runtime", title: "MCP 连接", summary: "连接 ChatGPT 或本地 AI 客户端", selectors: ["#mcpConnectionSettings"] },
     { id: "platforms", title: "分发平台", summary: "平台策略、Footer、Canonical 和 Tracking", selectors: ["#platformConfigEnvironmentCard"] },
     { id: "impact", title: "影响力统计", summary: "Reverfolio、发布后自动登记与重试队列", selectors: ["#impactConfigEnvironmentCard"] },
     { id: "social", title: "社交平台", summary: "Buffer、账号连接和发布渠道", selectors: ["#socialConfigEnvironmentCard"] },
@@ -42,6 +42,7 @@
       // controls. This makes field names searchable, not only category names.
       const domainText = (nodeMetaText(meta) + " " + (nodes.get(meta.id)?.textContent || "")).toLowerCase();
       if (query && !query.split(/\s+/).every((word) => domainText.includes(word))) continue;
+      if (!query && !active && meta.parent) continue;
       if (active && meta.id !== active) continue;
       const row = document.createElement("button");
       row.type = "button";
@@ -82,9 +83,14 @@
     const back = document.createElement("button");
     back.type = "button";
     back.className = "secondary compact settings-back";
-    back.textContent = "← 返回设置";
+    const activeMeta = CATEGORY_META.find((item) => item.id === active);
+    back.textContent = activeMeta?.parent ? "← 返回运行环境" : "← 返回设置";
     back.hidden = !isDetail;
-    back.addEventListener("click", () => { selected = ""; render(); });
+    back.addEventListener("click", () => {
+      const meta = CATEGORY_META.find((item) => item.id === selected);
+      selected = meta?.parent || "";
+      render();
+    });
     tree.replaceChildren(back);
     if (isDetail) {
       const current = CATEGORY_META.find((item) => item.id === active);
@@ -137,6 +143,32 @@
       nodes.set(meta.id, section);
       panes.append(section);
     }
+    // Runtime tools and this entry share the same card geometry and width.
+    // Mount the link once in the runtime pane, not in the global settings tree.
+    const mcp = CATEGORY_META.find((item) => item.id === "mcp");
+    const entry = document.createElement("button");
+    entry.type = "button";
+    entry.className = "tool-card settings-runtime-link";
+    entry.dataset.settingsCategory = mcp.id;
+    const title = document.createElement("span");
+    title.className = "tool-identity";
+    const name = document.createElement("strong");
+    name.textContent = mcp.title;
+    const badge = document.createElement("span");
+    badge.className = "tool-requirement optional";
+    badge.textContent = "可选";
+    title.append(name, badge);
+    const arrow = document.createElement("span");
+    arrow.className = "settings-runtime-chevron";
+    arrow.textContent = "›";
+    arrow.setAttribute("aria-hidden", "true");
+    entry.append(title, arrow);
+    entry.addEventListener("click", () => {
+      selected = mcp.id;
+      render();
+      root.BlogCTLMCPConnection?.refresh();
+    });
+    nodes.get("runtime").prepend(entry);
     panel.replaceChildren(heading, intro, search, tree, panes);
     initialized = true;
     render();

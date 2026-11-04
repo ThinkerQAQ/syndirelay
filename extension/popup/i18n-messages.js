@@ -2,6 +2,38 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "本地服务运行中 · Tunnel 未连接": "Local service running · Tunnel disconnected",
+  "本地服务正在运行，但 Tunnel 未连接。点击「连接 Tunnel」，等待就绪后再到 ChatGPT 管理插件。": "The local service is running, but the Tunnel is disconnected. Choose Connect Tunnel and wait until ready before managing the plugin in ChatGPT.",
+
+  "无法读取系统自启动设置，请检查系统权限或登录会话。": "Unable to read system startup settings. Check system permissions or your login session.",
+
+  "Tunnel 自动连接": "Connect Tunnel automatically",
+  "本地服务启动后自动连接 Tunnel，修改后重启当前服务生效。": "Connect the Tunnel when the local service starts. Restart the running service to apply changes.",
+  "连接 Tunnel": "Connect Tunnel",
+  "断开 Tunnel": "Disconnect Tunnel",
+  "Tunnel 已断开，本地服务仍运行。": "Tunnel disconnected. The local service remains running.",
+  "Tunnel 连接请求已提交，正在检查状态。": "Tunnel connection requested. Checking status.",
+  "已保存。重启服务后，新的自动连接设置生效。": "Saved. Restart the service to apply the new automatic connection preference.",
+  "Tunnel 自动连接设置已保存。": "Automatic Tunnel connection preference saved.",
+
+  "正在检查…": "Checking…",
+  "本地 Tunnel 服务": "Local Tunnel service",
+  "保存连接配置后启动服务；服务运行时，重启可应用已保存的修改。": "Save your connection settings, then start the service. Restart applies saved changes.",
+  "尚未保存": "Not saved",
+  "下次登录系统时启动。保存不会立即启动或停止当前服务。": "Start at the next sign-in. Saving does not start or stop the current service.",
+  "ChatGPT 插件": "ChatGPT plugin",
+  "本地 Tunnel 就绪后，在 ChatGPT 中创建并启用插件。授权结果以 ChatGPT 为准。": "Once the local Tunnel is ready, create and enable the plugin in ChatGPT. Authorization is handled there.",
+  "本地 MCP 客户端无需 Tunnel ID 或 Runtime API Key。": "Local MCP clients do not need a Tunnel ID or Runtime API Key.",
+  "配置保存在本机，已保存的 API Key 不会返回此页面。": "Settings are kept locally. Saved API keys are never returned to this page.",
+  "创建或管理 Tunnel": "Create or manage a Tunnel",
+  "创建 Runtime API Key": "Create a Runtime API Key",
+  "显示输入的密钥": "Show entered key",
+  "隐藏输入的密钥": "Hide entered key",
+  "已保存的修改等待重启生效。重启服务后再到 ChatGPT 中管理插件。": "Saved changes require a restart. Restart the service before managing the plugin in ChatGPT.",
+  "本地 Tunnel 已就绪。请在 ChatGPT 中创建或管理插件，授权结果以 ChatGPT 为准。": "The local Tunnel is ready. Create or manage the plugin in ChatGPT; authorization is handled there.",
+  "先启动本地 Tunnel 并等待就绪，再到 ChatGPT 中创建或管理插件。": "Start the local Tunnel and wait until it is ready before managing the plugin in ChatGPT.",
+
+  "本地服务开机自启": "Start local service at login",
   "1. 本地 Tunnel 服务": "1. Local Tunnel service",
   "启动服务": "Start Service",
   "重启服务": "Restart Service",

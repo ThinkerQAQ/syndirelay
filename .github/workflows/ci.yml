@@ -39,14 +39,6 @@ jobs:
         run: npm ci
       - name: Test all original Go platform compilers and publisher modules
         run: go test ./...
-      - name: Test dedicated POSIX/WSL Tunnel setup without contacting the network
-        if: runner.os != 'Windows'
-        shell: bash
-        run: bash scripts/connect-chatgpt-mcp.test.sh
-      - name: Validate native Windows MCP Tunnel setup without network
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: ./scripts/connect-chatgpt-mcp.windows.test.ps1
       - name: Test copied image renderer and browser extension
         run: npm run test:renderers && npm run test:extension
       - name: Build independent SyndiRelay executable
@@ -73,24 +65,14 @@ jobs:
           if ($compiled.platform -ne 'devto' -or $compiled.title -ne 'Hello SyndiRelay' -or -not $compiled.markdown.Contains('My first article.') -or -not $compiled.contentHash) {
             throw 'Quick Start output does not match the README'
           }
-      - name: Verify MCP scripts, installer wizard, and bilingual UI
+      - name: Verify Go-native MCP UI and installer wizard
         shell: bash
         run: |
-          bash -n scripts/setup-mcp.sh scripts/manage-mcp.sh
           node --check extension/popup/mcp-connection.js
           python scripts/test_package_installer.py
-      - name: Validate Windows setup scripts (parse only)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $failed = @()
-          foreach ($script in @('Install-SyndiRelay.ps1', 'Open-SyndiRelay.ps1', 'Setup-SyndiRelay-MCP.ps1', 'Manage-SyndiRelay-MCP.ps1')) {
-            $tokens = $null
-            $errors = $null
-            [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD "scripts/$script"), [ref]$tokens, [ref]$errors) | Out-Null
-            if ($errors.Count -gt 0) { $failed += "$script : $errors" }
-          }
-          if ($failed.Count -gt 0) { throw ($failed -join "`n") }
+      - name: Exercise isolated Go-native Tunnel lifecycle
+        if: runner.os == 'Linux'
+        run: python3 scripts/test_mcp_tunnel_lifecycle.py
       - name: Build native portable stage and prepare Qt IFW installer
         shell: bash
         run: |

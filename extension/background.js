@@ -6,6 +6,7 @@ import { configureMediumCanonical } from "./medium-settings.js";
 import { PLATFORM_AUTH, PLATFORM_SESSIONS } from "./platforms.js";
 import { collectBrowserSessionCookieBatches, cookieHeaderFromRequest, cookieQueryDiagnostic, selectBrowserSessionCookies } from "./session.js";
 import { toError } from "./errors.js";
+import { needsBridgeRestart } from "./bridge-version.js";
 import { uploadMediumInPage, validMediumUploadTask, findMediumEditorTab, retryMediumTabOperation } from "./medium-upload.js";
 import { insertMediumImageInPage, verifyMediumDraftInPage, validMediumEditorTask } from "./medium-insert.js";
 
@@ -16,6 +17,8 @@ let googleSearchConsoleProperty = "";
 let googleSearchConsoleURL = "";
 let googleIndexOrigin = "";
 let bridgeSession = null;
+let bridgeVersionRecoveryKey = "";
+let bridgeVersionRecoveryPromise = null;
 let googleSearchConsoleTabId = null;
 let googleIndexPumpPromise = null;
 let googleSearchConsoleStatus = {
@@ -257,11 +260,28 @@ function jsonOptions(method, body) {
 async function bridgeStatus() {
   const extensionVersion = chrome.runtime.getManifest().version;
   try {
-    const bridge = await ensureBridge(false);
-    const health = await fetchJSON("/v1/health");
+    let bridge = await ensureBridge(false);
+    let health = await fetchJSON("/v1/health");
     if (!health?.ok) throw new Error("Bridge health check failed.");
     const nativeHostVersion = String(bridge.nativeHostVersion || "");
-    const bridgeVersion = String(health.version || "");
+    let bridgeVersion = String(health.version || "");
+    let recoveryError = "";
+    // The installation may replace the EXE while its previous Bridge is still
+    // running. The new extension worker can safely ask the authenticated
+    // Bridge restart endpoint to launch the updated binary.
+    if (needsBridgeRestart(extensionVersion, nativeHostVersion, bridgeVersion)) {
+      const key = [bridge.pid, bridgeVersion, extensionVersion].join(":");
+      if (bridgeVersionRecoveryKey !== key) {
+        bridgeVersionRecoveryKey = key;
+        bridgeVersionRecoveryPromise = restartBridge().then(() => "").catch(errorMessage);
+      }
+      recoveryError = await bridgeVersionRecoveryPromise;
+      if (!recoveryError) {
+        bridge = await ensureBridge(false);
+        health = await fetchJSON("/v1/health");
+        bridgeVersion = String(health.version || "");
+      }
+    }
     const compatible = nativeHostVersion === extensionVersion && bridgeVersion === extensionVersion;
     const runtime = {
       extensionVersion,
@@ -269,6 +289,7 @@ async function bridgeStatus() {
       bridgeVersion,
       nativeHostExecutable: String(bridge.executablePath || ""),
       compatible,
+      versionRecoveryError: recoveryError,
     };
     try {
       const result = await fetchJSON("/v1/config");
@@ -1038,7 +1059,7 @@ async function handleMessage(message) {
     }
     case "blogctl.mcp.connection.action": {
       const action = String(message.action || "");
-      if (!["install-client", "setup", "save", "start", "stop", "restart"].includes(action)) {
+      if (!["install-client", "save", "start", "stop", "restart", "auto-status", "auto-enable", "auto-disable", "connect", "disconnect", "auto-connect-enable", "auto-connect-disable"].includes(action)) {
         throw new Error("Invalid MCP connection action");
       }
       return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {

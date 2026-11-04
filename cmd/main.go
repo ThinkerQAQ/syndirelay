@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +38,20 @@ func main() {
 	if len(os.Args) > 1 && (os.Args[1] == "-mcp-stdio" || os.Args[1] == "mcp-stdio") {
 		if err := runMCPStdio(); err != nil {
 			fmt.Fprintln(os.Stderr, "syndirelay mcp:", err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "mcp" {
+		if err := runMCPManagement(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "syndirelay mcp:", err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "tunnel-run" {
+		if err := blogbridge.RunTunnel(context.Background()); err != nil {
+			fmt.Fprintln(os.Stderr, "syndirelay tunnel:", err)
 			os.Exit(1)
 		}
 		return

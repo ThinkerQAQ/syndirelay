@@ -95,6 +95,25 @@ class InstallerTest(unittest.TestCase):
             finally:
                 installer.QA_PREPARE_ONLY=False
 
+    def test_local_install_test_mode_marks_package_and_preserves_release_gate(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=pathlib.Path(temp); stage=self.stage(root)
+            (stage/".qa-only").write_text("local QA build")
+            (stage/"THIRD_PARTY_LICENSES/MANIFEST.json").unlink()
+            (stage/"THIRD_PARTY_LICENSES").rmdir()
+            installer.QA_PREPARE_ONLY=False
+            installer.LOCAL_TEST_ONLY=False
+            with self.assertRaises(ValueError):
+                installer.prepare(stage,root/"release","1.2.3","windows")
+            installer.LOCAL_TEST_ONLY=True
+            try:
+                installer.prepare(stage,root/"local-test","1.2.3","windows")
+            finally:
+                installer.LOCAL_TEST_ONLY=False
+            data=root/"local-test/packages/com.thinkerqaq.syndirelay/data"
+            self.assertTrue((data/"LOCAL-TEST-ONLY.txt").is_file())
+            self.assertFalse((data/"Data").exists())
+
     def test_rejects_private_state_and_symlinks(self):
         for name in ("Data/state.sqlite","config.toml","scripts/runtime.env","extension/extension-access.key"):
             with self.subTest(name=name),tempfile.TemporaryDirectory() as temp:

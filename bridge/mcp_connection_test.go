@@ -10,82 +10,86 @@ import (
 	"testing"
 )
 
-func TestMCPBoundaries(t *testing.T) {
+func TestNativeMCPBoundaries(t *testing.T) {
+	good := "tunnel_1234567890abcdef1234567890abcdef"
+	for _, id := range []string{"tunnel_", "../../private", mcpExampleID, good + ";evil"} {
+		if validNativeTunnel(id) {
+			t.Fatalf("accepted unsafe Tunnel ID %q", id)
+		}
+	}
+	if !validNativeTunnel(good) {
+		t.Fatal("rejected valid Tunnel ID")
+	}
+	for _, key := range []string{"short", "with spaces malformed credential", "line\nbreaks"} {
+		if validRuntimeKey(key) {
+			t.Fatalf("accepted unsafe key %q", key)
+		}
+	}
+	if !validRuntimeKey("test_runtime_credential_123456789") {
+		t.Fatal("valid test key rejected")
+	}
+	for _, osName := range []string{"windows", "linux", "darwin"} {
+		paths := mcpNativePaths(osName, filepath.Join(t.TempDir(), "Data"))
+		if !strings.HasSuffix(paths.Profile, "syndirelay.yaml") || !strings.Contains(paths.Runner, "runner.json") {
+			t.Fatalf("%s: %+v", osName, paths)
+		}
+	}
 	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, "scripts"), 0700); err != nil {
+	file := filepath.Join(root, "nested", "private.key")
+	if err := privateWrite(file, []byte("not-a-live-key")); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"Setup-SyndiRelay-MCP.ps1", "Manage-SyndiRelay-MCP.ps1", "manage-mcp.sh", "setup-mcp.sh"} {
-		if err := os.WriteFile(filepath.Join(root, "scripts", name), []byte(""), 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	for _, action := range []string{"start", "stop", "restart"} {
-		cmd, err := mcpCommand("windows", root, action, "")
-		if err != nil || cmd.Args[len(cmd.Args)-1] != action {
-			t.Fatalf("%s: %v %v", action, cmd, err)
-		}
-	}
-	for _, action := range []string{"delete", "start; whoami", ""} {
-		if _, err := mcpCommand("windows", root, action, ""); err == nil {
-			t.Fatalf("accepted %q", action)
-		}
-	}
-	for _, id := range []string{"tunnel_", "../secret", "tunnel_0123456789abcdef0123456789abcdef;evil"} {
-		if _, err := mcpCommand("windows", root, "setup", id); err == nil {
-			t.Fatalf("accepted ID %q", id)
-		}
-	}
-	id := "tunnel_0123456789abcdef0123456789abcdef"
-	cmd, err := mcpCommand("windows", root, "setup", id)
-	if err != nil || cmd.Args[len(cmd.Args)-2] != "-TunnelId" {
-		t.Fatalf("unexpected %v %v", cmd, err)
+	got, err := os.ReadFile(file)
+	if err != nil || string(got) != "not-a-live-key" {
+		t.Fatalf("atomic private storage %q %v", got, err)
 	}
 	if tunnelReady(context.Background(), "", filepath.Join(root, "health.url")) {
-		t.Fatal("missing client ready")
-	}
-	profile, health := mcpPaths("linux", "/home/example", "", "/tmp/config")
-	if profile != filepath.Join("/tmp/config", "tunnel-client", "syndirelay.yaml") || health != filepath.Join("/tmp/config", "syndirelay", "mcp", "health.url") {
-		t.Fatal(profile, health)
+		t.Fatal("missing client reported ready")
 	}
 }
 
 func TestMCPManagementAuthenticated(t *testing.T) {
-	s, err := New("private-test-token")
+	server, err := New("private-test-token")
 	if err != nil {
 		t.Fatal(err)
 	}
-	server := httptest.NewServer(s.Handler())
-	defer server.Close()
+	httpServer := httptest.NewServer(server.Handler())
+	defer httpServer.Close()
 	for _, method := range []string{http.MethodGet, http.MethodPost} {
-		req, _ := http.NewRequest(method, server.URL+"/v1/mcp-connection", strings.NewReader(`{"action":"install-client"}`))
-		response, err := server.Client().Do(req)
+		req, _ := http.NewRequest(method, httpServer.URL+"/v1/mcp-connection", strings.NewReader("{}"))
+		response, err := httpServer.Client().Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
 		response.Body.Close()
 		if response.StatusCode != http.StatusUnauthorized {
-			t.Fatalf("%s: %d", method, response.StatusCode)
+			t.Fatalf("unauthorized %s returned %d", method, response.StatusCode)
 		}
 	}
-	req, _ := http.NewRequest(http.MethodPost, server.URL+"/v1/mcp-connection", strings.NewReader(`{"action":"setup","tunnel_id":"tunnel_invalid"}`))
-	req.Header.Set("x-thinkerqaq-token", "private-test-token")
-	response, err := server.Client().Do(req)
-	if err != nil {
-		t.Fatal(err)
+	for _, body := range []string{
+		`{"action":"save","tunnel_id":"tunnel_invalid","runtime_api_key":"test_fake_123456789"}`,
+		`{"action":"save","tunnel_id":"tunnel_0123456789abcdef0123456789abcdef","runtime_api_key":"test_fake_123456789"}`,
+		`{"action":"random-shell-command"}`,
+	} {
+		req, _ := http.NewRequest(http.MethodPost, httpServer.URL+"/v1/mcp-connection", strings.NewReader(body))
+		req.Header.Set("x-thinkerqaq-token", "private-test-token")
+		response, err := httpServer.Client().Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response.Body.Close()
+		if response.StatusCode != http.StatusBadRequest {
+			t.Fatalf("unsafe body %s returned %d", body, response.StatusCode)
+		}
 	}
-	response.Body.Close()
-	if response.StatusCode != http.StatusBadRequest {
-		t.Fatalf("invalid setup must not spawn: %d", response.StatusCode)
-	}
-	req, _ = http.NewRequest(http.MethodGet, server.URL+"/v1/mcp-connection", nil)
+	req, _ := http.NewRequest(http.MethodGet, httpServer.URL+"/v1/mcp-connection", nil)
 	req.Header.Set("x-thinkerqaq-token", "private-test-token")
-	response, err = server.Client().Do(req)
+	response, err := httpServer.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		t.Fatalf("authenticated GET: %d", response.StatusCode)
+		t.Fatalf("GET status=%d", response.StatusCode)
 	}
 }
