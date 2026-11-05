@@ -54,7 +54,7 @@ LOCAL_TEST_ONLY = False
 
 PAYLOAD = ("bin", "extension", "renderers", "node_modules", "scripts",
            "package.json", "package-lock.json", "LICENSE", "README.md", "README_ZH.md",
-           "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES", "Open-SyndiRelay.sh")
+           "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES")
 
 def xml(path, tag, values):
     node = ET.Element(tag)
@@ -74,7 +74,7 @@ def prepare(stage, destination, version, target):
     if json.loads((stage / "package-lock.json").read_text(encoding="utf-8")).get("packages", {}).get("", {}).get("version") != version:
         raise ValueError("installer version mismatch: package-lock root")
     suffix = ".exe" if target == "windows" else ""
-    for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("bin/node"+suffix, "package.json", "LICENSE", "THIRD_PARTY_LICENSES/runtime/node/LICENSE", "Open-SyndiRelay.sh"):
+    for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("bin/node"+suffix, "package.json", "LICENSE", "THIRD_PARTY_LICENSES/runtime/node/LICENSE"):
         if not (stage/name).is_file():
             raise ValueError("release is missing "+name)
     if not (stage/"THIRD_PARTY_LICENSES"/"MANIFEST.json").is_file() and not (stage/".qa-only").exists():
@@ -87,7 +87,7 @@ def prepare(stage, destination, version, target):
     for path in stage.rglob("*"):
         if path.is_symlink():
             raise ValueError("symlink in release stage")
-        if path.is_file() and path.suffix.lower() == ".ps1":
+        if path.is_file() and path.suffix.lower() in (".ps1", ".sh", ".cmd", ".bat", ".vbs", ".py"):
             raise ValueError("PowerShell scripts are forbidden in distributable installers: " + str(path))
         if path.is_file() and (path.name.lower() in ("config.toml","api-token","extension-access.key","runtime.env","runtime-key.dpapi", "blogctl.toml", "syndirelay.toml", ".env")
                               or path.suffix.lower() in (".sqlite",".db",".log",".har")
@@ -166,14 +166,14 @@ Component.prototype.createOperations = function() {
         script += '    component.addOperation("CreateShortcut", "@TargetDir@/bin/syndirelay-open.exe", "@UserStartMenuProgramsPath@/SyndiRelay/SyndiRelay.lnk", "--open-ui", "workingDirectory=@TargetDir@");\n'
         script += '    component.addOperation("CreateShortcut", "@TargetDir@/SyndiRelay-Maintenance.exe", "@UserStartMenuProgramsPath@/SyndiRelay/Uninstall SyndiRelay.lnk");\n'
     elif target == "linux":
-        entry = 'Type=Application\nName=SyndiRelay\nExec=/bin/bash "@TargetDir@/Open-SyndiRelay.sh"\nTerminal=false\nCategories=Utility;'
+        entry = 'Type=Application\nName=SyndiRelay\nExec="@TargetDir@/bin/syndirelay" --open-ui\nTerminal=false\nCategories=Utility;'
         script += '    component.addOperation("CreateDesktopEntry", "syndirelay.desktop", ' + json.dumps(entry) + ');\n'
     else:
         app = data/"SyndiRelay.app/Contents"
         (app/"MacOS").mkdir(parents=True)
         (app/"Info.plist").write_bytes(plistlib.dumps({"CFBundleName":"SyndiRelay", "CFBundleIdentifier":"com.thinkerqaq.syndirelay", "CFBundleExecutable":"SyndiRelay", "CFBundleVersion":version, "CFBundlePackageType":"APPL"}))
         launcher = app/"MacOS/SyndiRelay"
-        launcher.write_text('#!/bin/bash\nset -euo pipefail\nroot="$(cd "$(dirname "$0")/../../.." && pwd)"\nexec /bin/bash "$root/Open-SyndiRelay.sh"\n')
+        shutil.copy2(stage/"bin/syndirelay", launcher)
         launcher.chmod(0o755)
     script += "};\n"
     script += (ASSETS/"finish.qs").read_text(encoding="utf-8").replace("__PLATFORM__", target)

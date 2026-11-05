@@ -21,7 +21,7 @@ Component.prototype.finishFirstRun = function() {
         if (form.openExtensionCheckBox.checked) installer.executeDetached(launcher, ["--guide-extension"], target);
     } else {
         if (form.openAppCheckBox.checked) {
-            installer.executeDetached("/bin/bash", [target + "/Open-SyndiRelay.sh"], target);
+            installer.executeDetached(target + "/bin/syndirelay", ["--open-ui"], target);
         }
         if (form.openExtensionCheckBox.checked) {
             QDesktopServices.openUrl("file://" + target + "/extension");

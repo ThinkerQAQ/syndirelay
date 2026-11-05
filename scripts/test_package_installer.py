@@ -26,7 +26,6 @@ class InstallerTest(unittest.TestCase):
         (stage/"THIRD_PARTY_LICENSES/runtime/node").mkdir(parents=True)
         (stage/"THIRD_PARTY_LICENSES/runtime/node/LICENSE").write_text("Node.js upstream license fixture")
         (stage/"LICENSE").write_text("test")
-        (stage/"Open-SyndiRelay.sh").write_text("test")
         (stage/"extension/icons").mkdir(parents=True)
         (stage/"extension/icons/icon128.png").write_bytes(b"fixture-icon")
         (stage/"extension/manifest.json").write_text('{"version":"1.2.3"}')
@@ -71,7 +70,7 @@ class InstallerTest(unittest.TestCase):
                 else:
                     launcher=root/"out/packages/com.thinkerqaq.syndirelay/data/SyndiRelay.app/Contents/MacOS/SyndiRelay"
                     self.assertTrue(launcher.is_file())
-                    self.assertIn("Open-SyndiRelay.sh",launcher.read_text())
+                    self.assertEqual(launcher.read_bytes(),b"fixture")
 
     def test_single_product_wizard_and_finish_choices(self):
         with tempfile.TemporaryDirectory() as temp:
