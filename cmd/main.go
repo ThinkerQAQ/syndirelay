@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	blogbridge "github.com/ThinkerQAQ/syndirelay/bridge"
+	runtimeversion "github.com/ThinkerQAQ/syndirelay/internal/version"
 )
 
 type app struct {
@@ -21,6 +22,18 @@ type app struct {
 }
 
 func main() {
+	if len(os.Args) == 2 && (os.Args[1] == "--open-ui" || os.Args[1] == "--guide-extension") {
+		if err := openNativeGUI(os.Args[1]); err != nil {
+			reportGUIError(err)
+			os.Exit(1)
+		}
+		return
+	}
+	// Version reporting must work in a portable installation, without a checkout.
+	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "version") {
+		fmt.Println(runtimeversion.Current)
+		return
+	}
 	if isNativeMessagingInvocation(os.Args[1:]) {
 		if err := runNativeHost(); err != nil {
 			fmt.Fprintln(os.Stderr, err)

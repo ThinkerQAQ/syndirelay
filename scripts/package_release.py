@@ -21,6 +21,12 @@ SOURCE = ("extension", "renderers", "scripts", "README.md", "README_ZH.md", "LIC
 
 
 def build(stage, version, goos, goarch, qa_only=False):
+    for name in ("extension/manifest.json", "package.json", "package-lock.json"):
+        doc = json.loads((ROOT / name).read_text(encoding="utf-8"))
+        if doc.get("version") != version:
+            raise ValueError(f"release version {version} does not match {name}")
+    if json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))["packages"][""]["version"] != version:
+        raise ValueError("release and npm lockfile root versions differ")
     if goos not in ("windows", "linux", "darwin") or goarch not in ("amd64", "arm64"):
         raise ValueError("unsupported platform")
     # Public packages use the existing repo-wide reviewed-license gate, including
@@ -46,6 +52,10 @@ def build(stage, version, goos, goarch, qa_only=False):
     env = dict(os.environ, GOOS=goos, GOARCH=goarch, CGO_ENABLED="0")
     subprocess.run(["go", "build", "-trimpath", "-ldflags=-s -w", "-o", str(binary), "./cmd"],
                    cwd=ROOT, env=env, check=True)
+    if goos == "windows":
+        launcher = stage / "bin" / "syndirelay-open.exe"
+        subprocess.run(["go","build","-trimpath","-ldflags=-s -w -H=windowsgui",
+                        "-o",str(launcher),"./cmd"],cwd=ROOT,env=env,check=True)
     # Dependencies contain the platform-specific Sharp binary. Install only on the matching native host.
     if goos != OS_NAME.get(platform.system()) or goarch != ARCH_NAME.get(platform.machine()):
         raise ValueError("renderer dependencies must be installed on the matching native OS/architecture")

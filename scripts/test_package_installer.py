@@ -13,8 +13,9 @@ class InstallerTest(unittest.TestCase):
         stage=root/"stage"
         (stage/"bin").mkdir(parents=True)
         (stage/"bin/syndirelay.exe").write_bytes(b"fixture")
-        (stage/"package.json").write_text('{"name":"syndirelay"}')
-        (stage/"package-lock.json").write_text("{}")
+        (stage/"bin/syndirelay-open.exe").write_bytes(b"fixture")
+        (stage/"package.json").write_text('{"name":"syndirelay","version":"1.2.3"}')
+        (stage/"package-lock.json").write_text('{"version":"1.2.3","packages":{"":{"version":"1.2.3"}}}')
         (stage/"renderers").mkdir()
         (stage/"node_modules").mkdir()
         (stage/"scripts").mkdir()
@@ -26,6 +27,7 @@ class InstallerTest(unittest.TestCase):
         (stage/"Open-SyndiRelay.sh").write_text("test")
         (stage/"extension/icons").mkdir(parents=True)
         (stage/"extension/icons/icon128.png").write_bytes(b"fixture-icon")
+        (stage/"extension/manifest.json").write_text('{"version":"1.2.3"}')
 
         return stage
 
@@ -40,9 +42,18 @@ class InstallerTest(unittest.TestCase):
             self.assertFalse((data/"config.toml").exists())
             self.assertFalse((data/"Data").exists())
             script=(root/"out/packages/com.thinkerqaq.syndirelay/meta/installscript.qs").read_text()
-            self.assertIn("Open-SyndiRelay.ps1",script)
+            self.assertIn("syndirelay-open.exe",script)
+            self.assertNotIn("WindowsPowerShell",script)
             self.assertIn("UserStartMenuProgramsPath",script)
             self.assertNotIn("addStopProcessForUpdateRequest",script)
+
+    def test_rejects_mismatched_version(self):
+        for filename in ("extension/manifest.json", "package.json", "package-lock.json"):
+            with self.subTest(filename=filename), tempfile.TemporaryDirectory() as temp:
+                root=pathlib.Path(temp);stage=self.stage(root)
+                (stage/filename).write_text('{"version":"0.0.1"}')
+                with self.assertRaises(ValueError):
+                    installer.prepare(stage,root/"out","1.2.3","windows")
 
     def test_unix_launch_entries(self):
         for target in ("linux","darwin"):

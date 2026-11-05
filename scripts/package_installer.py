@@ -67,8 +67,15 @@ def xml(path, tag, values):
 def prepare(stage, destination, version, target):
     if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
         raise ValueError("version must be major.minor.patch")
+    # One release identity for the installed Go Bridge, npm package and extension.
+    for source in ("extension/manifest.json", "package.json", "package-lock.json"):
+        document = stage / source
+        if not document.is_file() or json.loads(document.read_text(encoding="utf-8")).get("version") != version:
+            raise ValueError("installer version mismatch: " + source)
+    if json.loads((stage / "package-lock.json").read_text(encoding="utf-8")).get("packages", {}).get("", {}).get("version") != version:
+        raise ValueError("installer version mismatch: package-lock root")
     suffix = ".exe" if target == "windows" else ""
-    for name in ("bin/syndirelay"+suffix, "package.json", "LICENSE", "Open-SyndiRelay.ps1" if target=="windows" else "Open-SyndiRelay.sh"):
+    for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("package.json","LICENSE", "Open-SyndiRelay.ps1" if target=="windows" else "Open-SyndiRelay.sh"):
         if not (stage/name).is_file():
             raise ValueError("release is missing "+name)
     if not (stage/"THIRD_PARTY_LICENSES"/"MANIFEST.json").is_file() and not (stage/".qa-only").exists():
@@ -158,7 +165,7 @@ Component.prototype.createOperations = function() {
 """
     if target == "windows":
         script += '    component.addOperation("Mkdir", "@UserStartMenuProgramsPath@/SyndiRelay");\n'
-        script += '    component.addOperation("CreateShortcut", installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe", "@UserStartMenuProgramsPath@/SyndiRelay/SyndiRelay.lnk", ' + json.dumps('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "@TargetDir@/Open-SyndiRelay.ps1"') + ', "workingDirectory=@TargetDir@");\n'
+        script += '    component.addOperation("CreateShortcut", "@TargetDir@/bin/syndirelay-open.exe", "@UserStartMenuProgramsPath@/SyndiRelay/SyndiRelay.lnk", "--open-ui", "workingDirectory=@TargetDir@");\n'
         script += '    component.addOperation("CreateShortcut", "@TargetDir@/SyndiRelay-Maintenance.exe", "@UserStartMenuProgramsPath@/SyndiRelay/Uninstall SyndiRelay.lnk");\n'
     elif target == "linux":
         entry = 'Type=Application\nName=SyndiRelay\nExec=/bin/bash "@TargetDir@/Open-SyndiRelay.sh"\nTerminal=false\nCategories=Utility;'

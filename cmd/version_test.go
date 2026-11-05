@@ -52,6 +52,28 @@ func TestBlogCTLVersionMatchesExtension(t *testing.T) {
 	if runtimeversion.Current != version {
 		t.Fatalf("runtime version = %q, blogctl version = %q", runtimeversion.Current, version)
 	}
+
+	for _, filename := range []string{"package.json", "package-lock.json"} {
+		content, err := os.ReadFile(filepath.Join(root, filename))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var details struct {
+			Version  string `json:"version"`
+			Packages map[string]struct {
+				Version string `json:"version"`
+			} `json:"packages"`
+		}
+		if err := json.Unmarshal(content, &details); err != nil {
+			t.Fatal(err)
+		}
+		if details.Version != version {
+			t.Fatalf("%s package version=%q; want %q", filename, details.Version, version)
+		}
+		if filename == "package-lock.json" && details.Packages[""].Version != version {
+			t.Fatalf("package-lock root version=%q; want %q", details.Packages[""].Version, version)
+		}
+	}
 	if manifest.SidePanel.DefaultPath != "popup/popup.html" || manifest.Action.DefaultPopup != "" {
 		t.Fatalf("extension sidebar = %q, popup = %q", manifest.SidePanel.DefaultPath, manifest.Action.DefaultPopup)
 	}
