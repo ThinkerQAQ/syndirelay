@@ -95,6 +95,7 @@ class InstallerTest(unittest.TestCase):
             ui=ET.parse(meta/"first-run.ui").getroot()
             checks={w.get("name"):w.findtext("property[@name='checked']/bool") for w in ui.findall(".//widget[@class='QCheckBox']")}
             self.assertEqual(checks,{"openAppCheckBox":"false","openExtensionCheckBox":"false","openReadmeCheckBox":"false"})
+            data=root/"out/packages/com.thinkerqaq.syndirelay/data"
             self.assertFalse(list(data.rglob("*.ps1")))
             self.assertTrue((data/"THIRD_PARTY_LICENSES/runtime/node/LICENSE").exists())
 
