@@ -35,11 +35,10 @@
 
 #### 2.1.2. 命令行
 
-安装器也支持 Qt Installer Framework 的无人值守参数。Windows PowerShell 在下载目录运行：
+安装器也支持 Qt Installer Framework 的无人值守参数。Windows CMD 在下载目录运行：
 
-~~~powershell
-$installer = (Get-ChildItem .\SyndiRelay-Setup-*-windows-amd64.exe | Select-Object -First 1).FullName
-Start-Process -FilePath $installer -ArgumentList '--accept-licenses --default-answer --confirm-command install' -Wait
+~~~cmd
+.\downloaded-installer.exe --accept-licenses --default-answer --confirm-command install
 ~~~
 
 Linux 图形桌面：
@@ -86,10 +85,10 @@ printf '# Hello SyndiRelay\n\nMy first article.\n' > example.md
 ./syndirelay compile --file ./example.md --platform devto
 ~~~
 
-Windows PowerShell：
+Windows CMD：
 
-~~~powershell
-Set-Content -Path example.md -Encoding utf8 -Value "# Hello SyndiRelay`n`nMy first article."
+~~~cmd
+echo # Hello SyndiRelay> example.md
 .\syndirelay.exe compile --file .\example.md --platform devto
 ~~~
 

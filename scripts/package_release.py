@@ -15,7 +15,7 @@ import tarfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OS_NAME = {"Windows": "windows", "Darwin": "darwin", "Linux": "linux"}
 ARCH_NAME = {"x86_64": "amd64", "AMD64": "amd64", "aarch64": "arm64", "arm64": "arm64"}
-ENTRY_SCRIPTS = ("Open-SyndiRelay.sh",)
+ENTRY_SCRIPTS = ()
 SOURCE = ("extension", "renderers", "scripts", "README.md", "README_ZH.md", "LICENSE",
           "THIRD_PARTY_NOTICES.md", "package.json", "package-lock.json")
 
@@ -66,7 +66,7 @@ def build(stage, version, goos, goarch, qa_only=False):
     for item in SOURCE:
         source = ROOT / item
         if source.is_dir():
-            shutil.copytree(source, stage / item, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.ps1"))
+            shutil.copytree(source, stage / item, ignore=shutil.ignore_patterns("__pycache__", "*.py", "*.pyc", "*.ps1", "*.sh", "*.cmd", "*.bat", "*.vbs"))
         else:
             shutil.copy2(source, stage / item)
     for filename in ENTRY_SCRIPTS:
@@ -97,9 +97,6 @@ def build(stage, version, goos, goarch, qa_only=False):
         shutil.rmtree(binlinks)
     if goos != "windows":
         binary.chmod(0o755)
-    for p in [stage / "Open-SyndiRelay.sh"]:
-        if p.exists():
-            p.chmod(0o755)
     return binary
 
 
