@@ -15,9 +15,37 @@ import tarfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OS_NAME = {"Windows": "windows", "Darwin": "darwin", "Linux": "linux"}
 ARCH_NAME = {"x86_64": "amd64", "AMD64": "amd64", "aarch64": "arm64", "arm64": "arm64"}
-ENTRY_SCRIPTS = ("Install-SyndiRelay.ps1", "Open-SyndiRelay.ps1", "Open-SyndiRelay.sh")
+ENTRY_SCRIPTS = ("Open-SyndiRelay.sh",)
 SOURCE = ("extension", "renderers", "scripts", "README.md", "README_ZH.md", "LICENSE",
           "THIRD_PARTY_NOTICES.md", "package.json", "package-lock.json")
+
+
+def bundle_node_runtime(stage):
+    """Ship the matching Node runtime and its upstream redistribution license."""
+    node_cmd = shutil.which("node")
+    if not node_cmd:
+        raise ValueError("Node.js 22+ is required on the release builder")
+    node = pathlib.Path(node_cmd).resolve()
+    version = subprocess.check_output([str(node), "--version"], text=True).strip()
+    try:
+        major = int(version.lstrip("v").split(".", 1)[0])
+    except ValueError as error:
+        raise ValueError("unrecognized build Node.js version: " + version) from error
+    if major < 22:
+        raise ValueError("Node.js 22+ is required on the release builder")
+    candidates = (node.parent / "LICENSE", node.parent.parent / "LICENSE",
+                  node.parent / "LICENSE.md", node.parent.parent / "LICENSE.md")
+    license_text = next((p for p in candidates if p.is_file() and p.stat().st_size > 1024), None)
+    if license_text is None:
+        raise ValueError("Node.js distribution LICENSE is missing; cannot redistribute runtime")
+    executable = stage / "bin" / ("node.exe" if os.name == "nt" else "node")
+    shutil.copy2(node, executable)
+    if os.name != "nt":
+        executable.chmod(0o755)
+    license_dir = stage / "THIRD_PARTY_LICENSES" / "runtime" / "node"
+    license_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(license_text, license_dir / "LICENSE")
+    (license_dir / "VERSION.txt").write_text(version + "\n", encoding="utf-8")
 
 
 def build(stage, version, goos, goarch, qa_only=False):
@@ -38,7 +66,7 @@ def build(stage, version, goos, goarch, qa_only=False):
     for item in SOURCE:
         source = ROOT / item
         if source.is_dir():
-            shutil.copytree(source, stage / item, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+            shutil.copytree(source, stage / item, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.ps1"))
         else:
             shutil.copy2(source, stage / item)
     for filename in ENTRY_SCRIPTS:
@@ -59,6 +87,7 @@ def build(stage, version, goos, goarch, qa_only=False):
     # Dependencies contain the platform-specific Sharp binary. Install only on the matching native host.
     if goos != OS_NAME.get(platform.system()) or goarch != ARCH_NAME.get(platform.machine()):
         raise ValueError("renderer dependencies must be installed on the matching native OS/architecture")
+    bundle_node_runtime(stage)
     npm = "npm.cmd" if os.name == "nt" else "npm"
     subprocess.run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
                    cwd=stage, check=True)
