@@ -54,8 +54,7 @@ LOCAL_TEST_ONLY = False
 
 PAYLOAD = ("bin", "extension", "renderers", "node_modules", "scripts",
            "package.json", "package-lock.json", "LICENSE", "README.md", "README_ZH.md",
-           "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES", "Install-SyndiRelay.ps1", "Open-SyndiRelay.ps1",
-           "Open-SyndiRelay.sh")
+           "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_LICENSES", "Open-SyndiRelay.sh")
 
 def xml(path, tag, values):
     node = ET.Element(tag)
@@ -75,7 +74,7 @@ def prepare(stage, destination, version, target):
     if json.loads((stage / "package-lock.json").read_text(encoding="utf-8")).get("packages", {}).get("", {}).get("version") != version:
         raise ValueError("installer version mismatch: package-lock root")
     suffix = ".exe" if target == "windows" else ""
-    for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("package.json","LICENSE", "Open-SyndiRelay.ps1" if target=="windows" else "Open-SyndiRelay.sh"):
+    for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("bin/node"+suffix, "package.json", "LICENSE", "THIRD_PARTY_LICENSES/runtime/node/LICENSE", "Open-SyndiRelay.sh"):
         if not (stage/name).is_file():
             raise ValueError("release is missing "+name)
     if not (stage/"THIRD_PARTY_LICENSES"/"MANIFEST.json").is_file() and not (stage/".qa-only").exists():
@@ -88,6 +87,8 @@ def prepare(stage, destination, version, target):
     for path in stage.rglob("*"):
         if path.is_symlink():
             raise ValueError("symlink in release stage")
+        if path.is_file() and path.suffix.lower() == ".ps1":
+            raise ValueError("PowerShell scripts are forbidden in distributable installers: " + str(path))
         if path.is_file() and (path.name.lower() in ("config.toml","api-token","extension-access.key","runtime.env","runtime-key.dpapi", "blogctl.toml", "syndirelay.toml", ".env")
                               or path.suffix.lower() in (".sqlite",".db",".log",".har")
                               or any(part.lower() in ("data","backups") for part in path.relative_to(stage).parts)):
@@ -139,9 +140,6 @@ def prepare(stage, destination, version, target):
     shutil.copy2(logo, config/"syndirelay-window.png")
     shutil.copy2(ASSETS/"first-run.ui", meta/"first-run.ui")
     shutil.copy2(stage/"LICENSE", meta/"license.txt")
-    if target == "windows":
-        (data/"scripts").mkdir(exist_ok=True)
-        shutil.copy2(ASSETS/"first-run.ps1", data/"scripts/SyndiRelay-FirstRun.ps1")
     xml(meta/"package.xml", "Package", {
         "DisplayName":"SyndiRelay", "Description":"Local article syndication and publishing",
         "Version":version, "ReleaseDate":datetime.date.today().isoformat(),
