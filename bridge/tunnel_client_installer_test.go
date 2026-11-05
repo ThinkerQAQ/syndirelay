@@ -138,30 +138,3 @@ func TestTunnelClientRejectsChecksumMismatch(t *testing.T) {
 		t.Fatal("bad archive wrote an executable")
 	}
 }
-
-func TestFindBundledTunnelClientPrefersInstallBin(t *testing.T) {
-	root := t.TempDir()
-	bin := filepath.Join(root, "bin")
-	if err := os.MkdirAll(bin, 0755); err != nil {
-		t.Fatal(err)
-	}
-	for _, goos := range []string{"windows", "linux", "darwin"} {
-		name := "tunnel-client"
-		if goos == "windows" {
-			name += ".exe"
-		}
-		candidate := filepath.Join(bin, name)
-		if err := os.WriteFile(candidate, []byte("fixture"), 0755); err != nil {
-			t.Fatal(err)
-		}
-		if got := findBundledTunnelClient(filepath.Join(bin, "syndirelay"), goos); got != candidate {
-			t.Fatalf("%s: got %q expected %q", goos, got, candidate)
-		}
-		if goos == "darwin" {
-			launcher := filepath.Join(root, "SyndiRelay.app", "Contents", "MacOS", "SyndiRelay")
-			if got := findBundledTunnelClient(launcher, goos); got != candidate {
-				t.Fatalf("macOS launcher: got %q expected %q", got, candidate)
-			}
-		}
-	}
-}

@@ -12,8 +12,6 @@ import tempfile
 import zipfile
 import tarfile
 
-from tunnel_bundle import bundle_tunnel_client
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OS_NAME = {"Windows": "windows", "Darwin": "darwin", "Linux": "linux"}
 ARCH_NAME = {"x86_64": "amd64", "AMD64": "amd64", "aarch64": "arm64", "arm64": "arm64"}
@@ -93,7 +91,6 @@ def build(stage, version, goos, goarch, qa_only=False, allow_unreviewed_licenses
     if goos != OS_NAME.get(platform.system()) or goarch != ARCH_NAME.get(platform.machine()):
         raise ValueError("renderer dependencies must be installed on the matching native OS/architecture")
     bundle_node_runtime(stage)
-    bundle_tunnel_client(stage, goos, goarch)
     npm = "npm.cmd" if os.name == "nt" else "npm"
     subprocess.run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
                    cwd=stage, env=dict(os.environ, PUPPETEER_SKIP_DOWNLOAD="1"), check=True)

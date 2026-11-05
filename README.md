@@ -15,7 +15,7 @@ Each platform has its own Markdown, HTML, image, and editor requirements. SyndiR
 
 The compiler supports 11 formats: DEV, Medium, Zhihu, Juejin, Toutiao, CSDN, CNBlogs, Hashnode, 51CTO, OSChina, and SegmentFault. Draft creation and updates depend on the adapter and website. Format support does not imply full remote-write support.
 
-SyndiRelay provides native installers for Windows, Linux, and macOS, a browser extension, a CLI, and MCP tools. Installers bundle the official Tunnel Client and cloudflared for local MCP connections; neither requires a separate download. OpenAI Secure MCP Tunnel connects the local MCP server to ChatGPT on the web without exposing the Bridge publicly. Local MCP clients can also use stdio directly. Ordinary Markdown does not require [Inkerio](https://github.com/ThinkerQAQ/inkerio), while existing Inkerio content repositories can be reused.
+SyndiRelay provides native installers for Windows, Linux, and macOS, a browser extension, a CLI, and MCP tools. OpenAI Secure MCP Tunnel connects the local MCP server to ChatGPT on the web without exposing the Bridge publicly. Local MCP clients can also use stdio directly. Ordinary Markdown does not require [Inkerio](https://github.com/ThinkerQAQ/inkerio), while existing Inkerio content repositories can be reused.
 
 ## 2. Quick Start
 
