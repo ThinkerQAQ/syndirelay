@@ -16,15 +16,9 @@ Component.prototype.finishFirstRun = function() {
         QDesktopServices.openUrl("file://" + target + "/README.md");
     }
     if ("__PLATFORM__" == "windows") {
-        var powershell = installer.environmentVariable("SystemRoot") + "/System32/WindowsPowerShell/v1.0/powershell.exe";
-        if (form.openAppCheckBox.checked) {
-            installer.executeDetached(powershell, ["-NoProfile", "-ExecutionPolicy", "Bypass",
-                "-WindowStyle", "Hidden", "-File", installer.toNativeSeparators(target + "/Open-SyndiRelay.ps1")], target);
-        }
-        if (form.openExtensionCheckBox.checked) {
-            installer.executeDetached(powershell, ["-NoProfile", "-ExecutionPolicy", "Bypass",
-                "-WindowStyle", "Hidden", "-File", installer.toNativeSeparators(target + "/scripts/SyndiRelay-FirstRun.ps1")], target);
-        }
+        var launcher = installer.toNativeSeparators(target + "/bin/syndirelay-open.exe");
+        if (form.openAppCheckBox.checked) installer.executeDetached(launcher, ["--open-ui"], target);
+        if (form.openExtensionCheckBox.checked) installer.executeDetached(launcher, ["--guide-extension"], target);
     } else {
         if (form.openAppCheckBox.checked) {
             installer.executeDetached("/bin/bash", [target + "/Open-SyndiRelay.sh"], target);

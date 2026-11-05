@@ -52,6 +52,10 @@ def build(stage, version, goos, goarch, qa_only=False):
     env = dict(os.environ, GOOS=goos, GOARCH=goarch, CGO_ENABLED="0")
     subprocess.run(["go", "build", "-trimpath", "-ldflags=-s -w", "-o", str(binary), "./cmd"],
                    cwd=ROOT, env=env, check=True)
+    if goos == "windows":
+        launcher = stage / "bin" / "syndirelay-open.exe"
+        subprocess.run(["go","build","-trimpath","-ldflags=-s -w -H=windowsgui",
+                        "-o",str(launcher),"./cmd"],cwd=ROOT,env=env,check=True)
     # Dependencies contain the platform-specific Sharp binary. Install only on the matching native host.
     if goos != OS_NAME.get(platform.system()) or goarch != ARCH_NAME.get(platform.machine()):
         raise ValueError("renderer dependencies must be installed on the matching native OS/architecture")

@@ -1,7 +1,7 @@
 {
   "name": "syndirelay",
   "private": true,
-  "version": "0.1.198",
+  "version": "0.1.199",
   "description": "Independent cross-platform Markdown syndication and publishing",
   "license": "MIT",
   "type": "module",

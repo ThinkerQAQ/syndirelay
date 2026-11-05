@@ -13,6 +13,7 @@ class InstallerTest(unittest.TestCase):
         stage=root/"stage"
         (stage/"bin").mkdir(parents=True)
         (stage/"bin/syndirelay.exe").write_bytes(b"fixture")
+        (stage/"bin/syndirelay-open.exe").write_bytes(b"fixture")
         (stage/"package.json").write_text('{"name":"syndirelay","version":"1.2.3"}')
         (stage/"package-lock.json").write_text('{"version":"1.2.3","packages":{"":{"version":"1.2.3"}}}')
         (stage/"renderers").mkdir()
@@ -41,7 +42,8 @@ class InstallerTest(unittest.TestCase):
             self.assertFalse((data/"config.toml").exists())
             self.assertFalse((data/"Data").exists())
             script=(root/"out/packages/com.thinkerqaq.syndirelay/meta/installscript.qs").read_text()
-            self.assertIn("Open-SyndiRelay.ps1",script)
+            self.assertIn("syndirelay-open.exe",script)
+            self.assertNotIn("WindowsPowerShell",script)
             self.assertIn("UserStartMenuProgramsPath",script)
             self.assertNotIn("addStopProcessForUpdateRequest",script)
 
