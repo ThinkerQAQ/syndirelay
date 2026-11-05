@@ -461,3 +461,33 @@ func TestLegacyConfigIsNotReplacedByDefaultOnInvalidContent(t *testing.T) {
 		t.Fatal("invalid legacy config silently overwritten")
 	}
 }
+
+func TestBundledNodeOverridesLegacyToolPaths(t *testing.T) {
+	engine := t.TempDir()
+	name := "node"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	bundled := filepath.Join(engine, "bin", name)
+	if err := os.MkdirAll(filepath.Dir(bundled), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(bundled, []byte("test"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	config, err := normalizeBridgeConfig(bridgeConfig{
+		EngineRoot: engine,
+		ToolPaths: map[string]string{
+			"node": "/invalid/system/node",
+			"npm":  "/invalid/npm",
+			"git":  "/invalid/git",
+			"java": "/invalid/java",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(config.ToolPaths) != 1 || config.ToolPaths["node"] != bundled {
+		t.Fatalf("expected only bundled node, got %+v", config.ToolPaths)
+	}
+}
