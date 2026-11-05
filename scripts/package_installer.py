@@ -206,10 +206,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix="syndirelay-ifw-") as temp:
         tree=pathlib.Path(temp)
         prepare(args.stage.resolve(),tree,args.version,args.os)
-        creator_args = [args.binarycreator, "--offline-only"]
+        creator = shutil.which(args.binarycreator)
+        if not creator:
+            raise ValueError("Qt Installer Framework binarycreator was not found in PATH")
+        creator_args = [creator, "--offline-only"]
         if host == "windows":
             template = tree/"installerbase-gui.exe"
-            prepare_windows_gui_template(pathlib.Path(args.binarycreator).resolve().parent/"installerbase.exe",template)
+            prepare_windows_gui_template(pathlib.Path(creator).resolve().parent/"installerbase.exe",template)
             creator_args.extend(["-t",str(template)])
         creator_args.extend(["-c",str(tree/"config/config.xml"),
                              "-p",str(tree/"packages"),str(args.output.resolve())])

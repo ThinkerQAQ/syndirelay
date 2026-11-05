@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { runner: windows-latest, target: windows, ext: exe }
-          - { runner: ubuntu-24.04, target: linux, ext: run }
-          - { runner: macos-15, target: darwin, ext: dmg }
+          - { runner: windows-latest, target: windows, arch: amd64, ext: exe }
+          - { runner: ubuntu-24.04, target: linux, arch: amd64, ext: run }
+          - { runner: macos-15, target: darwin, arch: arm64, ext: dmg }
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
@@ -45,7 +45,7 @@ jobs:
         shell: bash
         run: |
           version=$(cat VERSION)
-          python scripts/package_release.py --version "$version" --os "${{ matrix.target }}" --arch amd64 --stage .build/release-stage --allow-unreviewed-licenses
+          python scripts/package_release.py --version "$version" --os "${{ matrix.target }}" --arch "${{ matrix.arch }}" --stage .build/release-stage --allow-unreviewed-licenses
           test -s .build/release-stage/THIRD_PARTY_LICENSES/MANIFEST.json
           test -s .build/release-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
       - name: Create native GUI installer
@@ -53,7 +53,7 @@ jobs:
         run: |
           version=$(cat VERSION)
           mkdir -p dist
-          python scripts/package_installer.py --stage .build/release-stage --version "$version" --os "${{ matrix.target }}" --output "dist/SyndiRelay-Setup-v${version}-${{ matrix.target }}-amd64.${{ matrix.ext }}"
+          python scripts/package_installer.py --stage .build/release-stage --version "$version" --os "${{ matrix.target }}" --output "dist/SyndiRelay-Setup-v${version}-${{ matrix.target }}-${{ matrix.arch }}.${{ matrix.ext }}"
       - name: Verify downloadable installer exists and is not a stub
         shell: bash
         run: |
@@ -65,7 +65,7 @@ jobs:
           python -c 'from pathlib import Path; from scripts.package_installer import require_windows_gui; require_windows_gui(next(Path("dist").glob("*.exe")))'
       - uses: actions/upload-artifact@v4
         with:
-          name: syndirelay-${{ matrix.target }}-amd64
+          name: syndirelay-${{ matrix.target }}-${{ matrix.arch }}
           path: dist/SyndiRelay-Setup-*
           if-no-files-found: error
           retention-days: 14
@@ -80,7 +80,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: syndirelay-*-amd64
+          pattern: syndirelay-*-*
           path: dist
           merge-multiple: true
       - name: Verify all three native installers and checksums
@@ -88,10 +88,9 @@ jobs:
         run: |
           set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
-          for spec in windows:exe linux:run darwin:dmg; do
-            target="${spec%:*}"
-            ext="${spec#*:}"
-            test -s "dist/SyndiRelay-Setup-v${version}-${target}-amd64.${ext}"
+          for spec in windows:amd64:exe linux:amd64:run darwin:arm64:dmg; do
+            IFS=: read -r target arch ext <<< "$spec"
+            test -s "dist/SyndiRelay-Setup-v${version}-${target}-${arch}.${ext}"
           done
           (cd dist && sha256sum SyndiRelay-Setup-* > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
       - name: Create GitHub Release with installer attachments
