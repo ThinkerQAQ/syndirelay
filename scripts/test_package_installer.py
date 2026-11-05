@@ -1,5 +1,6 @@
 import importlib.util
 import pathlib
+import shutil
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -14,6 +15,7 @@ class InstallerTest(unittest.TestCase):
         (stage/"bin").mkdir(parents=True)
         (stage/"bin/syndirelay.exe").write_bytes(b"fixture")
         (stage/"bin/syndirelay-open.exe").write_bytes(b"fixture")
+        (stage/"bin/node.exe").write_bytes(b"fixture")
         (stage/"package.json").write_text('{"name":"syndirelay","version":"1.2.3"}')
         (stage/"package-lock.json").write_text('{"version":"1.2.3","packages":{"":{"version":"1.2.3"}}}')
         (stage/"renderers").mkdir()
@@ -21,9 +23,9 @@ class InstallerTest(unittest.TestCase):
         (stage/"scripts").mkdir()
         (stage/"THIRD_PARTY_LICENSES").mkdir()
         (stage/"THIRD_PARTY_LICENSES/MANIFEST.json").write_text('{"schema":1,"dependencies":[]}')
-        (stage/"Install-SyndiRelay.ps1").write_text("test")
+        (stage/"THIRD_PARTY_LICENSES/runtime/node").mkdir(parents=True)
+        (stage/"THIRD_PARTY_LICENSES/runtime/node/LICENSE").write_text("Node.js upstream license fixture")
         (stage/"LICENSE").write_text("test")
-        (stage/"Open-SyndiRelay.ps1").write_text("test")
         (stage/"Open-SyndiRelay.sh").write_text("test")
         (stage/"extension/icons").mkdir(parents=True)
         (stage/"extension/icons/icon128.png").write_bytes(b"fixture-icon")
@@ -39,6 +41,7 @@ class InstallerTest(unittest.TestCase):
             self.assertEqual(config.findtext("RemoveTargetDir"),"false")
             data=root/"out/packages/com.thinkerqaq.syndirelay/data"
             self.assertTrue((data/"bin/syndirelay.exe").exists())
+            self.assertTrue((data/"bin/node.exe").exists())
             self.assertFalse((data/"config.toml").exists())
             self.assertFalse((data/"Data").exists())
             script=(root/"out/packages/com.thinkerqaq.syndirelay/meta/installscript.qs").read_text()
@@ -60,6 +63,7 @@ class InstallerTest(unittest.TestCase):
             with self.subTest(target=target),tempfile.TemporaryDirectory() as temp:
                 root=pathlib.Path(temp);stage=self.stage(root)
                 (stage/"bin/syndirelay.exe").rename(stage/"bin/syndirelay")
+                (stage/"bin/node.exe").rename(stage/"bin/node")
                 installer.prepare(stage,root/"out","1.2.3",target)
                 if target=="linux":
                     script=(root/"out/packages/com.thinkerqaq.syndirelay/meta/installscript.qs").read_text()
@@ -91,7 +95,8 @@ class InstallerTest(unittest.TestCase):
             ui=ET.parse(meta/"first-run.ui").getroot()
             checks={w.get("name"):w.findtext("property[@name='checked']/bool") for w in ui.findall(".//widget[@class='QCheckBox']")}
             self.assertEqual(checks,{"openAppCheckBox":"false","openExtensionCheckBox":"false","openReadmeCheckBox":"false"})
-            self.assertTrue((root/"out/packages/com.thinkerqaq.syndirelay/data/scripts/SyndiRelay-FirstRun.ps1").is_file())
+            self.assertFalse(list(data.rglob("*.ps1")))
+            self.assertTrue((data/"THIRD_PARTY_LICENSES/runtime/node/LICENSE").exists())
 
     def test_qa_stage_not_distributable(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -110,8 +115,7 @@ class InstallerTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=pathlib.Path(temp); stage=self.stage(root)
             (stage/".qa-only").write_text("local QA build")
-            (stage/"THIRD_PARTY_LICENSES/MANIFEST.json").unlink()
-            (stage/"THIRD_PARTY_LICENSES").rmdir()
+            shutil.rmtree(stage/"THIRD_PARTY_LICENSES")
             installer.QA_PREPARE_ONLY=False
             installer.LOCAL_TEST_ONLY=False
             with self.assertRaises(ValueError):
@@ -126,7 +130,7 @@ class InstallerTest(unittest.TestCase):
             self.assertFalse((data/"Data").exists())
 
     def test_rejects_private_state_and_symlinks(self):
-        for name in ("Data/state.sqlite","config.toml","scripts/runtime.env","extension/extension-access.key"):
+        for name in ("Data/state.sqlite","config.toml","scripts/runtime.env","extension/extension-access.key","scripts/legacy.ps1"):
             with self.subTest(name=name),tempfile.TemporaryDirectory() as temp:
                 root=pathlib.Path(temp);stage=self.stage(root)
                 secret=stage/name;secret.parent.mkdir(parents=True,exist_ok=True);secret.write_text("private")
