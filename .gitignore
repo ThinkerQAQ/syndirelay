@@ -24,3 +24,8 @@ build/
 .idea/
 .vscode/
 .build/
+
+# Local Devbox / Python runtime state
+.devbox/
+.venv/
+__pycache__/
