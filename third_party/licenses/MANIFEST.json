@@ -1,0 +1,696 @@
+{
+  "schema": 1,
+  "dependencies": [
+    {
+      "ecosystem": "go",
+      "name": "github.com/google/jsonschema-go",
+      "version": "v0.4.2",
+      "license": "MIT",
+      "file": "go/github.com/google/jsonschema-go/LICENSE",
+      "sha256": "2d56c53449691d85d9aea245eb8dac12713e9075d70d5557b82ae1e94805b357",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/modelcontextprotocol/go-sdk",
+      "version": "v1.3.0",
+      "license": "MIT",
+      "file": "go/github.com/modelcontextprotocol/go-sdk/LICENSE",
+      "sha256": "46e22f28e5e8a03a09b0a7f144640797fdab852e494be12ae8d19bd55cebff0d",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/pelletier/go-toml/v2",
+      "version": "v2.2.4",
+      "license": "MIT",
+      "file": "go/github.com/pelletier/go-toml/v2/LICENSE",
+      "sha256": "26844e4b53c5adec04e557fd7dfef281cc0205a7d355626b1c68b778b99e9e7b",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/yosida95/uritemplate/v3",
+      "version": "v3.0.2",
+      "license": "BSD-3-Clause",
+      "file": "go/github.com/yosida95/uritemplate/v3/LICENSE",
+      "sha256": "0761aadfb1921103752869ee942d4a71bdd54494697684d4b13dc17ad9781191",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "go.yaml.in/yaml/v3",
+      "version": "v3.0.5",
+      "license": "MIT AND Apache-2.0",
+      "file": "go/go.yaml.in/yaml/v3/LICENSE",
+      "sha256": "d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "golang.org/x/net",
+      "version": "v0.48.0",
+      "license": "BSD-3-Clause",
+      "file": "go/golang.org/x/net/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "golang.org/x/oauth2",
+      "version": "v0.34.0",
+      "license": "BSD-3-Clause",
+      "file": "go/golang.org/x/oauth2/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "golang.org/x/sys",
+      "version": "v0.40.0",
+      "license": "BSD-3-Clause",
+      "file": "go/golang.org/x/sys/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "golang.org/x/tools",
+      "version": "v0.39.0",
+      "license": "BSD-3-Clause",
+      "file": "go/golang.org/x/tools/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "reviewed": true
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@emnapi/runtime",
+      "version": "1.11.3",
+      "license": "MIT",
+      "file": "npm/@emnapi/runtime/LICENSE",
+      "sha256": "2088f55c6731498410b20c95ebd345ed4a4a800bf74c0fba4d282fd2a021daaa",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/colour",
+      "version": "1.1.0",
+      "license": "MIT",
+      "file": "npm/@img/colour/LICENSE",
+      "sha256": "e2eaa4603c14cb26f301e88648c12a853fa3f0f5da6d4b0972958c666e7f2ab8",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-darwin-arm64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-darwin-arm64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-darwin-x64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-darwin-x64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-freebsd-wasm32",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-freebsd-wasm32/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-darwin-arm64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-darwin-x64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-darwin-x64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-arm",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-arm/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-arm64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-arm64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-ppc64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-riscv64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-s390x",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-s390x/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linux-x64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linux-x64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linuxmusl-arm64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.3",
+      "license": "LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-libvips-linuxmusl-x64/README-NOT-A-LICENSE",
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118",
+      "reviewed": false,
+      "audit_note": "BLOCKER: README only; LICENSE absent; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-arm",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-arm/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-arm64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-arm64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-ppc64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-ppc64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-riscv64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-riscv64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-s390x",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-s390x/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linux-x64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linux-x64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linuxmusl-arm64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linuxmusl-arm64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-linuxmusl-x64",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-linuxmusl-x64/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-wasm32",
+      "version": "0.35.4",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
+      "file": "npm/@img/sharp-wasm32/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": false,
+      "audit_note": "Verified official npm tarball LICENSE; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-webcontainers-wasm32",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/@img/sharp-webcontainers-wasm32/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-win32-arm64",
+      "version": "0.35.4",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-win32-arm64/LICENSE",
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
+      "reviewed": false,
+      "audit_note": "Verified official npm tarball LICENSE; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-win32-ia32",
+      "version": "0.35.4",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-win32-ia32/LICENSE",
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
+      "reviewed": false,
+      "audit_note": "Verified official npm tarball LICENSE; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@img/sharp-win32-x64",
+      "version": "0.35.4",
+      "license": "Apache-2.0 AND LGPL-3.0-or-later",
+      "file": "npm/@img/sharp-win32-x64/LICENSE",
+      "sha256": "dc1f5d2d43c5531dfe0acaf4e950ea5dbe3e61e1850cf0e983bda7efc10d6693",
+      "reviewed": false,
+      "audit_note": "Verified official npm tarball LICENSE; LGPL source/relink obligations outstanding"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@types/debug",
+      "version": "4.1.13",
+      "license": "MIT",
+      "file": "npm/@types/debug/LICENSE",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/@types/ms",
+      "version": "2.1.0",
+      "license": "MIT",
+      "file": "npm/@types/ms/LICENSE",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/character-entities",
+      "version": "2.0.2",
+      "license": "MIT",
+      "file": "npm/character-entities/LICENSE",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/debug",
+      "version": "4.4.3",
+      "license": "MIT",
+      "file": "npm/debug/LICENSE",
+      "sha256": "3a61c6c96caf5c1d9b623fb9b04c822b783dfcb78aa7e49c76a3f643e6ed7f95",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/decode-named-character-reference",
+      "version": "1.3.0",
+      "license": "MIT",
+      "file": "npm/decode-named-character-reference/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/dequal",
+      "version": "2.0.3",
+      "license": "MIT",
+      "file": "npm/dequal/LICENSE",
+      "sha256": "306fa513e39b23a6e8747520de761809d206b99800ef41907b530226574c59ae",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/detect-libc",
+      "version": "2.1.2",
+      "license": "Apache-2.0",
+      "file": "npm/detect-libc/LICENSE",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/devlop",
+      "version": "1.1.0",
+      "license": "MIT",
+      "file": "npm/devlop/LICENSE",
+      "sha256": "6f296a5eccc1dc96714bb94ebaa9cac25b0a1467d74cc5263ac4d0646ab01f62",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark",
+      "version": "4.0.2",
+      "license": "MIT",
+      "file": "npm/micromark/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-core-commonmark",
+      "version": "2.0.4",
+      "license": "MIT",
+      "file": "npm/micromark-core-commonmark/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-factory-destination",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-factory-destination/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-factory-label",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-factory-label/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-factory-space",
+      "version": "2.1.0",
+      "license": "MIT",
+      "file": "npm/micromark-factory-space/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-factory-title",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-factory-title/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-factory-whitespace",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-factory-whitespace/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-character",
+      "version": "2.1.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-character/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-chunked",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-chunked/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-classify-character",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-classify-character/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-combine-extensions",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-combine-extensions/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-decode-numeric-character-reference",
+      "version": "2.0.2",
+      "license": "MIT",
+      "file": "npm/micromark-util-decode-numeric-character-reference/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-edit-map",
+      "version": "1.0.0",
+      "license": "MIT",
+      "file": "npm/micromark-util-edit-map/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-encode",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-encode/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-html-tag-name",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-html-tag-name/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-normalize-identifier",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-normalize-identifier/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-resolve-all",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-resolve-all/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-sanitize-uri",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-sanitize-uri/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-subtokenize",
+      "version": "2.1.0",
+      "license": "MIT",
+      "file": "npm/micromark-util-subtokenize/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-symbol",
+      "version": "2.0.1",
+      "license": "MIT",
+      "file": "npm/micromark-util-symbol/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/micromark-util-types",
+      "version": "2.0.3",
+      "license": "MIT",
+      "file": "npm/micromark-util-types/LICENSE",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/ms",
+      "version": "2.1.3",
+      "license": "MIT",
+      "file": "npm/ms/LICENSE",
+      "sha256": "1662fae9b5314d11cf51284e2dcd1f006a354f7343f08712a730fcff9a359801",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/semver",
+      "version": "7.8.5",
+      "license": "ISC",
+      "file": "npm/semver/LICENSE",
+      "sha256": "4ec3d4c66cd87f5c8d8ad911b10f99bf27cb00cdfcff82621956e379186b016b",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/sharp",
+      "version": "0.35.4",
+      "license": "Apache-2.0",
+      "file": "npm/sharp/LICENSE",
+      "sha256": "73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    },
+    {
+      "ecosystem": "npm",
+      "name": "node_modules/tslib",
+      "version": "2.9.1",
+      "license": "0BSD",
+      "file": "npm/tslib/LICENSE",
+      "sha256": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",
+      "reviewed": true,
+      "audit_note": "Verified official npm tarball LICENSE"
+    }
+  ]
+}

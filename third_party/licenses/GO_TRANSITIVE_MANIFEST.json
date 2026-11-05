@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "purpose": "Supplemental Go module-graph licenses; not part of current 70-entry direct-dependency gate",
+  "modules": [
+    {
+      "name": "cloud.google.com/go/compute/metadata",
+      "version": "v0.3.0",
+      "file": "go-transitive/cloud.google.com/go/compute/metadata/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "github.com/golang-jwt/jwt/v5",
+      "version": "v5.2.2",
+      "file": "go-transitive/github.com/golang-jwt/jwt/v5/LICENSE",
+      "sha256": "fe26ca41577b9b2b4448050a24b25e5753af66b5d5945d5d36094e7790bfcb2f",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "github.com/google/go-cmp",
+      "version": "v0.7.0",
+      "file": "go-transitive/github.com/google/go-cmp/LICENSE",
+      "sha256": "17b5d209ba8f9684257ecfcff87df6ceda6194143a8fbd074f29727cff6f0c40",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "github.com/yuin/goldmark",
+      "version": "v1.4.13",
+      "file": "go-transitive/github.com/yuin/goldmark/LICENSE",
+      "sha256": "c1d6f653c38c80294dc7994647ba0dcc508ce64a86996303c804efa2f7982bff",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/crypto",
+      "version": "v0.46.0",
+      "file": "go-transitive/golang.org/x/crypto/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/mod",
+      "version": "v0.30.0",
+      "file": "go-transitive/golang.org/x/mod/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/sync",
+      "version": "v0.18.0",
+      "file": "go-transitive/golang.org/x/sync/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/telemetry",
+      "version": "v0.0.0-20251111182119-bc8e575c7b54",
+      "file": "go-transitive/golang.org/x/telemetry/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/term",
+      "version": "v0.38.0",
+      "file": "go-transitive/golang.org/x/term/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    },
+    {
+      "name": "golang.org/x/text",
+      "version": "v0.32.0",
+      "file": "go-transitive/golang.org/x/text/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+      "upstreamOriginalFilename": "LICENSE",
+      "noticeFiles": []
+    }
+  ]
+}
