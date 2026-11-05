@@ -80,6 +80,14 @@ jobs:
           case "${{ runner.os }}" in Linux) target=linux ;; Windows) target=windows ;; macOS) target=darwin ;; esac
           version="$(python -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')"
           python scripts/package_installer.py --stage .build/native-stage --version "$version" --os "$target" --output .build/qt-installer-tree --prepare-only
+      - name: Verify release stage has Node and no PowerShell dependency
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in Windows) node=.build/native-stage/bin/node.exe;; *) node=.build/native-stage/bin/node;; esac
+          test -f "$node"
+          "$node" --version
+          test -s .build/native-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
+          python -c 'from pathlib import Path; p=Path(".build/native-stage"); assert not list(p.rglob("*.ps1")), "PowerShell in runtime payload"'
       - name: Check no old risky transport dependencies
         shell: bash
         run: |
