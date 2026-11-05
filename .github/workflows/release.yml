@@ -48,6 +48,10 @@ jobs:
           python scripts/package_release.py --version "$version" --os "${{ matrix.target }}" --arch "${{ matrix.arch }}" --stage .build/release-stage --allow-unreviewed-licenses
           test -s .build/release-stage/THIRD_PARTY_LICENSES/MANIFEST.json
           test -s .build/release-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
+          case "${{ matrix.target }}" in windows) ext=.exe;; *) ext=;; esac
+          test -s ".build/release-stage/bin/tunnel-client${ext}"
+          test -s ".build/release-stage/bin/cloudflared${ext}"
+          test -s .build/release-stage/THIRD_PARTY_LICENSES/runtime/tunnel-client/LICENSES.txt
           test -s .build/release-stage/node_modules/@mermaid-js/mermaid-cli/src/cli.js
           test -s .build/release-stage/node_modules/puppeteer/package.json
       - name: Create native GUI installer

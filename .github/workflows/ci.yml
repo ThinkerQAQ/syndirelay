@@ -89,6 +89,10 @@ jobs:
           test -f "$node"
           "$node" --version
           test -s .build/native-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
+          case "${{ runner.os }}" in Windows) ext=.exe ;; *) ext= ;; esac
+          test -s ".build/native-stage/bin/tunnel-client${ext}"
+          test -s ".build/native-stage/bin/cloudflared${ext}"
+          test -s .build/native-stage/THIRD_PARTY_LICENSES/runtime/tunnel-client/LICENSES.txt
           python -c 'from pathlib import Path; p=Path(".build/native-stage"); assert not list(p.rglob("*.ps1")), "PowerShell in runtime payload"'
       - name: Smoke-test a brand-new Mermaid PNG with the bundled runtime and system Edge
         if: runner.os == 'Windows'

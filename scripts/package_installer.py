@@ -77,6 +77,10 @@ def prepare(stage, destination, version, target):
     for name in (("bin/syndirelay"+suffix,"bin/syndirelay-open.exe") if target=="windows" else ("bin/syndirelay"+suffix,)) + ("bin/node"+suffix, "package.json", "LICENSE", "THIRD_PARTY_LICENSES/runtime/node/LICENSE"):
         if not (stage/name).is_file():
             raise ValueError("release is missing "+name)
+    for name in ("bin/tunnel-client" + suffix, "bin/cloudflared" + suffix,
+                 "THIRD_PARTY_LICENSES/runtime/tunnel-client/LICENSES.txt"):
+        if not (stage/name).is_file():
+            raise ValueError("release missing bundled Tunnel Client dependency: " + name)
     if not (stage/"THIRD_PARTY_LICENSES"/"MANIFEST.json").is_file() and not (stage/".qa-only").exists():
         raise ValueError("reviewed third-party licenses are required")
     if (stage/".qa-only").exists() and not (QA_PREPARE_ONLY or LOCAL_TEST_ONLY):

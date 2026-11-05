@@ -34,7 +34,30 @@ type MCPConnectionStatus struct {
 	TunnelConnecting  bool   `json:"tunnel_connecting"`
 }
 
+func findBundledTunnelClient(executable, goos string) string {
+	name := "tunnel-client"
+	if goos == "windows" {
+		name += ".exe"
+	}
+	directory := filepath.Dir(executable)
+	candidates := []string{
+		filepath.Join(directory, name),
+		filepath.Join(directory, "..", "..", "..", "bin", name),
+	}
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && info.Mode().IsRegular() {
+			return filepath.Clean(candidate)
+		}
+	}
+	return ""
+}
+
 func findTunnelClient(goos, home string) string {
+	if executable, err := os.Executable(); err == nil {
+		if path := findBundledTunnelClient(executable, goos); path != "" {
+			return path
+		}
+	}
 	if path, err := exec.LookPath("tunnel-client"); err == nil {
 		return path
 	}

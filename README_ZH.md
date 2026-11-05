@@ -108,7 +108,7 @@ export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
 
 在浏览器扩展中打开**设置 → 运行环境 → MCP 连接**。新版 MCP 使用独立配置，不读取、迁移旧 Tunnel ID、Key 或脚本配置；重新填写即可，文章和发布记录不受影响：
 
-1. 在**本地 Tunnel 服务**中填写 Tunnel ID 和 Runtime API Key，点击**保存配置**。系统会校验官方 Tunnel Client，但不会启动服务。
+1. 在**本地 Tunnel 服务**中填写 Tunnel ID 和 Runtime API Key，点击**保存配置**。安装包已附带官方 Tunnel Client 和 cloudflared，无需另外安装；保存时只会校验配置，不会启动服务。
 2. 点击**启动服务**，等待状态显示 **Ready**。修改配置后使用**重启服务**；即使 Tunnel 进程运行但健康检查失败，也可以停止。
 3. **开机自启 Tunnel** 控制本地服务是否随系统登录启动；**Tunnel 自动连接** 决定服务启动后是否立即建立 Tunnel。两项独立设置，修改自动连接后重启服务生效。服务运行期间也可手动点击**连接 Tunnel**或**断开 Tunnel**，不会停止本地服务。
 4. 在**ChatGPT 插件**模块打开 [ChatGPT Plugins](https://chatgpt.com/plugins)，用相同的 Tunnel ID 注册并启用插件。详细流程见 [OpenAI 自定义 MCP 连接指南](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)，然后调用只读工具 `list_platforms` 验证。
