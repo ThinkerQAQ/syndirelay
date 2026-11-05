@@ -105,7 +105,7 @@ jobs:
         run: |
           printf 'flowchart LR\nA[Fresh] --> B[Installed Browser]\n' > .build/mermaid-fresh.mmd
           # Intentionally exclude npm/npx and node from PATH. The binary must be self-contained.
-          env PATH="/usr/bin:/bin" PUPPETEER_SKIP_DOWNLOAD=1 \
+          env PATH="/usr/bin:/bin" PUPPETEER_SKIP_DOWNLOAD=1 MERMAID_TEST_DISABLE_BROWSER_SANDBOX=1 \
             .build/native-stage/bin/node \
             .build/native-stage/renderers/node/publishing-image.mjs \
             --kind mermaid --input .build/mermaid-fresh.mmd \

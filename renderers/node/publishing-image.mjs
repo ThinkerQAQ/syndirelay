@@ -84,7 +84,13 @@ async function renderMermaid(sourceFile, outputFile, renderer, width, scale) {
   const configFile = path.join(temporary, "mermaid-config.json");
   const browserConfig = path.join(temporary, "puppeteer-config.json");
   await writeFile(configFile, JSON.stringify({securityLevel: "strict", theme: "default"}));
-  await writeFile(browserConfig, JSON.stringify({executablePath: browser, args: ["--no-first-run"]}));
+  // Disabling Chromium's sandbox is allowed only for explicitly configured CI
+  // environments; never weaken the default user runtime.
+  const browserArgs = ["--no-first-run"];
+  if (process.env.MERMAID_TEST_DISABLE_BROWSER_SANDBOX === "1") {
+    browserArgs.push("--no-sandbox", "--disable-setuid-sandbox");
+  }
+  await writeFile(browserConfig, JSON.stringify({executablePath: browser, args: browserArgs}));
   await run(process.execPath, [mermaidCLI, "--input", sourceFile, "--output", outputFile,
      "--backgroundColor", "white", "--width", String(resolvedWidth),
      "--scale", String(resolvedScale), "--configFile", configFile,
