@@ -681,41 +681,8 @@ func toolRegistry(config bridgeConfig) []toolDescriptor {
 		},
 		{
 			Name: "node", DisplayName: "Node.js", Kind: "dependency", Required: true,
-			Description: "必选。用于 Markdown HTML、图片清理、Mermaid 与 PlantUML 发布素材渲染；不需要 Astro。",
+			Description: "内置 Node.js，用于 Markdown HTML、图片及图表渲染；无需自行安装。",
 			Health:      executableHealth(config, "node"),
-			Actions: []toolAction{{
-				ID: "update", Label: "更新",
-				Description: "升级到当前 Node.js LTS；Windows 使用 WinGet，并沿用 SyndiRelay Network Proxy。",
-			}},
-			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["node"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 node")},
-		},
-		{
-			Name: "npm", DisplayName: "npm", Kind: "dependency", Required: true,
-			Description: "必选。负责安装 SyndiRelay 渲染器的 micromark、Sharp 等依赖。", Health: executableHealth(config, "npm"),
-			Actions: []toolAction{{
-				ID: "update", Label: "更新",
-				Description: "执行 npm install -g npm@latest，并沿用 SyndiRelay Network Proxy。",
-			}},
-			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["npm"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 npm")},
-		},
-		{
-			Name: "git", DisplayName: "Git", Kind: "dependency", Required: true,
-			Description: "必选。用于仓库版本工作流，以及 AI Search 增量同步时计算提交差异。", Health: executableHealth(config, "git"),
-			Actions: []toolAction{{
-				ID: "update", Label: "更新",
-				Description: "升级 Git for Windows；Windows 使用 WinGet，并沿用 SyndiRelay Network Proxy。",
-			}},
-			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["git"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 git")},
-		},
-		{
-			Name: "java", DisplayName: "Java", Kind: "dependency", Required: false,
-			Description: "可选。只有网站构建或发布内容包含 PlantUML（puml / plantuml / UML）时才需要，用于运行 PlantUML JAR 渲染图表。",
-			Health:      executableHealth(config, "java"),
-			Actions: []toolAction{{
-				ID: "update", Label: "更新",
-				Description: "按当前 JDK vendor/major 识别 WinGet 包后升级；无法安全识别时不会切换发行版。",
-			}},
-			Config: toolConfigView{Scope: "bridge", Values: map[string]any{"path": config.ToolPaths["java"]}, Schema: pathField("path", "Executable", "留空时从 PATH 自动检测 java")},
 		},
 	}
 }
@@ -811,11 +778,8 @@ func updateToolConfig(config bridgeConfig, name string, values map[string]any) (
 			}
 			config.GoogleSearchConsoleServiceJSON = value
 		}
-	case "node", "npm", "git", "java":
-		if config.ToolPaths == nil {
-			config.ToolPaths = map[string]string{}
-		}
-		config.ToolPaths[name] = stringConfig(values, "path")
+	case "node":
+		return config, errors.New("Node.js is bundled and cannot be changed from settings")
 	default:
 		return config, fmt.Errorf("tool configuration is not supported: %s", name)
 	}

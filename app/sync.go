@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -422,23 +421,7 @@ func (s SyncService) Run(ctx context.Context, config SyncConfig, request SyncReq
 		if !errors.Is(statErr, os.ErrNotExist) {
 			return "", fmt.Errorf("inspect Markdown renderer dependency: %w", statErr)
 		}
-		if request.DryRun {
-			return "", errors.New("dry-run requires preinstalled renderer dependencies (run npm ci manually); refusing to modify workspace")
-		}
-		npm, resolveErr := resolveExecutable(config, "npm")
-		if resolveErr != nil {
-			return "", errors.New("npm was not found; install Node.js with npm")
-		}
-		output.WriteString("[setup] installing npm dependencies\n")
-		program, args, invocationErr := npmInvocation(runtime.GOOS, node, npm, []string{"ci"})
-		if invocationErr != nil {
-			return output.String(), invocationErr
-		}
-		commandOutput, runErr := runner.Run(ctx, program, args, config.EngineRoot, env)
-		appendOutput(&output, commandOutput)
-		if runErr != nil {
-			return output.String(), fmt.Errorf("npm ci: %w", runErr)
-		}
+		return "", errors.New("SyndiRelay renderer dependencies are missing; reinstall the complete package")
 	}
 
 	plans := BuildSyncPlan(request)
@@ -537,7 +520,7 @@ func syncEnvironment(config SyncConfig) []string {
 func prependToolDirectories(env []string, toolPaths map[string]string) []string {
 	directories := []string{}
 	seen := map[string]struct{}{}
-	for _, name := range []string{"node", "npm", "git", "java"} {
+	for _, name := range []string{"node"} {
 		path := strings.TrimSpace(toolPaths[name])
 		if path == "" {
 			continue

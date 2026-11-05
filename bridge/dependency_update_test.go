@@ -69,23 +69,23 @@ func TestJavaWingetPackageMappingDoesNotSwitchVendor(t *testing.T) {
 	}
 }
 
-func TestDependencyUpdateActionsAreExposed(t *testing.T) {
+func TestOnlyPackagedNodeIsListedWithoutExternalUpdater(t *testing.T) {
 	config := defaultBridgeConfig()
-	seen := map[string]bool{}
+	found := false
 	for _, tool := range toolRegistry(config) {
-		if tool.Name != "node" && tool.Name != "npm" && tool.Name != "git" && tool.Name != "java" {
+		if tool.Kind != "dependency" {
 			continue
 		}
-		for _, action := range tool.Actions {
-			if action.ID == "update" {
-				seen[tool.Name] = true
-			}
+		if tool.Name != "node" {
+			t.Fatalf("unexpected external dependency: %s", tool.Name)
 		}
+		if len(tool.Actions) != 0 {
+			t.Fatal("bundled Node must not update system installations")
+		}
+		found = true
 	}
-	for _, name := range []string{"node", "npm", "git", "java"} {
-		if !seen[name] {
-			t.Fatalf("%s update action missing", name)
-		}
+	if !found {
+		t.Fatal("bundled Node dependency status is missing")
 	}
 }
 

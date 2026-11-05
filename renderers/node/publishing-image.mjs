@@ -48,43 +48,50 @@ function run(command, args, { cwd = process.cwd() } = {}) {
   });
 }
 
-function mermaidInvocation() {
-  if (process.platform !== "win32") return { command: "npx", prefix: [] };
-  const candidates = [
-    process.env.npm_execpath ? path.win32.join(path.win32.dirname(process.env.npm_execpath), "npx-cli.js") : "",
-    path.win32.join(path.win32.dirname(process.execPath), "node_modules", "npm", "bin", "npx-cli.js"),
-  ].filter(Boolean);
-  const cli = candidates.find((candidate) => existsSync(candidate));
-  if (!cli) throw new Error("npm npx-cli.js was not found beside the active Windows Node.js runtime");
-  return { command: process.execPath, prefix: [cli] };
-}
-
-async function renderMermaid(sourceFile, outputFile, renderer, width, scale) {
-  const resolvedWidth = Number(width);
-  const resolvedScale = Number(scale);
-  if (!Number.isFinite(resolvedWidth) || resolvedWidth <= 0) throw new Error("--width must be a positive number");
-  if (!Number.isFinite(resolvedScale) || resolvedScale <= 0) throw new Error("--scale must be a positive number");
-  const temporary = await mkdtemp(path.join(os.tmpdir(), "blogctl-mermaid-renderer-"));
-  try {
-    const configFile = path.join(temporary, "mermaid-config.json");
-    await writeFile(configFile, JSON.stringify({ securityLevel: "strict", theme: "default" }), "utf8");
-    const invocation = mermaidInvocation();
-    const args = [
-      ...invocation.prefix,
-      "--yes", "-p", renderer || "@mermaid-js/mermaid-cli@11.17.0", "mmdc",
-      "--input", sourceFile,
-      "--output", outputFile,
-      "--backgroundColor", "white",
-      "--width", String(resolvedWidth),
-      "--scale", String(resolvedScale),
-      "--configFile", configFile,
-    ];
-    const puppeteer = String(process.env.MERMAID_PUPPETEER_CONFIG_FILE || "").trim();
-    if (puppeteer) args.push("--puppeteerConfigFile", path.resolve(puppeteer));
-    await run(invocation.command, args, { cwd: temporary });
-  } finally {
-    await rm(temporary, { recursive: true, force: true });
+// The CLI is packaged alongside this renderer; never invoke npx or download packages.
+const mermaidCLI = path.resolve(import.meta.dirname, "../../node_modules/@mermaid-js/mermaid-cli/src/cli.js");
+let selectedBrowser;
+function existingBrowser() {
+ if (selectedBrowser !== undefined) return selectedBrowser;
+ const candidates = [];
+ if (process.env.MERMAID_BROWSER_EXECUTABLE) candidates.push(process.env.MERMAID_BROWSER_EXECUTABLE);
+ if (process.platform === "win32") {
+  const roots = [process.env.PROGRAMFILES, process.env["PROGRAMFILES(X86)"], process.env.LOCALAPPDATA].filter(Boolean);
+  for (const root of roots) {
+   candidates.push(path.join(root, "Microsoft", "Edge", "Application", "msedge.exe"),
+                   path.join(root, "Google", "Chrome", "Application", "chrome.exe"));
   }
+ } else if (process.platform === "darwin") {
+  candidates.push("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+                  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+ } else {
+  candidates.push("/usr/bin/microsoft-edge", "/usr/bin/microsoft-edge-stable",
+                  "/usr/bin/google-chrome", "/usr/bin/google-chrome-stable",
+                  "/usr/bin/chromium", "/usr/bin/chromium-browser");
+ }
+ selectedBrowser = candidates.find((candidate) => existsSync(candidate)) ?? null;
+ return selectedBrowser;
+}
+async function renderMermaid(sourceFile, outputFile, renderer, width, scale) {
+ const resolvedWidth = Number(width), resolvedScale = Number(scale);
+ if (!Number.isFinite(resolvedWidth) || resolvedWidth <= 0) throw new Error("--width must be positive");
+ if (!Number.isFinite(resolvedScale) || resolvedScale <= 0) throw new Error("--scale must be positive");
+ if (!existsSync(mermaidCLI)) throw new Error("Bundled Mermaid CLI is missing; reinstall SyndiRelay");
+ const browser = existingBrowser();
+ if (!browser) throw new Error("Mermaid rendering requires an installed Edge/Chrome browser; no download is attempted");
+ const temporary = await mkdtemp(path.join(os.tmpdir(), "syndirelay-mermaid-"));
+ try {
+  const configFile = path.join(temporary, "mermaid-config.json");
+  const browserConfig = path.join(temporary, "puppeteer-config.json");
+  await writeFile(configFile, JSON.stringify({securityLevel: "strict", theme: "default"}));
+  await writeFile(browserConfig, JSON.stringify({executablePath: browser, args: ["--no-first-run"]}));
+  await run(process.execPath, [mermaidCLI, "--input", sourceFile, "--output", outputFile,
+     "--backgroundColor", "white", "--width", String(resolvedWidth),
+     "--scale", String(resolvedScale), "--configFile", configFile,
+     "--puppeteerConfigFile", browserConfig], {cwd: temporary});
+ } finally {
+  await rm(temporary, {recursive: true, force: true});
+ }
 }
 
 async function renderPlantUML(source, outputFile) {

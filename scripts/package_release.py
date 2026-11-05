@@ -93,7 +93,13 @@ def build(stage, version, goos, goarch, qa_only=False, allow_unreviewed_licenses
     bundle_node_runtime(stage)
     npm = "npm.cmd" if os.name == "nt" else "npm"
     subprocess.run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
-                   cwd=stage, check=True)
+                   cwd=stage, env=dict(os.environ, PUPPETEER_SKIP_DOWNLOAD="1"), check=True)
+    if not (stage / "node_modules" / "@mermaid-js" / "mermaid-cli" / "src" / "cli.js").is_file():
+        raise ValueError("bundled Mermaid CLI is missing")
+    if not (stage / "node_modules" / "puppeteer" / "package.json").is_file():
+        raise ValueError("bundled Mermaid browser driver is missing")
+    if list(stage.rglob("chrome.exe")) or list(stage.rglob("msedge.exe")):
+        raise ValueError("browser executable must not be bundled")
     # npm's command shim symlinks must not be included in portable archives/installer.
     binlinks = stage / "node_modules" / ".bin"
     if binlinks.exists():

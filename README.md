@@ -123,7 +123,7 @@ The CLI manages the same runtime with `syndirelay mcp status|start|stop|restart|
 
 If the extension cannot connect, check that the browser and native program run on the **same operating system**, the extension is loaded, and the Bridge is reachable. In a source checkout, use `./syndirelay install` to register Native Messaging or `./syndirelay --bridge` to debug the local Bridge.
 
-If an article preview fails, run `npm ci` in the source checkout and verify the content path. If the Tunnel is not ready, check the ID, key, network, and service status. If the Tunnel is ready but ChatGPT cannot call tools, ensure the plugin is enabled for the current conversation.
+If an installed preview fails, verify the paths and bundled renderer. Mermaid rendering uses an existing Edge/Chrome browser and does not download Chromium. For source development, run `npm ci` in the source checkout and verify the content path. If the Tunnel is not ready, check the ID, key, network, and service status. If the Tunnel is ready but ChatGPT cannot call tools, ensure the plugin is enabled for the current conversation.
 
 Do not post credentials, cookies, private settings, or unredacted logs in public Issues.
 

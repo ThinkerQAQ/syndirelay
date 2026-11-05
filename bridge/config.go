@@ -156,6 +156,27 @@ func InstallationRoot(executable string) string {
 	return directory
 }
 
+func packagedNodeExecutable(engineRoot string) string {
+	roots := []string{}
+	if executable, err := os.Executable(); err == nil {
+		roots = append(roots, InstallationRoot(executable))
+	}
+	if engineRoot != "" {
+		roots = append(roots, engineRoot)
+	}
+	name := "node"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	for _, root := range roots {
+		candidate := filepath.Join(root, "bin", name)
+		if info, err := os.Stat(candidate); err == nil && info.Mode().IsRegular() {
+			return candidate
+		}
+	}
+	return ""
+}
+
 func defaultConfigDir() (string, error) {
 	if runtime.GOOS == "windows" {
 		executable, err := os.Executable()
@@ -360,8 +381,12 @@ func normalizeBridgeConfig(config bridgeConfig) (bridgeConfig, error) {
 	default:
 		return config, errors.New("log level must be debug, info, warn, or error")
 	}
-	for name, value := range config.ToolPaths {
-		config.ToolPaths[name] = normalizeStoredPath(value)
+	// Use the packaged runtime, never legacy user-provided tools.
+	for name := range config.ToolPaths {
+		delete(config.ToolPaths, name)
+	}
+	if node := packagedNodeExecutable(config.EngineRoot); node != "" {
+		config.ToolPaths["node"] = node
 	}
 
 	config.ProxyHost = strings.TrimSpace(config.ProxyHost)

@@ -155,9 +155,21 @@ func (a app) runCheck() error {
 
 func (a app) doctor() error {
 	failed := false
-	for _, name := range []string{"node", "npm", "git"} {
-		path, err := lookPath(name)
-		if err != nil {
+	for _, name := range []string{"node"} {
+		path := ""
+		if executable, err := os.Executable(); err == nil {
+			path = filepath.Join(filepath.Dir(executable), name)
+			if runtime.GOOS == "windows" {
+				path += ".exe"
+			}
+			if info, err := os.Stat(path); err != nil || !info.Mode().IsRegular() {
+				path = ""
+			}
+		}
+		if path == "" {
+			path, _ = lookPath(name)
+		}
+		if path == "" {
 			if cliLocale() == "zh-CN" {
 				fmt.Fprintf(a.out, "%-8s 未安装\n", name)
 			} else {
