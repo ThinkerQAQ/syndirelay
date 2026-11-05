@@ -421,7 +421,7 @@ func TestDryRunFailsClosedInsteadOfInstallingNpm(t *testing.T) {
 		EngineRoot: engineRoot, ContentRoot: contentRoot, DistributionRoot: t.TempDir(),
 		ToolPaths: map[string]string{"node": node, "npm": npm},
 	}, SyncRequest{Articles: []string{"example"}, Platforms: []string{"devto"}, DryRun: true})
-	if err == nil || !strings.Contains(err.Error(), "refusing to modify workspace") {
+	if err == nil || !strings.Contains(err.Error(), "renderer dependencies are missing") {
 		t.Fatalf("output=%q err=%v", output, err)
 	}
 	if runner.commands != 0 {

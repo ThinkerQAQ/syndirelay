@@ -93,11 +93,34 @@ def build(stage, version, goos, goarch, qa_only=False, allow_unreviewed_licenses
     bundle_node_runtime(stage)
     npm = "npm.cmd" if os.name == "nt" else "npm"
     subprocess.run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund"],
-                   cwd=stage, check=True)
+                   cwd=stage, env=dict(os.environ, PUPPETEER_SKIP_DOWNLOAD="1"), check=True)
+    if not (stage / "node_modules" / "@mermaid-js" / "mermaid-cli" / "src" / "cli.js").is_file():
+        raise ValueError("bundled Mermaid CLI is missing")
+    if not (stage / "node_modules" / "puppeteer" / "package.json").is_file():
+        raise ValueError("bundled Mermaid browser driver is missing")
+    if list(stage.rglob("chrome.exe")) or list(stage.rglob("msedge.exe")):
+        raise ValueError("browser executable must not be bundled")
+    # Upstream npm tarballs can contain development/test scripts. Never ship
+    # interpreted command scripts in native installers. Keep runtime JS/data.
+    script_suffixes = {".ps1", ".sh", ".cmd", ".bat", ".vbs", ".py"}
+    modules = stage / "node_modules"
+    for path in modules.rglob("*"):
+        if path.is_file() and path.suffix.lower() in script_suffixes:
+            path.unlink()
+    for path in sorted(modules.rglob(".github"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir():
+            shutil.rmtree(path)
     # npm's command shim symlinks must not be included in portable archives/installer.
     binlinks = stage / "node_modules" / ".bin"
     if binlinks.exists():
         shutil.rmtree(binlinks)
+    # Nested packages may themselves contain npm command shims/symlinks.
+    for link in modules.rglob("*"):
+        if link.is_symlink():
+            link.unlink()
+    for nested_bin in sorted(modules.rglob(".bin"), key=lambda p: len(p.parts), reverse=True):
+        if nested_bin.is_dir():
+            shutil.rmtree(nested_bin)
     if goos != "windows":
         binary.chmod(0o755)
     return binary

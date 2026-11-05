@@ -35,7 +35,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Install only distribution renderer dependencies
+      - name: Install only distribution renderer dependencies (never download Chromium)
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "1"
         run: npm ci
       - name: Test all original Go platform compilers and publisher modules
         run: go test ./...
@@ -88,6 +90,28 @@ jobs:
           "$node" --version
           test -s .build/native-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
           python -c 'from pathlib import Path; p=Path(".build/native-stage"); assert not list(p.rglob("*.ps1")), "PowerShell in runtime payload"'
+      - name: Smoke-test a brand-new Mermaid PNG with the bundled runtime and system Edge
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-Content -Path .build/mermaid-fresh.mmd -Value 'flowchart LR; A[Fresh] --> B[Installed Edge]' -Encoding ascii
+          $env:PATH = 'C:\Windows\System32;C:\Windows'
+          & .build/native-stage/bin/node.exe .build/native-stage/renderers/node/publishing-image.mjs --kind mermaid --input .build/mermaid-fresh.mmd --output .build/mermaid-fresh.png --width 800 --scale 1
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path .build/mermaid-fresh.png)) { throw "Bundled Mermaid renderer failed without npm/npx or a browser download" }
+          if ((Get-Item .build/mermaid-fresh.png).Length -lt 100) { throw "Mermaid renderer returned empty PNG" }
+      - name: Smoke-test a new Mermaid PNG with packaged Node on Linux and macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          printf 'flowchart LR\nA[Fresh] --> B[Installed Browser]\n' > .build/mermaid-fresh.mmd
+          # Intentionally exclude npm/npx and node from PATH. The binary must be self-contained.
+          env PATH="/usr/bin:/bin" PUPPETEER_SKIP_DOWNLOAD=1 MERMAID_TEST_DISABLE_BROWSER_SANDBOX=1 \
+            .build/native-stage/bin/node \
+            .build/native-stage/renderers/node/publishing-image.mjs \
+            --kind mermaid --input .build/mermaid-fresh.mmd \
+            --output .build/mermaid-fresh.png --width 800 --scale 1
+          test -s .build/mermaid-fresh.png
+          python -c 'from pathlib import Path; p=Path(".build/mermaid-fresh.png"); assert p.stat().st_size > 100, "empty Mermaid PNG"'
       - name: Check no old risky transport dependencies
         shell: bash
         run: |

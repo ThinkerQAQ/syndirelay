@@ -123,7 +123,7 @@ export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
 
 扩展无法连接时，检查浏览器和程序是否在**同一个操作系统**、扩展是否已加载、Bridge 是否可访问。源码模式可执行 `./syndirelay install` 注册 Native Messaging，使用 `./syndirelay --bridge` 排查本地服务。
 
-文章预览失败时，在源码目录执行 `npm ci` 并检查内容路径。Tunnel 无法连接时检查 ID、密钥、网络和服务状态。Tunnel 已就绪但 ChatGPT 无法调用时，检查插件是否已在当前会话启用。
+安装版预览失败时检查内容路径和内置渲染器；Mermaid 使用已有 Edge/Chrome 浏览器，不下载 Chromium。源码开发环境预览失败时，在源码目录执行 `npm ci` 并检查内容路径。Tunnel 无法连接时检查 ID、密钥、网络和服务状态。Tunnel 已就绪但 ChatGPT 无法调用时，检查插件是否已在当前会话启用。
 
 不要在 Issue 中公开配置、凭据、Cookie 或未脱敏日志。
 

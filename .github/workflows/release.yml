@@ -48,6 +48,8 @@ jobs:
           python scripts/package_release.py --version "$version" --os "${{ matrix.target }}" --arch "${{ matrix.arch }}" --stage .build/release-stage --allow-unreviewed-licenses
           test -s .build/release-stage/THIRD_PARTY_LICENSES/MANIFEST.json
           test -s .build/release-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
+          test -s .build/release-stage/node_modules/@mermaid-js/mermaid-cli/src/cli.js
+          test -s .build/release-stage/node_modules/puppeteer/package.json
       - name: Create native GUI installer
         shell: bash
         run: |
