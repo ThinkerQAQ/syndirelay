@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	runtimeversion "github.com/ThinkerQAQ/syndirelay/internal/version"
@@ -75,14 +76,36 @@ func (s *Server) imageConfig() (bridgeConfig, *http.Client) {
 	defer s.mu.Unlock()
 	return s.config, s.httpClient
 }
+// imageNodeExecutable prefers the release-bundled runtime. PATH is a source-
+// development fallback, not a prerequisite for installed users.
+func imageNodeExecutable(engineRoot string) (string, error) {
+    name := "node"
+    if runtime.GOOS == "windows" {
+        name = "node.exe"
+    }
+    candidates := []string{filepath.Join(engineRoot, "bin", name)}
+    if executable, err := os.Executable(); err == nil {
+        candidates = append(candidates, filepath.Join(InstallationRoot(executable), "bin", name))
+    }
+    for _, candidate := range candidates {
+        if info, err := os.Stat(candidate); err == nil && info.Mode().IsRegular() {
+            return candidate, nil
+        }
+    }
+    if node, err := exec.LookPath("node"); err == nil {
+        return node, nil
+    }
+    return "", errors.New("bundled Node.js runtime is missing; reinstall SyndiRelay")
+}
+
 func sanitizeImage(ctx context.Context, engineRoot string, input []byte, format string) (cleanedImage, error) {
 	script := filepath.Join(engineRoot, "renderers", "node", "sanitize-image.mjs")
 	if info, err := os.Stat(script); err != nil || !info.Mode().IsRegular() {
 		return cleanedImage{}, errors.New("image sanitizer unavailable; configure SyndiRelay workspace and install Node dependencies")
 	}
-	node, err := exec.LookPath("node")
+	node, err := imageNodeExecutable(engineRoot)
 	if err != nil {
-		return cleanedImage{}, errors.New("Node.js is required for image privacy processing")
+		return cleanedImage{}, err
 	}
 	temp, err := os.CreateTemp("", "syndirelay-image-clean-*")
 	if err != nil {
