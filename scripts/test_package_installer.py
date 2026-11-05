@@ -115,7 +115,7 @@ class InstallerTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root=pathlib.Path(temp); stage=self.stage(root)
             (stage/".qa-only").write_text("local QA build")
-            shutil.rmtree(stage/"THIRD_PARTY_LICENSES")
+            (stage/"THIRD_PARTY_LICENSES/MANIFEST.json").unlink()
             installer.QA_PREPARE_ONLY=False
             installer.LOCAL_TEST_ONLY=False
             with self.assertRaises(ValueError):
