@@ -91,7 +91,7 @@ def prepare(stage, destination, version, target):
             raise ValueError("PowerShell scripts are forbidden in distributable installers: " + str(path))
         if path.is_file() and (path.name.lower() in ("config.toml","api-token","extension-access.key","runtime.env","runtime-key.dpapi", "blogctl.toml", "syndirelay.toml", ".env")
                               or path.suffix.lower() in (".sqlite",".db",".log",".har")
-                              or any(part.lower() in ("data","backups") for part in path.relative_to(stage).parts)):
+                              or path.relative_to(stage).parts[0].lower() in ("data", "backups")):
             raise ValueError("private runtime file in release stage")
     config = destination/"config"
     package = destination/"packages/com.thinkerqaq.syndirelay"

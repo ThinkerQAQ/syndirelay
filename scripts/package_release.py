@@ -100,10 +100,27 @@ def build(stage, version, goos, goarch, qa_only=False, allow_unreviewed_licenses
         raise ValueError("bundled Mermaid browser driver is missing")
     if list(stage.rglob("chrome.exe")) or list(stage.rglob("msedge.exe")):
         raise ValueError("browser executable must not be bundled")
+    # Upstream npm tarballs can contain development/test scripts. Never ship
+    # interpreted command scripts in native installers. Keep runtime JS/data.
+    script_suffixes = {".ps1", ".sh", ".cmd", ".bat", ".vbs", ".py"}
+    modules = stage / "node_modules"
+    for path in modules.rglob("*"):
+        if path.is_file() and path.suffix.lower() in script_suffixes:
+            path.unlink()
+    for path in sorted(modules.rglob(".github"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir():
+            shutil.rmtree(path)
     # npm's command shim symlinks must not be included in portable archives/installer.
     binlinks = stage / "node_modules" / ".bin"
     if binlinks.exists():
         shutil.rmtree(binlinks)
+    # Nested packages may themselves contain npm command shims/symlinks.
+    for link in modules.rglob("*"):
+        if link.is_symlink():
+            link.unlink()
+    for nested_bin in sorted(modules.rglob(".bin"), key=lambda p: len(p.parts), reverse=True):
+        if nested_bin.is_dir():
+            shutil.rmtree(nested_bin)
     if goos != "windows":
         binary.chmod(0o755)
     return binary
