@@ -6,3 +6,9 @@
 - Never upload users' article content, authentication cookies, local publishing databases, credentials, or tokens.
 - Keep any unofficial/private platform integration private until policy and authorization review is complete.
 - Cross-platform CI: Linux, macOS and Windows.
+
+## Project validation
+
+- Tests: `devbox run test`.
+- Build: `devbox run build`.
+- Installer changes: `devbox run verify-package`.
