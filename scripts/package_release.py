@@ -21,6 +21,12 @@ SOURCE = ("extension", "renderers", "scripts", "README.md", "README_ZH.md", "LIC
 
 
 def build(stage, version, goos, goarch, qa_only=False):
+    for name in ("extension/manifest.json", "package.json", "package-lock.json"):
+        doc = json.loads((ROOT / name).read_text(encoding="utf-8"))
+        if doc.get("version") != version:
+            raise ValueError(f"release version {version} does not match {name}")
+    if json.loads((ROOT / "package-lock.json").read_text(encoding="utf-8"))["packages"][""]["version"] != version:
+        raise ValueError("release and npm lockfile root versions differ")
     if goos not in ("windows", "linux", "darwin") or goarch not in ("amd64", "arm64"):
         raise ValueError("unsupported platform")
     # Public packages use the existing repo-wide reviewed-license gate, including
