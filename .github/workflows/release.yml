@@ -1,0 +1,102 @@
+name: Publish native SyndiRelay installers
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    name: Native installer (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: windows-latest, target: windows, ext: exe }
+          - { runner: ubuntu-24.04, target: linux, ext: run }
+          - { runner: macos-15, target: darwin, ext: dmg }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: jurplel/install-qt-action@v4
+        with:
+          no-qt-binaries: 'true'
+          tools: tools_ifw
+      - name: Verify source release identity
+        shell: bash
+        run: |
+          python -c 'import json,pathlib; v=pathlib.Path("VERSION").read_text().strip(); assert all(json.load(open(p))["version"]==v for p in ("package.json","package-lock.json","extension/manifest.json")); print(v)'
+          python scripts/test_package_installer.py
+      - name: Build native portable payload with bundled Go and Node runtimes
+        shell: bash
+        run: |
+          version=$(cat VERSION)
+          python scripts/package_release.py --version "$version" --os "${{ matrix.target }}" --arch amd64 --stage .build/release-stage --allow-unreviewed-licenses
+          test -s .build/release-stage/THIRD_PARTY_LICENSES/MANIFEST.json
+          test -s .build/release-stage/THIRD_PARTY_LICENSES/runtime/node/LICENSE
+      - name: Create native GUI installer
+        shell: bash
+        run: |
+          version=$(cat VERSION)
+          mkdir -p dist
+          python scripts/package_installer.py --stage .build/release-stage --version "$version" --os "${{ matrix.target }}" --output "dist/SyndiRelay-Setup-v${version}-${{ matrix.target }}-amd64.${{ matrix.ext }}"
+      - name: Verify downloadable installer exists and is not a stub
+        shell: bash
+        run: |
+          python -c 'from pathlib import Path; a=list(Path("dist").iterdir()); assert len(a)==1 and a[0].stat().st_size>1000000, a; print(a[0],a[0].stat().st_size)'
+      - name: Verify Windows installer launches as GUI subsystem
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -c 'from pathlib import Path; from scripts.package_installer import require_windows_gui; require_windows_gui(next(Path("dist").glob("*.exe")))'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: syndirelay-${{ matrix.target }}-amd64
+          path: dist/SyndiRelay-Setup-*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish installers only after all platforms pass
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: installer
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: syndirelay-*-amd64
+          path: dist
+          merge-multiple: true
+      - name: Verify all three native installers and checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          for spec in windows:exe linux:run darwin:dmg; do
+            target="${spec%:*}"
+            ext="${spec#*:}"
+            test -s "dist/SyndiRelay-Setup-v${version}-${target}-amd64.${ext}"
+          done
+          (cd dist && sha256sum SyndiRelay-Setup-* > SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+      - name: Create GitHub Release with installer attachments
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "SyndiRelay $GITHUB_REF_NAME — native installers" --notes "Native Windows, Linux and macOS GUI installers. Includes Go and Node runtimes. Bundled upstream license texts are retained; manual dependency redistribution audit is not completed for this release."

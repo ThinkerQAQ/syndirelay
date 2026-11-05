@@ -48,7 +48,7 @@ def bundle_node_runtime(stage):
     (license_dir / "VERSION.txt").write_text(version + "\n", encoding="utf-8")
 
 
-def build(stage, version, goos, goarch, qa_only=False):
+def build(stage, version, goos, goarch, qa_only=False, allow_unreviewed_licenses=False):
     for name in ("extension/manifest.json", "package.json", "package-lock.json"):
         doc = json.loads((ROOT / name).read_text(encoding="utf-8"))
         if doc.get("version") != version:
@@ -57,10 +57,11 @@ def build(stage, version, goos, goarch, qa_only=False):
         raise ValueError("release and npm lockfile root versions differ")
     if goos not in ("windows", "linux", "darwin") or goarch not in ("amd64", "arm64"):
         raise ValueError("unsupported platform")
-    # Public packages use the existing repo-wide reviewed-license gate, including
-    # the full Go and npm dependency graphs. QA stages cannot be distributed.
+    # Default: require the complete reviewed-license audit. For a manually
+    # authorized release, retain all collected upstream texts without claiming
+    # that the incomplete manifest passed the audit.
     license_root = ROOT / ".build" / "out" / "publish-licenses"
-    if not qa_only:
+    if not qa_only and not allow_unreviewed_licenses:
         subprocess.run(["go", "run", "./cmd/maint", "licenses"], cwd=ROOT, check=True)
     stage.mkdir(parents=True, exist_ok=False)
     for item in SOURCE:
@@ -73,6 +74,8 @@ def build(stage, version, goos, goarch, qa_only=False):
         shutil.copy2(ROOT / "scripts" / filename, stage / filename)
     if qa_only:
         (stage / ".qa-only").write_text("Unreviewed build; distribution forbidden.\n")
+    elif allow_unreviewed_licenses:
+        shutil.copytree(ROOT / "third_party" / "licenses", stage / "THIRD_PARTY_LICENSES")
     else:
         shutil.copytree(license_root, stage / "THIRD_PARTY_LICENSES")
     (stage / "bin").mkdir()
@@ -124,22 +127,25 @@ def main():
     ap.add_argument("--stage", type=pathlib.Path, help="Keep the extracted release payload at this path")
     ap.add_argument("--output", type=pathlib.Path, help="Create the portable archive and SHA-256")
     ap.add_argument("--qa-only", action="store_true", help="Build a non-distributable test stage without the legal review bundle")
+    ap.add_argument("--allow-unreviewed-licenses", action="store_true", help="Publish with the repository-provided upstream license texts; manual audit remains incomplete")
     args = ap.parse_args()
     if args.qa_only and args.output:
         ap.error("QA-only stages cannot be distributed")
+    if args.qa_only and args.allow_unreviewed_licenses:
+        ap.error("QA-only mode cannot be combined with the license audit waiver")
     if not args.stage and not args.output:
         ap.error("choose --stage and/or --output")
     if args.stage and args.stage.exists():
         ap.error("refusing to overwrite stage")
     if args.stage:
         stage = args.stage.resolve()
-        build(stage, args.version, args.os, args.arch, qa_only=args.qa_only)
+        build(stage, args.version, args.os, args.arch, qa_only=args.qa_only, allow_unreviewed_licenses=args.allow_unreviewed_licenses)
         if args.output:
             archive_stage(stage, args.output.resolve(), args.os)
     else:
         with tempfile.TemporaryDirectory(prefix="syndirelay-release-") as temp:
             stage = pathlib.Path(temp)/"SyndiRelay"
-            build(stage, args.version, args.os, args.arch, qa_only=args.qa_only)
+            build(stage, args.version, args.os, args.arch, qa_only=args.qa_only, allow_unreviewed_licenses=args.allow_unreviewed_licenses)
             archive_stage(stage, args.output.resolve(), args.os)
     print("PACKAGED", args.os, args.arch, args.version)
 
