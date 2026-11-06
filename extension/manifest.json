@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "0.1.201",
+  "version": "0.1.202",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA59/i1QkISX5Kq+gRqR9qfVERoFR11gRLqcvrXsfhMtyJFNyK0N4cQmChNGbBSQakDjfD2Hvm3nbJ4fF59EKzpFTc2r6yvZH+Dca5xpXOEsNDb5UQAjl1KSDrNCAqd8nVARbm/gum5CsbkFha9amGSmkc/qBbc7NxvCAGyREjg5W715wHKm+S21KuHphwkSDGLeLEdEfOH3D/+Wn1XTwkisyuNO2H866/kY3N7sjzs2RMLc8zMTG6Ly9eGutFY1hagajCzBPJqTs0uJYhJr+Kc+YAoe3ebjp7wDjEXZI2H7N4v2sTz0WFkfdvlAxBzrA2ZYqTUzBoFEnMU9SLuJqO0wIDAQAB",
   "description": "__MSG_extensionDescription__",
   "permissions": [
