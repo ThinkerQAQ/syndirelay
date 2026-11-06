@@ -906,7 +906,11 @@ input, select { min-height: 42px; font-size: 13px; }
 }
 #mcpConnectionSettings .mcp-field input:focus { outline: none; border-color: #7b9cc9; box-shadow: 0 0 0 3px rgba(55, 111, 194, .08); }
 #mcpConnectionSettings .mcp-field input:disabled { background: #f8f9fb; opacity: 1; }
-#mcpConnectionSettings #mcpTunnelID { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+#mcpConnectionSettings #mcpTunnelID, #mcpConnectionSettings #mcpClientPath { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+#mcpConnectionSettings .mcp-environment-status { margin: 0 0 15px; font-size: 12px; color: #64748b; }
+#mcpConnectionSettings .mcp-environment-status[data-kind="ready"] { color: #18704e; }
+#mcpConnectionSettings .mcp-environment-status[data-kind="missing"] { color: #b45309; }
+#mcpConnectionSettings #mcpClientPath { font-size: 12px; }
 #mcpConnectionSettings .mcp-field small { display: block; margin-top: 6px; min-height: 17px; font-size: 11px; font-weight: 400; color: #8390a4; }
 #mcpConnectionSettings .mcp-key-input { position: relative; }
 #mcpConnectionSettings .mcp-key-input input { padding-right: 48px; }

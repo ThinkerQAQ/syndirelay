@@ -44,8 +44,9 @@ def main():
         d=Path(td)
         executable=d/"syndirelay"
         subprocess.run(["go","build","-o",str(executable),"./cmd"],cwd=REPO,check=True,stdout=subprocess.DEVNULL)
-        fake_bin=d/"bin"
-        fake_bin.mkdir()
+        # Tunnel Client is installation-private, never resolved from PATH.
+        fake_bin=d/"Data"/"bin"
+        fake_bin.mkdir(parents=True)
         fake_client=fake_bin/"tunnel-client"
         fake_client.write_text('#!/bin/sh\nif [ "$1" != "run" ]; then exit 12; fi\nprintf "%s\\n" "$$" > "$MOCK_TUNNEL_PID"\nwhile true; do sleep 2; done\n',encoding="utf-8")
         fake_client.chmod(0o700)
@@ -60,7 +61,6 @@ def main():
         pid_file=d/"fake-tunnel.pid"
         env=os.environ.copy()
         env.update({"HOME":str(d),"XDG_CONFIG_HOME":str(cfg),"SYNDIRELAY_DATA_DIR":str(data),
-                    "PATH":str(fake_bin)+os.pathsep+env.get("PATH",""),
                     "MOCK_TUNNEL_PID":str(pid_file)})
         process=subprocess.Popen([str(executable),"tunnel-run"],env=env,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
         try:

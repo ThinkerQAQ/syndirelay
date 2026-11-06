@@ -2,6 +2,22 @@
 // Catalog uses existing Chinese UI labels as stable source keys. i18next is
 // bundled locally for MV3 CSP and reused by Extension + Go-hosted Web Console.
 globalThis.BlogCTLEnMessages = Object.freeze({
+  "环境检测": "Environment check",
+  "检测 Tunnel Client 可执行文件。缺失时手动下载到 SyndiRelay，或指定已有的客户端路径。": "Check the Tunnel Client executable. If missing, download it into SyndiRelay or specify an existing executable path.",
+  "正在检测 Tunnel Client…": "Checking Tunnel Client…",
+  "Tunnel Client 可执行文件位置": "Tunnel Client executable path",
+  "默认使用 SyndiRelay 专属目录，不使用系统 PATH 或全局 .local/bin。": "Use SyndiRelay's private directory by default, not the system PATH or shared .local/bin.",
+  "下载 Tunnel Client": "Download Tunnel Client",
+  "保存路径": "Save path",
+  "检测通过：Tunnel Client 已就绪": "Tunnel Client detected and ready",
+  "未检测到 Tunnel Client，请下载或填写已有可执行文件路径。": "Tunnel Client not found. Download it or specify an existing executable path.",
+  "自定义位置已保存；修改后点击「保存路径」，运行中的服务需重启生效。": "Custom location saved. Save path changes, then restart the running service to apply them.",
+  "默认位置：SyndiRelay 专属目录。路径可修改，运行中的服务需重启生效。": "Default location: SyndiRelay's private directory. You can change the path; restart the running service to apply it.",
+  "请先在「环境检测」中下载 Tunnel Client 或保存可用的客户端路径。": "First download Tunnel Client or save a valid executable path in Environment check.",
+  "正在下载并校验官方 Tunnel Client…": "Downloading and verifying the official Tunnel Client…",
+  "官方 Tunnel Client 已下载并通过校验，路径已保存。": "Official Tunnel Client downloaded and verified. Executable path saved.",
+  "可执行文件路径已保存。": "Executable path saved.",
+  "重启本地服务后生效。": "Restart the local service to apply the change.",
   "本地服务运行中 · Tunnel 未连接": "Local service running · Tunnel disconnected",
   "本地服务正在运行，但 Tunnel 未连接。点击「连接 Tunnel」，等待就绪后再到 ChatGPT 管理插件。": "The local service is running, but the Tunnel is disconnected. Choose Connect Tunnel and wait until ready before managing the plugin in ChatGPT.",
 

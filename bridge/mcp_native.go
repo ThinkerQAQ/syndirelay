@@ -162,7 +162,7 @@ func nativeSave(ctx context.Context, in mcpConnectionAction) (err error) {
 		return err
 	}
 	defer release()
-	client := findTunnelClient(runtime.GOOS, func() string { h, _ := os.UserHomeDir(); return h }())
+	client := findTunnelClient(runtime.GOOS, filepath.Dir(p.Private))
 	if client == "" {
 		return errors.New("official Tunnel client is missing")
 	}
@@ -356,6 +356,9 @@ func nativeStart() error {
 	if _, err = mcpReadKey(p); err != nil {
 		return errors.New("save Runtime API Key before starting")
 	}
+	if findTunnelClient(runtime.GOOS, filepath.Dir(p.Private)) == "" {
+		return errors.New("Tunnel Client missing: check the executable path or download in Environment Check")
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return err
@@ -448,8 +451,7 @@ func RunTunnel(ctx context.Context) error {
 		}
 	}()
 	defer os.Remove(active)
-	home, _ := os.UserHomeDir()
-	client := findTunnelClient(runtime.GOOS, home)
+	client := findTunnelClient(runtime.GOOS, filepath.Dir(p.Private))
 	if client == "" {
 		return errors.New("official Tunnel client missing")
 	}

@@ -12,7 +12,7 @@ import (
 
 func TestNativeSaveValidatesBeforeCommitAndRollsBack(t *testing.T) {
 	root := t.TempDir()
-	bin := filepath.Join(root, "bin")
+	bin := filepath.Join(root, "Data", "bin")
 	if err := os.MkdirAll(bin, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,6 @@ esac
 	t.Setenv("HOME", root)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "config"))
 	t.Setenv("SYNDIRELAY_DATA_DIR", filepath.Join(root, "Data"))
-	t.Setenv("PATH", bin+":"+os.Getenv("PATH"))
 	id1 := "tunnel_1234567890abcdef1234567890abcdef"
 	id2 := "tunnel_abcdef1234567890abcdef1234567890"
 	key := "test_only_runtime_credential_123456"

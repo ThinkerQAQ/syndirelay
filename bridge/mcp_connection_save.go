@@ -9,6 +9,7 @@ import (
 )
 
 type mcpConnectionAction struct {
+	ClientPath       string `json:"client_path"`
 	Action           string `json:"action"`
 	TunnelID         string `json:"tunnel_id"`
 	RuntimeAPIKey    string `json:"runtime_api_key"`

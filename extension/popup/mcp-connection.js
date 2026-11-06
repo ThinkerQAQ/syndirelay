@@ -3,7 +3,7 @@
  const PATTERN=/^tunnel_(?:[a-z0-9]{32}|[a-z0-9]{4}_[a-z0-9]{32})$/;
  const EXAMPLE='tunnel_0123456789abcdef0123456789abcdef';
  const $=id=>document.getElementById(id);
- const state={status:{},busy:false,pending:null,editedID:false,editedKey:false,autoStart:false,autoKnown:false,initialized:false,stopPoll:null};
+ const state={status:{},busy:false,pending:null,editedID:false,editedKey:false,editedClientPath:false,autoStart:false,autoKnown:false,initialized:false,stopPoll:null};
  const validID=id=>PATTERN.test(id)&&id!==EXAMPLE;
  const running=s=>Boolean(s.running||s.ready);
  const controls=(s,{id,key,busy=false,pending=false}={})=>{
@@ -11,11 +11,11 @@
   const stored=Boolean(s.configured&&s.runtime_key_saved&&validID(s.tunnel_id));
   const active=running(s);
   return {
-   canSave:!busy&&!pending,
-   canStart:!active&&stored&&!changed&&!busy&&!pending,
+   canSave:s.client_installed!==false&&!busy&&!pending,
+   canStart:!active&&stored&&!changed&&s.client_installed!==false&&!busy&&!pending,
    canStop:active&&!busy&&!pending,
-   canRestart:active&&stored&&!changed&&!busy&&!pending,
-   canAutoStart:stored&&!changed&&!busy&&!pending,
+   canRestart:active&&stored&&!changed&&s.client_installed!==false&&!busy&&!pending,
+   canAutoStart:stored&&!changed&&s.client_installed!==false&&!busy&&!pending,
    changed,active,stored
   };
  };
@@ -29,6 +29,19 @@
  }
  function show() {
   const s=state.status,c=controls(s,form()),run=running(s);
+  const clientPresent=Boolean(s.client_installed);
+  const pathInput=$('mcpClientPath');
+  const pathChanged=(pathInput?.value?.trim()||'')!==(s.client_path||'');
+  const clientStatus=$('mcpClientStatus');
+  clientStatus.textContent=clientPresent?'检测通过：Tunnel Client 已就绪':'未检测到 Tunnel Client，请下载或填写已有可执行文件路径。';
+  clientStatus.setAttribute('data-kind',clientPresent?'ready':'missing');
+  $('mcpClientDownload').disabled=state.busy||!!state.pending||clientPresent;
+  $('mcpClientDownload').hidden=clientPresent;
+  $('mcpClientPathSave').disabled=state.busy||!!state.pending||!pathChanged;
+  $('mcpClientPathReset').disabled=state.busy||!!state.pending||!s.client_custom;
+  $('mcpClientPathHint').textContent=s.client_custom
+    ? '自定义位置已保存；修改后点击「保存路径」，运行中的服务需重启生效。'
+    : '默认位置：SyndiRelay 专属目录。路径可修改，运行中的服务需重启生效。';
   $('mcpSave').disabled=!c.canSave;
   $('mcpConnect').disabled=run?!c.canStop:!c.canStart;
   $('mcpConnect').textContent=run?'停止服务':'启动服务';
@@ -111,6 +124,7 @@
    const result=await root.BlogCTLPopup.send('blogctl.mcp.connection.get');
    const s=result.connection||{};
    state.status=s;
+   if(!state.editedClientPath&&document.activeElement!==$('mcpClientPath'))$('mcpClientPath').value=s.client_path||'';
    if(!state.editedID&&document.activeElement!==$('mcpTunnelID'))$('mcpTunnelID').value=s.tunnel_id||'';
    $('mcpRuntimeKey').placeholder=s.runtime_key_saved?'****************':'';
    $('mcpLocalConfig').textContent=JSON.stringify(s.local_config||{},null,2);
@@ -142,6 +156,7 @@
    show();return;
   }
   if(action==='save'){
+   if(!s.client_installed){message('请先在「环境检测」中下载 Tunnel Client 或保存可用的客户端路径。',true);return;}
    if(!validID(id)){message('请输入有效的非测试 Tunnel ID。',true);return;}
    if(!key&&!s.runtime_key_saved){message('请输入 Runtime API Key。',true);return;}
    if(id===s.tunnel_id&&!key&&s.configured&&s.runtime_key_saved){
@@ -152,9 +167,6 @@
   }
   state.busy=true;show();
   try{
-   if(action==='save'&&!s.client_installed){
-    await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{action:'install-client'});
-   }
    await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{
     action,tunnelId:id,runtimeApiKey:action==='save'?key:'',
     reuseKey:action==='save'&&!key,
@@ -167,6 +179,27 @@
    }else message('操作已提交，正在刷新服务状态。');
   }catch(e){message(root.BlogCTLPopup.errorMessage(e),true);}
   finally{state.busy=false;await refresh();}
+ }
+ function clientMessage(text,error=false) {
+  $('mcpClientMessage').textContent=text||'';
+  $('mcpClientMessage').className=error?'mcp-message error':'mcp-message';
+ }
+ async function clientAction(action){
+  if(state.busy||state.pending)return;
+  const value=$('mcpClientPath').value.trim();
+  if(action==='set-client-path'&&value===(state.status.client_path||''))return;
+  state.busy=true;show();clientMessage(action==='install-client'?'正在下载并校验官方 Tunnel Client…':'');
+  try{
+   await root.BlogCTLPopup.send('blogctl.mcp.connection.action',{action,clientPath:action==='set-client-path'?value:''});
+   state.editedClientPath=false;
+   state.busy=false;
+   await refresh();
+   $('mcpClientPath').value=state.status.client_path||'';
+   clientMessage(action==='install-client'
+     ? '官方 Tunnel Client 已下载并通过校验，路径已保存。'
+     : '可执行文件路径已保存。'+(running(state.status)?'重启本地服务后生效。':''));
+  }catch(e){clientMessage(root.BlogCTLPopup.errorMessage(e),true);}
+  finally{state.busy=false;show();}
  }
  async function autoStatus(){
   try{
@@ -218,6 +251,14 @@ async function autoChanged(){
  }
  function init(){
   if(state.initialized)return;state.initialized=true;
+  $('mcpClientPath').addEventListener('input',()=>{state.editedClientPath=true;clientMessage('');show();});
+  $('mcpClientDownload').addEventListener('click',()=>clientAction('install-client'));
+  $('mcpClientPathSave').addEventListener('click',()=>clientAction('set-client-path'));
+  $('mcpClientPathReset').addEventListener('click',()=>{
+   $('mcpClientPath').value=state.status.client_default_path||'';
+   state.editedClientPath=true;
+   clientAction('set-client-path');
+  });
   intendedInput($('mcpTunnelID'),'');
   intendedInput($('mcpRuntimeKey'),'');
   $('mcpSave').addEventListener('click',()=>action('save'));

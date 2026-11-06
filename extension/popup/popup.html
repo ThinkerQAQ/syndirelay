@@ -427,9 +427,32 @@
                 <span id="mcpConnectionStatusText">正在检查…</span>
               </span>
             </div>
-            <section class="mcp-flow-section" aria-labelledby="mcpLocalTitle">
+            <section class="mcp-flow-section" aria-labelledby="mcpEnvironmentTitle">
               <div class="mcp-section-heading">
                 <span class="mcp-step" aria-hidden="true">01</span>
+                <div>
+                  <h3 id="mcpEnvironmentTitle">环境检测</h3>
+                  <p>检测 Tunnel Client 可执行文件。缺失时手动下载到 SyndiRelay，或指定已有的客户端路径。</p>
+                </div>
+              </div>
+              <div class="mcp-flow-body">
+                <p id="mcpClientStatus" class="mcp-environment-status" role="status" aria-live="polite">正在检测 Tunnel Client…</p>
+                <div class="mcp-field">
+                  <div class="mcp-field-heading"><label for="mcpClientPath">Tunnel Client 可执行文件位置</label></div>
+                  <input id="mcpClientPath" type="text" spellcheck="false" autocomplete="off" aria-describedby="mcpClientPathHint">
+                  <small id="mcpClientPathHint">默认使用 SyndiRelay 专属目录，不使用系统 PATH 或全局 .local/bin。</small>
+                </div>
+                <div class="mcp-button-row">
+                  <button id="mcpClientDownload" class="mcp-primary" type="button" disabled>下载 Tunnel Client</button>
+                  <button id="mcpClientPathSave" class="mcp-secondary" type="button" disabled>保存路径</button>
+                  <button id="mcpClientPathReset" class="mcp-secondary" type="button" disabled>恢复默认</button>
+                </div>
+                <p id="mcpClientMessage" class="mcp-message" role="status" aria-live="polite"></p>
+              </div>
+            </section>
+            <section class="mcp-flow-section" aria-labelledby="mcpLocalTitle">
+              <div class="mcp-section-heading">
+                <span class="mcp-step" aria-hidden="true">02</span>
                 <div>
                   <h3 id="mcpLocalTitle">本地 Tunnel 服务</h3>
                   <p>保存连接配置后启动服务；服务运行时，重启可应用已保存的修改。</p>
@@ -482,7 +505,7 @@
             </section>
             <section class="mcp-flow-section mcp-plugin-panel" aria-labelledby="mcpPluginTitle">
               <div class="mcp-section-heading">
-                <span class="mcp-step" aria-hidden="true">02</span>
+                <span class="mcp-step" aria-hidden="true">03</span>
                 <div>
                   <h3 id="mcpPluginTitle">ChatGPT 插件</h3>
                   <p id="mcpPluginDescription">本地 Tunnel 就绪后，在 ChatGPT 中创建并启用插件。授权结果以 ChatGPT 为准。</p>

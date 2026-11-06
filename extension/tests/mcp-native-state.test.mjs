@@ -44,7 +44,8 @@ test('invalid and fixture Tunnel IDs are rejected',()=>{
 function fakeUI() {
  const elements=new Map();
  const calls=[];
- const saved={configured:true,runtime_key_saved:true,client_installed:true,tunnel_id:id,running:false,ready:false,revision:'before',setup_state:'succeeded'};
+ const defaultPath='/private/SyndiRelay/bin/tunnel-client';
+ const saved={configured:true,runtime_key_saved:true,client_installed:true,client_path:defaultPath,client_default_path:defaultPath,client_custom:false,tunnel_id:id,running:false,ready:false,revision:'before',setup_state:'succeeded'};
  const elem=(name)=>{
   if(!elements.has(name)){
    elements.set(name,{id:name,value:'',textContent:'',className:'',disabled:false,readOnly:false,
@@ -62,6 +63,14 @@ function fakeUI() {
     calls.push({action,args});
     if(action==='blogctl.mcp.connection.get')return {connection:{...saved}};
     if(args?.action==='auto-status')return {auto_start:false};
+    if(args?.action==='install-client'){
+     saved.client_installed=true;saved.client_custom=false;saved.client_path=saved.client_default_path;
+    }
+    if(args?.action==='set-client-path'){
+     saved.client_path=args.clientPath||saved.client_default_path;
+     saved.client_custom=saved.client_path!==saved.client_default_path;
+     saved.client_installed=true;
+    }
     return {accepted:true};
    },errorMessage:e=>String(e?.message||e)}
  };
@@ -96,4 +105,60 @@ test('standby supervisor remains running and displays Tunnel disconnected',async
  assert.equal(elem('mcpConnect').textContent,'停止服务');
  assert.equal(elem('mcpConnect').disabled,false);
  assert.equal(elem('mcpTunnelToggle').textContent,'连接 Tunnel');
+});
+
+test('environment detection requires explicit download and shows private executable',async()=>{
+ const {api,elem,calls,saved}=fakeUI();
+ saved.client_installed=false;
+ api.init();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(elem('mcpClientPath').value,saved.client_default_path);
+ assert.equal(elem('mcpClientDownload').hidden,false);
+ assert.equal(elem('mcpClientDownload').disabled,false);
+ assert.equal(elem('mcpConnect').disabled,true);
+ await elem('mcpClientDownload').handlers.get('click')();
+ const installCalls=calls.filter(c=>c.args?.action==='install-client');
+ assert.equal(installCalls.length,1);
+ assert.equal(calls.filter(c=>c.args?.action==='save').length,0);
+ assert.equal(elem('mcpClientDownload').hidden,true);
+ assert.equal(elem('mcpClientStatus').attrs.get('data-kind'),'ready');
+ assert.equal(elem('mcpClientPath').value,saved.client_default_path);
+});
+
+test('custom executable path is editable, saved, and reset independently',async()=>{
+ const {api,elem,calls,saved}=fakeUI();
+ api.init();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ const custom='/custom/runtime/tunnel-client';
+ elem('mcpClientPath').value=custom;
+ elem('mcpClientPath').handlers.get('input')();
+ assert.equal(elem('mcpClientPathSave').disabled,false);
+ await elem('mcpClientPathSave').handlers.get('click')();
+ assert.equal(saved.client_path,custom);
+ assert.equal(saved.client_custom,true);
+ assert.equal(calls.filter(c=>c.args?.action==='set-client-path').length,1);
+ assert.equal(elem('mcpClientPathReset').disabled,false);
+ await elem('mcpClientPathReset').handlers.get('click')();
+ assert.equal(saved.client_custom,false);
+ assert.equal(saved.client_path,saved.client_default_path);
+ assert.equal(calls.filter(c=>c.args?.action==='set-client-path').length,2);
+});
+
+test('saving Tunnel credentials never downloads a missing client automatically',async()=>{
+ const {api,elem,calls,saved}=fakeUI();
+ saved.client_installed=false;
+ api.init();
+ await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(elem('mcpSave').disabled,true);
+ await elem('mcpSave').handlers.get('click')();
+ assert.equal(calls.filter(c=>['install-client','save'].includes(c.args?.action)).length,0);
+});
+
+test('a running Tunnel without a private client can be stopped but not restarted',()=>{
+ const {controls}=load();
+ const status={configured:true,runtime_key_saved:true,client_installed:false,tunnel_id:id,running:true,ready:false};
+ const options=controls(status,{id});
+ assert.equal(options.canStop,true);
+ assert.equal(options.canRestart,false);
+ assert.equal(options.canAutoStart,false);
 });

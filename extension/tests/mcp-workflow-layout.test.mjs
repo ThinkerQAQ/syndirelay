@@ -10,12 +10,18 @@ const html = read('popup.html');
 const css = read('popup.css');
 const js = read('mcp-connection.js');
 
-test('MCP connection follows the two-step browser connection workflow', () => {
+test('MCP connection follows environment, Tunnel, then ChatGPT workflow', () => {
   const section = html.match(/<section id="mcpConnectionSettings"[\s\S]+?<\/section>\s*(?=<div id="environmentRuntimeTools")/)?.[0];
   assert.ok(section, 'MCP connection section is present');
+  const environment = section.indexOf('mcpEnvironmentTitle');
   const local = section.indexOf('mcpLocalTitle');
   const chatgpt = section.indexOf('mcpPluginTitle');
-  assert.ok(local > 0 && chatgpt > local, 'local Tunnel precedes ChatGPT plugin');
+  assert.ok(environment > 0 && local > environment && chatgpt > local, 'environment precedes local Tunnel and ChatGPT');
+  assert.match(section, /id="mcpClientDownload"/);
+  assert.match(section, /id="mcpClientPath"/);
+  assert.match(section, /id="mcpClientPathSave"/);
+  assert.match(section, /id="mcpClientPathReset"/);
+  assert.match(section, /<span class="mcp-step" aria-hidden="true">03<\/span>/);
   assert.match(section, /mcp-workflow-header/);
   assert.match(section, /mcp-status-chip/);
   assert.match(section, /mcp-section-heading/);

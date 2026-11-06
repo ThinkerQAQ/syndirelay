@@ -19,6 +19,9 @@ var tunnelIDPattern = regexp.MustCompile(`^tunnel_(?:[a-z0-9]{32}|[a-z0-9]{4}_[a
 var profileTunnelID = regexp.MustCompile(`(?m)^\s*tunnel_id:\s*["']?(tunnel_[a-z0-9_]+)`)
 
 type MCPConnectionStatus struct {
+	ClientPath        string `json:"client_path"`
+	ClientDefaultPath string `json:"client_default_path"`
+	ClientCustom      bool   `json:"client_custom"`
 	State             string `json:"state"`
 	TunnelID          string `json:"tunnel_id"`
 	ClientInstalled   bool   `json:"client_installed"`
@@ -34,16 +37,6 @@ type MCPConnectionStatus struct {
 	TunnelConnecting  bool   `json:"tunnel_connecting"`
 }
 
-func findTunnelClient(goos, home string) string {
-	if path, err := exec.LookPath("tunnel-client"); err == nil {
-		return path
-	}
-	path := tunnelClientTarget(goos, home)
-	if st, err := os.Stat(path); err == nil && !st.IsDir() {
-		return path
-	}
-	return ""
-}
 func mcpPaths(dataDir string) (string, string) {
 	// Tunnel state belongs to SyndiRelay's existing data directory on every OS.
 	// Never read or migrate the obsolete script-managed Tunnel configuration.
@@ -66,10 +59,6 @@ func tunnelReady(ctx context.Context, client, health string) bool {
 }
 func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error) {
 	out := MCPConnectionStatus{State: "unconfigured"}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return out, err
-	}
 	exe, err := os.Executable()
 	if err != nil {
 		return out, err
@@ -81,7 +70,13 @@ func (s *Server) MCPConnection(ctx context.Context) (MCPConnectionStatus, error)
 		return out, err
 	}
 	profile, health := privatePaths.Profile, privatePaths.Health
-	client := findTunnelClient(runtime.GOOS, home)
+	dataDir := filepath.Dir(privatePaths.Private)
+	out.ClientDefaultPath = tunnelClientTarget(runtime.GOOS, dataDir)
+	out.ClientPath, out.ClientCustom, err = selectedTunnelClientPath(runtime.GOOS, dataDir)
+	if err != nil {
+		return out, err
+	}
+	client := findTunnelClient(runtime.GOOS, dataDir)
 	out.ClientInstalled = client != ""
 	out.Running = mcpRunnerRunning(privatePaths)
 	out.TunnelAutoConnect = mcpAutoConnectEnabled(privatePaths)
@@ -165,13 +160,27 @@ func (s *Server) handleMCPConnection(w http.ResponseWriter, r *http.Request) {
 		s.handleMCPSave(w, r, in)
 		return
 	case "install-client":
-		home, err := os.UserHomeDir()
+		dataDir, err := ConfigDir()
 		if err != nil {
-			http.Error(w, "home unavailable", 500)
+			writeAPIError(w, http.StatusInternalServerError, "client_directory_unavailable", err.Error(), nil)
 			return
 		}
-		if _, err = installTunnelClient(r.Context(), tunnelReleaseHTTPClient(), runtime.GOOS, runtime.GOARCH, home); err != nil {
-			http.Error(w, "official Tunnel Client verification or installation failed", 502)
+		if _, err = installTunnelClient(r.Context(), tunnelReleaseHTTPClient(), runtime.GOOS, runtime.GOARCH, dataDir); err != nil {
+			writeAPIError(w, http.StatusBadGateway, "client_install_failed", err.Error(), nil)
+			return
+		}
+		if _, err = setTunnelClientPath(runtime.GOOS, dataDir, ""); err != nil {
+			writeAPIError(w, http.StatusInternalServerError, "client_path_save_failed", err.Error(), nil)
+			return
+		}
+	case "set-client-path":
+		dataDir, err := ConfigDir()
+		if err != nil {
+			writeAPIError(w, http.StatusInternalServerError, "client_directory_unavailable", err.Error(), nil)
+			return
+		}
+		if _, err = setTunnelClientPath(runtime.GOOS, dataDir, in.ClientPath); err != nil {
+			writeAPIError(w, http.StatusBadRequest, "invalid_client_path", err.Error(), nil)
 			return
 		}
 	case "connect", "disconnect":
