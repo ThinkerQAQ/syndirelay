@@ -3,7 +3,7 @@ package bridge
 // Install the official OpenAI tunnel-client as an explicitly selected optional
 // component. Never execute a downloaded script: download a single official
 // platform release, verify its GitHub-published SHA-256 digest, and extract only
-// the expected executables into the current user's private bin directory.
+// the expected executables into SyndiRelay's own application data/bin directory.
 
 import (
 	"archive/zip"
@@ -57,12 +57,15 @@ func tunnelClientPlatform(goos, goarch string) (string, string, error) {
 	return fmt.Sprintf("%s-%s", goos, goarch), ext, nil
 }
 
-func tunnelClientTarget(goos, home string) string {
+// tunnelClientTarget is always private to this SyndiRelay installation, not PATH
+// or the user's shared ~/.local/bin. ConfigDir is within the installation's
+// Data directory on Windows and the user configuration directory elsewhere.
+func tunnelClientTarget(goos, dataDir string) string {
 	name := "tunnel-client"
 	if goos == "windows" {
 		name += ".exe"
 	}
-	return filepath.Join(home, ".local", "bin", name)
+	return filepath.Join(dataDir, "bin", name)
 }
 
 func tunnelReleaseHTTPClient() *http.Client {
@@ -226,11 +229,12 @@ func extractTunnelBinaries(zipArchive *zip.Reader, dest, goos string) (err error
 	return nil
 }
 
-func installTunnelClient(ctx context.Context, client *http.Client, goos, goarch, home string) (string, error) {
+func installTunnelClient(ctx context.Context, client *http.Client, goos, goarch, dataDir string) (string, error) {
 	tunnelClientInstallMu.Lock()
 	defer tunnelClientInstallMu.Unlock()
-	if existing := findTunnelClient(goos, home); existing != "" {
-		return existing, nil
+	path := tunnelClientTarget(goos, dataDir)
+	if tunnelClientExecutableExists(goos, path) {
+		return path, nil
 	}
 	if _, _, err := tunnelClientPlatform(goos, goarch); err != nil {
 		return "", err
@@ -239,7 +243,6 @@ func installTunnelClient(ctx context.Context, client *http.Client, goos, goarch,
 	if err != nil {
 		return "", err
 	}
-	path := tunnelClientTarget(goos, home)
 	parent := filepath.Dir(path)
 	if err := os.MkdirAll(parent, 0o700); err != nil {
 		return "", err

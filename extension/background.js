@@ -1059,11 +1059,11 @@ async function handleMessage(message) {
     }
     case "blogctl.mcp.connection.action": {
       const action = String(message.action || "");
-      if (!["install-client", "save", "start", "stop", "restart", "auto-status", "auto-enable", "auto-disable", "connect", "disconnect", "auto-connect-enable", "auto-connect-disable"].includes(action)) {
+      if (!["install-client", "set-client-path", "save", "start", "stop", "restart", "auto-status", "auto-enable", "auto-disable", "connect", "disconnect", "auto-connect-enable", "auto-connect-disable"].includes(action)) {
         throw new Error("Invalid MCP connection action");
       }
       return { ok: true, ...(await fetchJSON("/v1/mcp-connection", jsonOptions("POST", {
-        action, tunnel_id: String(message.tunnelId || ""),
+        action, client_path: String(message.clientPath || ""), tunnel_id: String(message.tunnelId || ""),
         runtime_api_key: String(message.runtimeApiKey || ""),
         reuse_key: Boolean(message.reuseKey),
         replace: Boolean(message.replace),

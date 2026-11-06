@@ -108,10 +108,11 @@ export SYNDIRELAY_CONTENT_ROOT="/absolute/path/to/your-content"
 
 在浏览器扩展中打开**设置 → 运行环境 → MCP 连接**。新版 MCP 使用独立配置，不读取、迁移旧 Tunnel ID、Key 或脚本配置；重新填写即可，文章和发布记录不受影响：
 
-1. 在**本地 Tunnel 服务**中填写 Tunnel ID 和 Runtime API Key，点击**保存配置**。系统会校验官方 Tunnel Client，但不会启动服务。
-2. 点击**启动服务**，等待状态显示 **Ready**。修改配置后使用**重启服务**；即使 Tunnel 进程运行但健康检查失败，也可以停止。
-3. **开机自启 Tunnel** 控制本地服务是否随系统登录启动；**Tunnel 自动连接** 决定服务启动后是否立即建立 Tunnel。两项独立设置，修改自动连接后重启服务生效。服务运行期间也可手动点击**连接 Tunnel**或**断开 Tunnel**，不会停止本地服务。
-4. 在**ChatGPT 插件**模块打开 [ChatGPT Plugins](https://chatgpt.com/plugins)，用相同的 Tunnel ID 注册并启用插件。详细流程见 [OpenAI 自定义 MCP 连接指南](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)，然后调用只读工具 `list_platforms` 验证。
+1. 在**环境检测**中查看 Tunnel Client 状态及可执行文件路径。缺失时手动点击**下载 Tunnel Client**，程序将官方客户端及 Cloudflared 校验后下载到 SyndiRelay 数据目录的 `bin/`。也可修改绝对路径并点击**保存路径**，或使用**恢复默认**。不再自动查找系统 `PATH` 或全局 `~/.local/bin`。
+2. 在**本地 Tunnel 服务**中填写 Tunnel ID 和 Runtime API Key，点击**保存**。保存连接配置不再自动下载客户端，也不会启动服务。
+3. 点击**启动服务**，等待状态显示 **Ready**。修改连接配置或可执行文件路径后使用**重启服务**；即使 Tunnel 进程运行但健康检查失败，也可以停止。
+4. **本地服务开机自启**控制本地服务是否随系统登录启动；**Tunnel 自动连接**决定服务启动后是否立即建立 Tunnel。两项独立设置，修改自动连接后重启服务生效。服务运行期间也可手动点击**连接 Tunnel**或**断开 Tunnel**，不会停止本地服务。
+5. 在**ChatGPT 插件**模块打开 [ChatGPT Plugins](https://chatgpt.com/plugins)，用相同的 Tunnel ID 注册并启用插件。详细流程见 [OpenAI 自定义 MCP 连接指南](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt)，然后调用只读工具 `list_platforms` 验证。
 
 已保存的 Runtime API Key 显示星号占位，留空即可复用。Tunnel 配置与运行状态统一保存在 SyndiRelay 数据目录的 `mcp/` 下（Windows 安装版为 `Data/mcp/`）；不读取旧 Tunnel 配置。Tunnel 生命周期由 Go 负责，不再经由 PowerShell/Bash 服务脚本。Tunnel 已就绪不代表 ChatGPT 插件已授权。
 
