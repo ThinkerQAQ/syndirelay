@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -53,8 +54,9 @@ func tunnelClientExecutableExists(goos, path string) bool {
 	if err != nil || !info.Mode().IsRegular() {
 		return false
 	}
-	// Windows executable permissions cannot be represented by Unix mode bits.
-	return goos == "windows" || info.Mode().Perm()&0111 != 0
+	// Windows filesystems do not expose Unix executable mode bits. This also
+	// allows platform-fixture tests to exercise Unix archive layouts on Windows.
+	return runtime.GOOS == "windows" || info.Mode().Perm()&0111 != 0
 }
 
 func findTunnelClient(goos, dataDir string) string {
